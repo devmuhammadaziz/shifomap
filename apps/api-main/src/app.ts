@@ -62,7 +62,14 @@ export const app = new Elysia()
   // CORS plugin - allows requests from any origin in dev
   .use(
     cors({
-      origin: true, // Allow all origins (set to specific domains in production)
+      origin: [
+        "https://clinic.shifoyol.uz",
+        "https://console.shifoyol.uz",
+        // add any other frontend domains you use:
+        // "https://app.shifoyol.uz",
+        "http://localhost:3000",
+        "http://localhost:4000",
+      ],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
