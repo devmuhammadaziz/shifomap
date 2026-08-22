@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useAuthStore } from '../store/auth-store';
 import { getFileUrl } from '../lib/api';
 import { listStories, markStorySeen, type StoryItem } from '../lib/api';
@@ -97,7 +97,7 @@ export default function StoriesViewerScreen() {
         )}
       />
       <TouchableOpacity style={styles.close} onPress={() => router.back()} hitSlop={10}>
-        <Ionicons name="close" size={30} color="#fff" />
+        <Icon name="close" size={30} color="#fff" />
       </TouchableOpacity>
       <View style={styles.topProgress}>
         {items.map((it, i) => (

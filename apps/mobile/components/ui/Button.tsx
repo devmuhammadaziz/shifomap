@@ -10,7 +10,7 @@ import {
   TextStyle,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTokens } from '../../lib/design';
 
@@ -22,8 +22,8 @@ interface Props {
   onPress?: () => void;
   variant?: Variant;
   size?: Size;
-  leftIcon?: keyof typeof Ionicons.glyphMap;
-  rightIcon?: keyof typeof Ionicons.glyphMap;
+  leftIcon?: IconName;
+  rightIcon?: IconName;
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
@@ -66,13 +66,13 @@ export function Button({
 
   const content = (
     <View style={styles.row}>
-      {leftIcon ? <Ionicons name={leftIcon} size={iconSize[size]} color={p.fg} style={{ marginRight: 8 }} /> : null}
+      {leftIcon ? <Icon name={leftIcon} size={iconSize[size]} color={p.fg} style={{ marginRight: 8 }} /> : null}
       {loading ? (
         <ActivityIndicator color={p.fg} />
       ) : (
         <Text style={[{ color: p.fg, fontSize: fontBySize[size], fontWeight: '700' }, textStyle]}>{title}</Text>
       )}
-      {rightIcon ? <Ionicons name={rightIcon} size={iconSize[size]} color={p.fg} style={{ marginLeft: 8 }} /> : null}
+      {rightIcon ? <Icon name={rightIcon} size={iconSize[size]} color={p.fg} style={{ marginLeft: 8 }} /> : null}
     </View>
   );
 

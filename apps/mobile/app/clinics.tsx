@@ -8,7 +8,7 @@ import {
   Image,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useRouter } from 'expo-router';
 import { getClinicsList, type ClinicListItem } from '../lib/api';
 import { useAuthStore } from '../store/auth-store';
@@ -40,7 +40,7 @@ export default function ClinicsScreen() {
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.back} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t.clinics}</Text>
         <View style={styles.headerRight} />
@@ -64,7 +64,7 @@ export default function ClinicsScreen() {
         </ScrollView>
       ) : clinics.length === 0 ? (
         <View style={styles.empty}>
-          <Ionicons name="business-outline" size={56} color={colors.border} />
+          <Icon name="business-outline" size={56} color={colors.border} />
           <Text style={[styles.emptyTitle, { color: colors.textSecondary }]}>{t.clinics}</Text>
           <Text style={[styles.emptySub, { color: colors.textTertiary }]}>{t.noResultsFound}</Text>
         </View>
@@ -94,7 +94,7 @@ export default function ClinicsScreen() {
                   {tagline ? <Text style={[styles.cardTagline, { color: colors.textTertiary }]} numberOfLines={1}>{tagline}</Text> : null}
                   <View style={styles.cardMetaRow}>
                     <View style={styles.cardRatingWrap}>
-                      <Ionicons name="star" size={14} color={colors.warning} />
+                      <Icon name="star" size={14} color={colors.warning} />
                       <Text style={[styles.cardRating, { color: colors.warning }]}>{c.rating.avg > 0 ? c.rating.avg.toFixed(1) : '—'} {c.rating.count > 0 ? `(${c.rating.count})` : ''}</Text>
                     </View>
                     <Text style={[styles.cardMetaDot, { color: colors.textTertiary }]}>•</Text>

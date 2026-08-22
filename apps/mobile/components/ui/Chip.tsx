@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet, ViewStyle, StyleProp } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTokens } from '../../lib/design';
 
@@ -8,7 +8,7 @@ interface Props {
   label: string;
   selected?: boolean;
   onPress?: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: IconName;
   color?: string;
   backgroundColor?: string;
   style?: StyleProp<ViewStyle>;
@@ -36,7 +36,7 @@ export function Chip({ label, selected, onPress, icon, color, backgroundColor, s
         style,
       ]}
     >
-      {icon ? <Ionicons name={icon} size={14} color={fg} style={{ marginRight: 6 }} /> : null}
+      {icon ? <Icon name={icon} size={14} color={fg} style={{ marginRight: 6 }} /> : null}
       <Text style={{ color: fg, fontSize: 13, fontWeight: '600' }}>{label}</Text>
     </TouchableOpacity>
   );

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/theme-store';
 import { useAuthStore } from '../store/auth-store';
@@ -205,7 +205,7 @@ export default function BookDoctorScreen() {
                         {s.price?.amount ? ` · ${s.price.amount.toLocaleString()} ${s.price.currency}` : ''}
                       </Text>
                     </View>
-                    {active ? <Ionicons name="checkmark-circle" size={22} color={tokens.brand.iris} /> : null}
+                    {active ? <Icon name="checkmark-circle" size={22} color={tokens.brand.iris} /> : null}
                   </TouchableOpacity>
                 );
               })}

@@ -1,8 +1,8 @@
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../components/icons/Icon';
 
 export type SpecialtyIcon =
-  | { lib: 'ion'; name: keyof typeof Ionicons.glyphMap }
-  | { lib: 'mci'; name: keyof typeof MaterialCommunityIcons.glyphMap };
+  | { lib: 'ion'; name: IconName }
+  | { lib: 'mci'; name: IconName };
 
 export type DoctorSpecialty = {
   key: string;
@@ -252,8 +252,5 @@ export function SpecialtyIconView({
   size: number;
   color: string;
 }) {
-  if (icon.lib === 'mci') {
-    return <MaterialCommunityIcons name={icon.name} size={size} color={color} />;
-  }
-  return <Ionicons name={icon.name} size={size} color={color} />;
+  return <Icon name={icon.name} size={size} color={color} />;
 }

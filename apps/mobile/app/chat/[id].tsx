@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
@@ -155,7 +155,7 @@ export default function ChatThread() {
           disabled={!text.trim() || sending}
           style={[styles.sendBtn, { backgroundColor: text.trim() ? tokens.brand.iris : tokens.colors.border }]}
         >
-          <Ionicons name="send" size={18} color="#fff" />
+          <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

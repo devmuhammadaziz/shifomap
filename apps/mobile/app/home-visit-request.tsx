@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
 import { getTokens } from '../lib/design';
@@ -116,7 +116,7 @@ export default function HomeVisitRequestScreen() {
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-            <Ionicons name="chevron-back" size={28} color={tokens.colors.primary} />
+            <Icon name="chevron-back" size={28} color={tokens.colors.primary} />
           </TouchableOpacity>
           <Text style={[styles.title, { color: tokens.colors.text }]}>
             {isUz ? 'Shifokorni uyga chaqirish' : 'Вызов врача на дом'}
@@ -130,7 +130,7 @@ export default function HomeVisitRequestScreen() {
         >
           <View style={[styles.card, { backgroundColor: tokens.colors.backgroundCard, borderColor: tokens.colors.border }]}>
             <View style={[styles.clinicIcon, { backgroundColor: tokens.brand.primarySoft }]}>
-              <Ionicons name="business" size={22} color={tokens.colors.primary} />
+              <Icon name="business" size={22} color={tokens.colors.primary} />
             </View>
             <View style={{ flex: 1, minWidth: 0 }}>
               <Text style={[styles.cardTitle, { color: tokens.colors.text }]} numberOfLines={2}>

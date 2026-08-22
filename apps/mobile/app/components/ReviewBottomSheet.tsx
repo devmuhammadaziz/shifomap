@@ -14,7 +14,7 @@ import {
   Keyboard,
   Dimensions,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
 import { useAuthStore } from '../../store/auth-store';
@@ -212,13 +212,13 @@ export default function ReviewBottomSheet({
             </View>
             <View style={[styles.header, { borderBottomColor: sheetBorder }]}>
               <View style={styles.headerTitleWrap}>
-                <Ionicons name="star" size={22} color={colors.warning} />
+                <Icon name="star" size={22} color={colors.warning} />
                 <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
                   {t.writeReview} — {entityName}
                 </Text>
               </View>
               <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={12}>
-                <Ionicons name="close-circle" size={28} color={colors.textTertiary} />
+                <Icon name="close-circle" size={28} color={colors.textTertiary} />
               </TouchableOpacity>
             </View>
 
@@ -239,7 +239,7 @@ export default function ReviewBottomSheet({
                     style={styles.starBtn}
                     activeOpacity={0.8}
                   >
-                    <Ionicons
+                    <Icon
                       name={s <= stars ? 'star' : 'star-outline'}
                       size={40}
                       color={colors.warning}
@@ -270,7 +270,7 @@ export default function ReviewBottomSheet({
                           },
                         ]}
                       >
-                        <Ionicons
+                        <Icon
                           name={selected ? 'checkmark-circle' : 'add-circle-outline'}
                           size={14}
                           color={selected ? primaryBtn : colors.textTertiary}

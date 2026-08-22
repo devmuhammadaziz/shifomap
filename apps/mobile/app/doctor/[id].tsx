@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   getClinicDetail,
@@ -213,7 +213,7 @@ export default function DoctorDetailScreen() {
               {doctor.fullName}
             </Text>
             <View style={[styles.specPill, { backgroundColor: tokens.colors.backgroundCard }]}>
-              <Ionicons name="medkit" size={12} color={tokens.brand.iris} />
+              <Icon name="medkit" size={12} color={tokens.brand.iris} />
               <Text style={{ color: tokens.brand.iris, fontSize: 12, fontWeight: '700' }}>{doctor.specialty}</Text>
             </View>
 
@@ -267,7 +267,7 @@ export default function DoctorDetailScreen() {
           {hasSchedule ? (
             <Card>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                <Ionicons name="calendar-outline" size={14} color={tokens.brand.iris} />
+                <Icon name="calendar-outline" size={14} color={tokens.brand.iris} />
                 <Text style={[tokens.type.caption, { color: tokens.colors.textTertiary }]}>
                   {language === 'uz' ? 'Ish jadvali' : language === 'en' ? 'Working hours' : 'График работы'}
                 </Text>
@@ -335,7 +335,7 @@ export default function DoctorDetailScreen() {
               onPress={() => setReviewSheetVisible(true)}
               style={[styles.writeReview, { borderColor: tokens.brand.iris }]}
             >
-              <Ionicons name="star-outline" size={16} color={tokens.brand.iris} />
+              <Icon name="star-outline" size={16} color={tokens.brand.iris} />
               <Text style={{ color: tokens.brand.iris, fontWeight: '700', fontSize: 13 }}>
                 {t.writeReview ?? 'Write review'}
               </Text>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { getClinicDetail } from '../../lib/api';
 import type { ClinicBranchPublic } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
@@ -91,7 +91,7 @@ export default function BranchDetailScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>{branch.name}</Text>
       </View>
@@ -99,7 +99,7 @@ export default function BranchDetailScreen() {
         <View style={[styles.card, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
           <View style={styles.row}>
             <View style={[styles.iconWrap, { backgroundColor: colors.primaryBg }]}>
-              <Ionicons name="business-outline" size={20} color={colors.primary} />
+              <Icon name="business-outline" size={20} color={colors.primary} />
             </View>
             <Text style={[styles.label, { color: colors.textTertiary }]}>{t.branchName}</Text>
             <Text style={[styles.value, { color: colors.text }]}>{branch.name}</Text>
@@ -107,7 +107,7 @@ export default function BranchDetailScreen() {
           {branch.phone ? (
             <View style={styles.row}>
               <View style={[styles.iconWrap, { backgroundColor: colors.successBg }]}>
-                <Ionicons name="call-outline" size={20} color={colors.success} />
+                <Icon name="call-outline" size={20} color={colors.success} />
               </View>
               <Text style={[styles.label, { color: colors.textTertiary }]}>{t.phone}</Text>
               <Text style={[styles.value, { color: colors.text }]}>{branch.phone}</Text>
@@ -116,7 +116,7 @@ export default function BranchDetailScreen() {
           {addressLine ? (
             <View style={styles.row}>
               <View style={[styles.iconWrap, { backgroundColor: colors.warningBg }]}>
-                <Ionicons name="location-outline" size={20} color={colors.warning} />
+                <Icon name="location-outline" size={20} color={colors.warning} />
               </View>
               <Text style={[styles.label, { color: colors.textTertiary }]}>{t.location}</Text>
               <Text style={[styles.value, { color: colors.text }]}>{addressLine}</Text>
@@ -125,7 +125,7 @@ export default function BranchDetailScreen() {
           {branch.workingHours?.length > 0 ? (
             <View style={styles.row}>
               <View style={[styles.iconWrap, { backgroundColor: colors.infoBg }]}>
-                <Ionicons name="time-outline" size={20} color={colors.info} />
+                <Icon name="time-outline" size={20} color={colors.info} />
               </View>
               <Text style={[styles.label, { color: colors.textTertiary }]}>{t.workingHours}</Text>
               <View style={styles.hoursList}>

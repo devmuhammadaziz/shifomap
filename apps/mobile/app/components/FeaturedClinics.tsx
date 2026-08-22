@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
@@ -45,7 +45,7 @@ const FeaturedClinics = () => {
       {savedServices.length === 0 ? (
         <View style={[styles.emptyState, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
           <View style={[styles.emptyIcon, { backgroundColor: colors.primaryBg }]}>
-            <Ionicons name="bookmark-outline" size={24} color={tokens.brand.iris} />
+            <Icon name="bookmark-outline" size={24} color={tokens.brand.iris} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>{t.noSavedServices}</Text>
           <Text style={[styles.emptyHint, { color: colors.textTertiary }]}>{t.noSavedServicesHint}</Text>
@@ -78,7 +78,7 @@ const FeaturedClinics = () => {
                 pointerEvents="none"
               />
               <View style={[styles.savedBadge, { backgroundColor: tokens.brand.amber }]}>
-                <Ionicons name="bookmark" size={11} color="#fff" />
+                <Icon name="bookmark" size={11} color="#fff" />
               </View>
             </View>
 
@@ -106,7 +106,7 @@ const FeaturedClinics = () => {
                   }}
                   style={[styles.removeBtn, { backgroundColor: colors.backgroundSecondary }]}
                 >
-                  <Ionicons name="close" size={14} color={colors.textSecondary} />
+                  <Icon name="close" size={14} color={colors.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -117,7 +117,7 @@ const FeaturedClinics = () => {
                   end={{ x: 1, y: 0 }}
                   style={styles.priceChip}
                 >
-                  <Ionicons name="cash-outline" size={12} color="#fff" />
+                  <Icon name="cash-outline" size={12} color="#fff" />
                   <Text style={styles.priceText} numberOfLines={1}>
                     {formatPrice(service.price)}
                   </Text>
@@ -125,7 +125,7 @@ const FeaturedClinics = () => {
               </View>
 
               <View style={styles.clinicRow}>
-                <Ionicons name="business-outline" size={12} color={colors.textTertiary} />
+                <Icon name="business-outline" size={12} color={colors.textTertiary} />
                 <Text style={[styles.clinicName, { color: colors.textSecondary }]} numberOfLines={1}>
                   {service.clinicDisplayName}
                 </Text>

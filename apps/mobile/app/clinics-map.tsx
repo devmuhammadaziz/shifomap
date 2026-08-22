@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Asset } from 'expo-asset';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useRouter } from 'expo-router';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
@@ -442,7 +442,7 @@ export default function ClinicsMapScreen() {
         ]}
       >
         <View style={[styles.listIcon, { backgroundColor: active ? colors.primary + '22' : colors.backgroundSecondary }]}>
-          <Ionicons
+          <Icon
             name={item.isPharmacy ? 'medical' : 'business'}
             size={18}
             color={item.isPharmacy ? '#0ea5e9' : colors.primary}
@@ -456,7 +456,7 @@ export default function ClinicsMapScreen() {
             {item.branchName}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+        <Icon name="chevron-forward" size={18} color={colors.textTertiary} />
       </TouchableOpacity>
     );
   };
@@ -465,7 +465,7 @@ export default function ClinicsMapScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Icon name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>
           {language === 'uz' ? 'Xarita' : language === 'ru' ? 'Карта' : 'Map'}
@@ -480,7 +480,7 @@ export default function ClinicsMapScreen() {
             onPress={() => switchEntity('clinic')}
             activeOpacity={0.85}
           >
-            <Ionicons name="business" size={16} color={entity === 'clinic' ? '#fff' : colors.textSecondary} />
+            <Icon name="business" size={16} color={entity === 'clinic' ? '#fff' : colors.textSecondary} />
             <Text style={[styles.switchBtnText, { color: entity === 'clinic' ? '#fff' : colors.textSecondary }]}>
               {language === 'uz' ? 'Klinika' : 'Клиники'}
             </Text>
@@ -490,14 +490,14 @@ export default function ClinicsMapScreen() {
             onPress={() => switchEntity('pharmacy')}
             activeOpacity={0.85}
           >
-            <Ionicons name="medical" size={16} color={entity === 'pharmacy' ? '#fff' : colors.textSecondary} />
+            <Icon name="medical" size={16} color={entity === 'pharmacy' ? '#fff' : colors.textSecondary} />
             <Text style={[styles.switchBtnText, { color: entity === 'pharmacy' ? '#fff' : colors.textSecondary }]}>
               {language === 'uz' ? 'Apteka' : 'Аптеки'}
             </Text>
           </TouchableOpacity>
         </View>
         <View style={[styles.countPill, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-          <Ionicons name="location" size={14} color={colors.primary} />
+          <Icon name="location" size={14} color={colors.primary} />
           <Text style={[styles.countText, { color: colors.textSecondary }]}>
             {markersData.length}{' '}
             {language === 'uz' ? 'joy' : language === 'ru' ? 'точек' : 'places'}
@@ -569,10 +569,10 @@ export default function ClinicsMapScreen() {
                   style={[styles.chipBtnOutline, { borderColor: colors.border }]}
                   onPress={() => openDirections(selectedMarker)}
                 >
-                  <Ionicons name="navigate" size={16} color={colors.primary} />
+                  <Icon name="navigate" size={16} color={colors.primary} />
                 </TouchableOpacity>
                 <TouchableOpacity hitSlop={8} onPress={() => setSelectedMarker(null)}>
-                  <Ionicons name="close-circle" size={22} color={colors.textTertiary} />
+                  <Icon name="close-circle" size={22} color={colors.textTertiary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -581,7 +581,7 @@ export default function ClinicsMapScreen() {
 
         <View style={[styles.listPanel, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
           <View style={[styles.searchBox, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
-            <Ionicons name="search" size={18} color={colors.textTertiary} />
+            <Icon name="search" size={18} color={colors.textTertiary} />
             <TextInput
               style={[styles.searchInput, { color: colors.text }]}
               placeholder={language === 'uz' ? 'Qidirish…' : language === 'ru' ? 'Поиск…' : 'Search…'}
@@ -592,7 +592,7 @@ export default function ClinicsMapScreen() {
             />
             {searchQuery ? (
               <TouchableOpacity hitSlop={8} onPress={() => setSearchQuery('')}>
-                <Ionicons name="close-circle" size={18} color={colors.textTertiary} />
+                <Icon name="close-circle" size={18} color={colors.textTertiary} />
               </TouchableOpacity>
             ) : null}
           </View>
@@ -603,7 +603,7 @@ export default function ClinicsMapScreen() {
             </View>
           ) : filteredList.length === 0 ? (
             <View style={styles.listEmpty}>
-              <Ionicons name="map-outline" size={32} color={colors.textTertiary} />
+              <Icon name="map-outline" size={32} color={colors.textTertiary} />
               <Text style={{ color: colors.textTertiary, marginTop: 8, fontSize: 14 }}>
                 {language === 'uz' ? 'Joy topilmadi' : language === 'ru' ? 'Ничего не найдено' : 'No places found'}
               </Text>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useAuthStore } from '../../store/auth-store';
 import { getTranslations } from '../../lib/translations';
 
@@ -20,7 +20,7 @@ const Specialties = () => {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
       {categories.map((item, index) => (
         <TouchableOpacity key={index} style={[styles.chip, index === 0 && styles.chipActive]}>
-          <Ionicons
+          <Icon
             name={item.icon}
             size={20}
             color={index === 0 ? '#ffffff' : '#a1a1aa'}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
@@ -52,7 +52,7 @@ export default function ChatListScreen() {
         </View>
       ) : items.length === 0 ? (
         <View style={{ flex: 1, padding: 40, alignItems: 'center', justifyContent: 'center' }}>
-          <Ionicons name="chatbubbles" size={56} color={tokens.brand.iris} />
+          <Icon name="chatbubbles" size={56} color={tokens.brand.iris} />
           <Text style={[tokens.type.title, { color: tokens.colors.text, marginTop: 14 }]}>
             {tr('Hozircha yozishmalar yo‘q', 'Пока нет чатов', 'No conversations yet')}
           </Text>

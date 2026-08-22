@@ -14,7 +14,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServiceFilterOptions } from '../../lib/api';
 import { getTranslations } from '../../lib/translations';
@@ -132,7 +132,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
 
           <View style={styles.sheetHeader}>
             <View style={[styles.headerIcon, { backgroundColor: tokens.brand.iris + '18' }]}>
-              <Ionicons name="options" size={20} color={tokens.brand.iris} />
+              <Icon name="options" size={20} color={tokens.brand.iris} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.sheetTitle, { color: tokens.colors.text }]}>
@@ -147,7 +147,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
               </Text>
             </View>
             <TouchableOpacity onPress={closeSheet} hitSlop={12} style={[styles.closeBtn, { backgroundColor: tokens.colors.backgroundSecondary }]}>
-              <Ionicons name="close" size={20} color={tokens.colors.textSecondary} />
+              <Icon name="close" size={20} color={tokens.colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
@@ -234,7 +234,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
               end={{ x: 1, y: 0 }}
               style={styles.searchBtn}
             >
-              <Ionicons name="search" size={20} color="#fff" />
+              <Icon name="search" size={20} color="#fff" />
               <Text style={styles.searchBtnText}>{t.searchPlaceholder}</Text>
             </LinearGradient>
           </TouchableOpacity>

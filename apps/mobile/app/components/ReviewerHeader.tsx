@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { getFileUrl } from '../../lib/api';
 
 type ReviewLike = {
@@ -75,7 +75,7 @@ export default function ReviewerHeader({
         <View style={styles.metaRow}>
           <View style={styles.starsRow}>
             {[1, 2, 3, 4, 5].map((s) => (
-              <Ionicons
+              <Icon
                 key={s}
                 name={s <= review.stars ? 'star' : 'star-outline'}
                 size={isSm ? 11 : 13}

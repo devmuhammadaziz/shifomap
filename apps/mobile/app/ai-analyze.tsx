@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/theme-store';
 import { useAuthStore } from '../store/auth-store';
@@ -165,7 +165,7 @@ export default function AiAnalyzeScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.hero}
           >
-            <Ionicons name="document-text" size={28} color="#fff" />
+            <Icon name="document-text" size={28} color="#fff" />
             <Text style={[tokens.type.titleLg, { color: '#fff', marginTop: 12 }]}>
               {tr('Tahlil rasmingizni yuklang', 'Загрузите фото анализа', 'Upload your test result')}
             </Text>

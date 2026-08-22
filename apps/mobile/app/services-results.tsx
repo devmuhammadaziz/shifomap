@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { searchServicesWithFilters, type PublicServiceItem, type ServiceFilters } from '../lib/api';
 import { useAuthStore } from '../store/auth-store';
@@ -225,7 +225,7 @@ export default function ServicesResultsScreen() {
         />
         {savedOnly ? (
           <View style={[styles.cardSavedBadge, { backgroundColor: tokens.brand.amber }]}>
-            <Ionicons name="bookmark" size={11} color="#fff" />
+            <Icon name="bookmark" size={11} color="#fff" />
           </View>
         ) : null}
       </View>
@@ -252,7 +252,7 @@ export default function ServicesResultsScreen() {
               }}
               style={[styles.cardRemoveBtn, { backgroundColor: colors.backgroundSecondary }]}
             >
-              <Ionicons name="close" size={14} color={colors.textSecondary} />
+              <Icon name="close" size={14} color={colors.textSecondary} />
             </TouchableOpacity>
           ) : (
             <SaveServiceStar service={item} size={20} />
@@ -265,14 +265,14 @@ export default function ServicesResultsScreen() {
           end={{ x: 1, y: 0 }}
           style={styles.cardPriceChip}
         >
-          <Ionicons name="cash-outline" size={12} color="#fff" />
+          <Icon name="cash-outline" size={12} color="#fff" />
           <Text style={styles.cardPriceText} numberOfLines={1}>
             {formatPrice(item.price)}
           </Text>
         </LinearGradient>
 
         <View style={styles.cardClinicRow}>
-          <Ionicons name="business-outline" size={12} color={colors.textTertiary} />
+          <Icon name="business-outline" size={12} color={colors.textTertiary} />
           <Text style={[styles.cardClinicName, { color: colors.textSecondary }]} numberOfLines={1}>
             {item.clinicDisplayName}
           </Text>
@@ -285,10 +285,10 @@ export default function ServicesResultsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { borderBottomColor: 'transparent' }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={[styles.searchRow, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
-          <Ionicons name="search" size={20} color={colors.textTertiary} style={styles.searchIcon} />
+          <Icon name="search" size={20} color={colors.textTertiary} style={styles.searchIcon} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
             placeholder={t.searchPlaceholder}
@@ -300,13 +300,13 @@ export default function ServicesResultsScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => { setSearchQuery(''); setTimeout(() => load(1, false), 50); }} hitSlop={8}>
-              <Ionicons name="close-circle" size={20} color={colors.textTertiary} />
+              <Icon name="close-circle" size={20} color={colors.textTertiary} />
             </TouchableOpacity>
           )}
         </View>
         {!savedOnly ? (
           <TouchableOpacity onPress={openFilterModal} style={styles.headerFilterBtn}>
-            <Ionicons name="options-outline" size={24} color={colors.text} />
+            <Icon name="options-outline" size={24} color={colors.text} />
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
@@ -329,7 +329,7 @@ export default function ServicesResultsScreen() {
             </Text>
           </View>
           <View style={[styles.sectionBadge, { backgroundColor: colors.primaryBg }]}>
-            <Ionicons name="bookmark" size={14} color={tokens.brand.iris} />
+            <Icon name="bookmark" size={14} color={tokens.brand.iris} />
           </View>
         </View>
       ) : null}
@@ -338,7 +338,7 @@ export default function ServicesResultsScreen() {
         <View style={[styles.activeFiltersRow, { paddingHorizontal: 20, paddingBottom: 8 }]}>
           {searchQuery.trim() ? (
             <View style={[styles.activeFilterChip, { backgroundColor: colors.primaryBg }]}>
-              <Ionicons name="search" size={12} color={tokens.brand.iris} />
+              <Icon name="search" size={12} color={tokens.brand.iris} />
               <Text style={[styles.activeFilterChipText, { color: tokens.brand.iris }]} numberOfLines={1}>
                 {searchQuery.trim()}
               </Text>
@@ -346,7 +346,7 @@ export default function ServicesResultsScreen() {
           ) : null}
           {appliedMinPrice != null || appliedMaxPrice != null ? (
             <View style={[styles.activeFilterChip, { backgroundColor: colors.primaryBg }]}>
-              <Ionicons name="cash-outline" size={12} color={tokens.brand.iris} />
+              <Icon name="cash-outline" size={12} color={tokens.brand.iris} />
               <Text style={[styles.activeFilterChipText, { color: tokens.brand.iris }]}>
                 {appliedMinPrice != null ? appliedMinPrice.toLocaleString() : '0'} –{' '}
                 {appliedMaxPrice != null ? appliedMaxPrice.toLocaleString() : '∞'} UZS
@@ -377,7 +377,7 @@ export default function ServicesResultsScreen() {
         ) : listData.length === 0 ? (
           <View style={styles.centered}>
             <View style={[styles.emptyIcon, { backgroundColor: colors.primaryBg }]}>
-              <Ionicons
+              <Icon
                 name={savedOnly ? 'bookmark-outline' : 'search-outline'}
                 size={32}
                 color={tokens.brand.iris}
@@ -405,7 +405,7 @@ export default function ServicesResultsScreen() {
                 activeOpacity={0.85}
                 onPress={() => router.back()}
               >
-                <Ionicons name="search-outline" size={16} color="#fff" />
+                <Icon name="search-outline" size={16} color="#fff" />
                 <Text style={styles.emptyCtaText}>
                   {language === 'ru' ? 'Найти услуги' : 'Xizmat qidirish'}
                 </Text>

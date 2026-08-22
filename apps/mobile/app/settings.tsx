@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Switch, Alert, Linking } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useRouter } from 'expo-router';
 import { useAuthStore, DEFAULT_AVATAR } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -114,7 +114,7 @@ export default function SettingsScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Icon name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t.settings}</Text>
       </View>
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
             {/* <View style={styles.languageRow}>
               <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconPurpleBg }]}>
-                  <Ionicons name="globe-outline" size={20} color={colors.iconPurple} />
+                  <Icon name="globe-outline" size={20} color={colors.iconPurple} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{t.language}</Text>
               </View>
@@ -186,7 +186,7 @@ export default function SettingsScreen() {
             <View style={styles.languageRow}>
               <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconPurpleBg }]}>
-                  <Ionicons name={theme === 'light' ? 'sunny-outline' : 'moon-outline'} size={20} color={colors.iconPurple} />
+                  <Icon name={theme === 'light' ? 'sunny-outline' : 'moon-outline'} size={20} color={colors.iconPurple} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{t.theme}</Text>
               </View>
@@ -237,7 +237,7 @@ export default function SettingsScreen() {
             <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconGreenBg }]}>
-                  <Ionicons name="calendar-outline" size={20} color={colors.iconGreen} />
+                  <Icon name="calendar-outline" size={20} color={colors.iconGreen} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{t.appointmentReminders}</Text>
               </View>
@@ -252,7 +252,7 @@ export default function SettingsScreen() {
             <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconPurpleBg }]}>
-                  <Ionicons name="medical-outline" size={20} color={colors.iconPurple} />
+                  <Icon name="medical-outline" size={20} color={colors.iconPurple} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{t.pillRemindersLabel}</Text>
               </View>
@@ -267,7 +267,7 @@ export default function SettingsScreen() {
             {/* <View style={styles.row}>
               <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconGrayBg }]}>
-                  <Ionicons name="notifications-outline" size={20} color={colors.iconGray} />
+                  <Icon name="notifications-outline" size={20} color={colors.iconGray} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{t.generalNotifications}</Text>
               </View>
@@ -298,7 +298,7 @@ export default function SettingsScreen() {
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Ionicons name="log-out-outline" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
+          <Icon name="log-out-outline" size={20} color={colors.textSecondary} style={{ marginRight: 8 }} />
           <Text style={[styles.logoutText, { color: colors.text }]}>{t.logout}</Text>
         </TouchableOpacity>
 
@@ -314,13 +314,13 @@ const SettingItem = ({ icon, label, value, isExternal, onPress, colors }: { icon
         <TouchableOpacity style={styles.row} onPress={onPress} disabled={!onPress}>
             <View style={styles.rowLeft}>
                 <View style={[styles.iconBox, { backgroundColor: colors.iconPurpleBg }]}>
-                    <Ionicons name={icon as any} size={20} color={colors.iconPurple} />
+                    <Icon name={icon} size={20} color={colors.iconPurple} />
                 </View>
                 <Text style={[styles.rowLabel, { color: colors.text }]}>{label}</Text>
             </View>
             <View style={styles.rowRight}>
                 {value && <Text style={[styles.valueText, { color: colors.textSecondary }]}>{value}</Text>}
-                <Ionicons name={isExternal ? "open-outline" : "chevron-forward"} size={18} color={colors.textTertiary} />
+                <Icon name={isExternal ? "open-outline" : "chevron-forward"} size={18} color={colors.textTertiary} />
             </View>
         </TouchableOpacity>
         <View style={[styles.divider, { backgroundColor: colors.border }]} />

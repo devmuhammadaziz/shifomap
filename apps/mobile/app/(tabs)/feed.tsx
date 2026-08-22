@@ -18,7 +18,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { useThemeStore } from '../../store/theme-store';
@@ -158,11 +158,11 @@ export default function FeedScreen() {
           onPress={() => navigation.navigate('index' as never)}
           activeOpacity={0.85}
         >
-          <Ionicons name="chevron-back" size={26} color="#fff" />
+          <Icon name="chevron-back" size={26} color="#fff" />
         </TouchableOpacity>
         <View style={styles.center}>
           <View style={[styles.emptyIcon, { backgroundColor: tokens.colors.backgroundSecondary }]}>
-            <Ionicons name="play-circle-outline" size={40} color={tokens.brand.iris} />
+            <Icon name="play-circle-outline" size={40} color={tokens.brand.iris} />
           </View>
           <Text style={[tokens.type.titleLg, { color: tokens.colors.text, textAlign: 'center', marginTop: 14 }]}>
             {language === 'uz' ? 'Lenta bo‘sh' : 'Лента пуста'}
@@ -205,7 +205,7 @@ export default function FeedScreen() {
         accessibilityRole="button"
         accessibilityLabel={language === 'uz' ? 'Orqaga' : 'Назад'}
       >
-        <Ionicons name="chevron-back" size={26} color="#fff" />
+        <Icon name="chevron-back" size={26} color="#fff" />
       </TouchableOpacity>
 
       <CommentsModal
@@ -252,7 +252,7 @@ function PostCard({
 
       <View style={[styles.actionsRail, { bottom: footerBottom + 72 }]}>
         <TouchableOpacity style={styles.railBtn} onPress={onLike} activeOpacity={0.75}>
-          <Ionicons
+          <Icon
             name={post.likedByMe ? 'heart' : 'heart-outline'}
             size={30}
             color={post.likedByMe ? '#f43f5e' : '#fff'}
@@ -260,11 +260,11 @@ function PostCard({
           <Text style={styles.railCount}>{post.likesCount}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.railBtn} onPress={onCommentOpen} activeOpacity={0.75}>
-          <Ionicons name="chatbubble-outline" size={28} color="#fff" />
+          <Icon name="chatbubble-outline" size={28} color="#fff" />
           <Text style={styles.railCount}>{post.commentsCount}</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.railBtn} onPress={onShare} activeOpacity={0.75}>
-          <Ionicons name="paper-plane-outline" size={28} color="#fff" />
+          <Icon name="paper-plane-outline" size={28} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -419,7 +419,7 @@ function CommentsModal({
                   alignItems: 'center', justifyContent: 'center',
                   backgroundColor: tokens.colors.backgroundSecondary,
                 }}>
-                  <Ionicons name="chatbubble-outline" size={24} color={tokens.brand.iris} />
+                  <Icon name="chatbubble-outline" size={24} color={tokens.brand.iris} />
                 </View>
                 <Text style={{ color: tokens.colors.text, fontWeight: '700', fontSize: 14, marginTop: 12 }}>
                   {language === 'uz' ? 'Hozircha fikrlar yo‘q' : 'Пока нет комментариев'}
@@ -470,7 +470,7 @@ function CommentsModal({
               {sending ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Ionicons name="send" size={18} color="#fff" />
+                <Icon name="send" size={18} color="#fff" />
               )}
             </TouchableOpacity>
           </View>

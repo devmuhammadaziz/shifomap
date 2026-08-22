@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useSavedServicesStore, toSavedServiceItem } from '../../store/saved-services-store';
 import { useThemeStore } from '../../store/theme-store';
 import { getColors } from '../../lib/theme';
@@ -40,7 +40,7 @@ export default function SaveServiceStar({ service, size = 22, onSave, onUnsave }
 
   return (
     <TouchableOpacity hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }} onPress={handlePress} style={{ padding: 4 }}>
-      <Ionicons
+      <Icon
         name={isSaved ? 'bookmark' : 'bookmark-outline'}
         size={size}
         color={isSaved ? colors.warning : colors.text}

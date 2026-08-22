@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/theme-store';
 import { useAuthStore } from '../store/auth-store';
@@ -306,7 +306,7 @@ export default function HealthTestScreen() {
             end={{ x: 1, y: 1 }}
             style={styles.resultHero}
           >
-            <Ionicons name="sparkles" size={22} color="#fff" />
+            <Icon name="sparkles" size={22} color="#fff" />
             <Text style={[tokens.type.titleXl, { color: '#fff', marginTop: 10 }]}>{result.condition}</Text>
             <View style={[styles.severityPill, { backgroundColor: severityColor }]}>
               <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800', letterSpacing: 0.5 }}>
@@ -369,7 +369,7 @@ export default function HealthTestScreen() {
                 <Text style={{ color: selected ? '#fff' : tokens.colors.text, fontSize: 15, fontWeight: '700' }}>
                   {opt.label}
                 </Text>
-                {selected ? <Ionicons name="checkmark-circle" size={20} color="#fff" /> : null}
+                {selected ? <Icon name="checkmark-circle" size={20} color="#fff" /> : null}
               </TouchableOpacity>
             );
           })}

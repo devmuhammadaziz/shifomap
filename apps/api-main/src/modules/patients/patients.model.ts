@@ -60,10 +60,25 @@ export const authPhoneBodySchema = z.object({
   phone: z.string().regex(UZ_PHONE_REGEX, "Invalid Uzbekistan mobile number"),
 })
 
+export function normalizeUzPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "")
+  if (digits.startsWith("998") && digits.length === 12) return `+${digits}`
+  if (digits.length === 9) return `+998${digits}`
+  return phone.startsWith("+") ? phone : `+${phone}`
+}
+
+export function uzPhoneLookupValues(phone: string): string[] {
+  const normalized = normalizeUzPhone(phone)
+  const digits = normalized.replace(/\D/g, "")
+  const national = digits.slice(-9)
+  return [...new Set([normalized, digits, `+${digits}`, national, `998${national}`].filter(Boolean))]
+}
+
 // Validation: Phone + password auth (login or signup: one field checks or creates password)
 export const authPhonePasswordBodySchema = z.object({
   phone: z.string().regex(UZ_PHONE_REGEX, "Invalid Uzbekistan mobile number"),
   password: passwordStrength,
+  intent: z.enum(["login", "signup"]).optional(),
 })
 
 // Validation: Complete profile after phone signup

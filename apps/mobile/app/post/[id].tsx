@@ -16,7 +16,7 @@ import {
   NativeScrollEvent,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
@@ -193,15 +193,15 @@ export default function PostDetailScreen() {
         <View style={{ padding: 20, gap: 12 }}>
           <View style={styles.detailActionsRail}>
             <TouchableOpacity onPress={onLike} style={styles.detailRailBtn}>
-              <Ionicons name={post.likedByMe ? 'heart' : 'heart-outline'} size={28} color={post.likedByMe ? '#f43f5e' : tokens.colors.text} />
+              <Icon name={post.likedByMe ? 'heart' : 'heart-outline'} size={28} color={post.likedByMe ? '#f43f5e' : tokens.colors.text} />
               <Text style={[styles.detailRailCount, { color: tokens.colors.text }]}>{post.likesCount}</Text>
             </TouchableOpacity>
             <View style={styles.detailRailBtn}>
-              <Ionicons name="chatbubble-outline" size={26} color={tokens.colors.text} />
+              <Icon name="chatbubble-outline" size={26} color={tokens.colors.text} />
               <Text style={[styles.detailRailCount, { color: tokens.colors.text }]}>{post.commentsCount}</Text>
             </View>
             <TouchableOpacity onPress={onShare} style={styles.detailRailBtn}>
-              <Ionicons name="paper-plane-outline" size={26} color={tokens.colors.text} />
+              <Icon name="paper-plane-outline" size={26} color={tokens.colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -275,7 +275,7 @@ export default function PostDetailScreen() {
           disabled={!text.trim() || sending}
           style={[styles.sendBtn, { backgroundColor: tokens.brand.iris, opacity: text.trim() && !sending ? 1 : 0.5 }]}
         >
-          <Ionicons name="send" size={18} color="#fff" />
+          <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>

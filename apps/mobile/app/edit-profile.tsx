@@ -12,7 +12,7 @@ import {
   Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -132,7 +132,7 @@ export default function EditProfileScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Icon name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t.editProfile}</Text>
         <View style={styles.backButton} />
@@ -264,7 +264,7 @@ export default function EditProfileScreen() {
                   editable={!passwordLoading}
                 />
                 <TouchableOpacity onPress={() => setShowOldPassword((s) => !s)}>
-                  <Ionicons name={showOldPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.textTertiary} />
+                  <Icon name={showOldPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.textTertiary} />
                 </TouchableOpacity>
               </View>
               <Text style={[styles.label, { color: colors.textSecondary }]}>{t.editProfileNewPassword}</Text>
@@ -279,7 +279,7 @@ export default function EditProfileScreen() {
                   editable={!passwordLoading}
                 />
                 <TouchableOpacity onPress={() => setShowNewPassword((s) => !s)}>
-                  <Ionicons name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.textTertiary} />
+                  <Icon name={showNewPassword ? 'eye-off-outline' : 'eye-outline'} size={22} color={colors.textTertiary} />
                 </TouchableOpacity>
               </View>
               <TouchableOpacity

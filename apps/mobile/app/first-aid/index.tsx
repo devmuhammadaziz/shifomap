@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
@@ -45,7 +45,7 @@ export default function FirstAidIndex() {
               style={[styles.row, { backgroundColor: tokens.colors.backgroundCard, borderColor: tokens.colors.border }]}
             >
               <View style={[styles.iconWrap, { backgroundColor: g.color + '1a' }]}>
-                <Ionicons name={g.icon as any} size={22} color={g.color} />
+                <Icon name={g.icon} size={22} color={g.color} />
               </View>
               <View style={{ flex: 1, minWidth: 0 }}>
                 <Text style={[tokens.type.title, { color: tokens.colors.text }]} numberOfLines={1}>
@@ -55,7 +55,7 @@ export default function FirstAidIndex() {
                   {summary}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={tokens.colors.textTertiary} />
+              <Icon name="chevron-forward" size={18} color={tokens.colors.textTertiary} />
             </TouchableOpacity>
           );
         })}

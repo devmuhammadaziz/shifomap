@@ -14,7 +14,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addCustomReminder } from '../../lib/api';
 import { getTokens } from '../../lib/design';
@@ -331,7 +331,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
             ]}
           >
             <Text style={[styles.optionText, { color: active ? tokens.brand.iris : tokens.colors.text }]}>{item.label}</Text>
-            {active ? <Ionicons name="checkmark-circle" size={22} color={tokens.brand.iris} /> : null}
+            {active ? <Icon name="checkmark-circle" size={22} color={tokens.brand.iris} /> : null}
           </TouchableOpacity>
         );
       })}
@@ -346,7 +346,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
         <LinearGradient colors={heroColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
           <View style={styles.heroTop}>
             <TouchableOpacity onPress={goBack} hitSlop={12} style={styles.heroBack}>
-              <Ionicons name="chevron-back" size={26} color="#fff" />
+              <Icon name="chevron-back" size={26} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.heroPillName} numberOfLines={1}>
               {name.trim() || tr(language, 'Yangi dori', 'Новое лекарство')}
@@ -356,7 +356,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
 
           <View style={styles.heroIconRow}>
             <View style={styles.heroIconBubble}>
-              <Ionicons name={stepIcon as keyof typeof Ionicons.glyphMap} size={22} color="#fff" />
+              <Icon name={stepIcon as IconName} size={22} color="#fff" />
             </View>
           </View>
 
@@ -520,7 +520,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
                       ? tr(language, 'Saqlash', 'Сохранить')
                       : tr(language, 'Keyingi', 'Далее')}
                   </Text>
-                  <Ionicons name={stepIndex >= steps.length - 1 ? 'checkmark' : 'chevron-forward'} size={20} color="#fff" />
+                  <Icon name={stepIndex >= steps.length - 1 ? 'checkmark' : 'chevron-forward'} size={20} color="#fff" />
                 </>
               )}
             </LinearGradient>

@@ -10,7 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { getClinicDetail, getClinicServices, type PublicServiceItem } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
@@ -115,10 +115,10 @@ export default function ClinicServicesScreen() {
           <Image source={{ uri: coverUri }} style={styles.heroImage} />
           <View style={styles.heroOverlay}>
             <TouchableOpacity style={styles.heroBackBtn} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Icon name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.heroFavoriteBtn}>
-              <Ionicons name="heart-outline" size={24} color="#fff" />
+              <Icon name="heart-outline" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -128,21 +128,21 @@ export default function ClinicServicesScreen() {
           <View style={styles.clinicNameRow}>
             <Text style={[styles.clinicName, { color: colors.text }]}>{clinic.clinicDisplayName}</Text>
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color={colors.info} />
+              <Icon name="checkmark-circle" size={20} color={colors.info} />
             </View>
           </View>
           {(locationText || openUntil) && (
             <View style={styles.metaRow}>
               {locationText ? (
                 <>
-                  <Ionicons name="location-outline" size={16} color={colors.textSecondary} />
+                  <Icon name="location-outline" size={16} color={colors.textSecondary} />
                   <Text style={[styles.metaText, { color: colors.textSecondary }]}>{locationText}</Text>
                 </>
               ) : null}
               {locationText && openUntil ? <Text style={[styles.metaDot, { color: colors.textTertiary }]}>•</Text> : null}
               {openUntil ? (
                 <>
-                  <Ionicons name="time-outline" size={16} color={colors.success} />
+                  <Icon name="time-outline" size={16} color={colors.success} />
                   <Text style={[styles.metaText, { color: colors.success }]}>{t.openUntil} {openUntil}</Text>
                 </>
               ) : null}
@@ -152,7 +152,7 @@ export default function ClinicServicesScreen() {
             <View style={[styles.ratingBox, { backgroundColor: colors.backgroundSecondary }]}>
               <View>
                 <View style={styles.ratingRow}>
-                  <Ionicons name="star" size={18} color={colors.warning} />
+                  <Icon name="star" size={18} color={colors.warning} />
                   <Text style={[styles.ratingValue, { color: colors.text }]}>{clinic.rating.avg.toFixed(1)} / 5.0</Text>
                 </View>
                 <Text style={[styles.ratingReviews, { color: colors.textTertiary }]}>Based on {clinic.rating.count} reviews</Text>
@@ -195,7 +195,7 @@ export default function ClinicServicesScreen() {
                     ) : null}
                     <Text style={[styles.servicePrice, { color: colors.primaryLight }]}>{formatPrice(item.price)}</Text>
                   </View>
-                  <Ionicons name="chevron-forward" size={20} color={colors.textTertiary} />
+                  <Icon name="chevron-forward" size={20} color={colors.textTertiary} />
                 </TouchableOpacity>
               ))
             )}

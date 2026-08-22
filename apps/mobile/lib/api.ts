@@ -94,14 +94,17 @@ export async function authPhone(
 export async function authPhonePassword(
   phone: string,
   password: string,
-  preferredLanguage: 'uz' | 'ru' | 'en' = 'uz'
+  preferredLanguage: 'uz' | 'ru' | 'en' = 'uz',
+  intent: 'login' | 'signup' = 'signup'
 ): Promise<AuthPhoneResponse> {
   const { data } = await api.post<{ success: boolean; data: AuthPhoneResponse }>(
     '/patients/auth/phone-password',
-    { phone, password },
+    { phone, password, intent },
     { headers: { 'X-Preferred-Language': preferredLanguage } }
   );
-  if (!data.success) throw new Error('Auth failed');
+  if (!data?.success || !data.data?.token || !data.data.patient) {
+    throw new Error('Auth failed');
+  }
   return data.data;
 }
 

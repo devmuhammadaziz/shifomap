@@ -11,10 +11,11 @@ import {
   ActivityIndicator,
   Modal,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeStore } from '../store/theme-store';
 import { getColors } from '../lib/theme';
@@ -29,19 +30,51 @@ import {
   type DoctorSlotBySpecialty,
 } from '../lib/api';
 
-const SAMPLE_QUESTIONS = [
+const ROBOT = require('../assets/ai-shifo-robot.png');
+const ACCENT = '#2563EB';
+
+const SAMPLE_QUESTIONS: Array<{
+  titleUz: string;
+  titleRu: string;
+  subtitleUz: string;
+  subtitleRu: string;
+  promptUz: string;
+  promptRu: string;
+  analyze?: boolean;
+}> = [
   {
-    title: "Zodak haqida ma'lumot",
-    subtitle: "Dori vositalari bo'yicha yo'riqnomalarni oling"
+    titleUz: 'Alomatlar bo‘yicha maslahat',
+    titleRu: 'Совет по симптомам',
+    subtitleUz: 'Nima bezovta qilayotganini yozing',
+    subtitleRu: 'Опишите, что беспокоит',
+    promptUz: "Bosh og'rig'i va holsizlik bor, nima qilishim kerak?",
+    promptRu: 'Болит голова и слабость, что делать?',
   },
   {
-    title: "Bosh og'rig'i",
-    subtitle: "Sabablari va uy sharoitida davolash"
+    titleUz: 'Kasalliklar haqida ma’lumot',
+    titleRu: 'Информация о болезнях',
+    subtitleUz: 'Sabablari va oldini olish',
+    subtitleRu: 'Причины и профилактика',
+    promptUz: 'Gripp nima va qanday oldini olish mumkin?',
+    promptRu: 'Что такое грипп и как его предотвратить?',
   },
   {
-    title: "Tish og'rig'i",
-    subtitle: "Tezkor yordam va maslahatlar"
-  }
+    titleUz: 'Tahlil natijasini tushuntirish',
+    titleRu: 'Расшифровка анализов',
+    subtitleUz: 'Laboratoriya javobini tushuning',
+    subtitleRu: 'Поймите результат лаборатории',
+    promptUz: '',
+    promptRu: '',
+    analyze: true,
+  },
+  {
+    titleUz: 'Klinika yoki shifokor tanlash',
+    titleRu: 'Выбор клиники или врача',
+    subtitleUz: 'Mutaxassisni topishga yordam',
+    subtitleRu: 'Поможем найти специалиста',
+    promptUz: 'Terapevt shifokor kerak, qayerga murojaat qilay?',
+    promptRu: 'Нужен терапевт, к кому обратиться?',
+  },
 ];
 
 type DoctorSuggestion = {
@@ -628,10 +661,10 @@ export default function AiChatScreen() {
         {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity style={styles.headerBtn} onPress={() => router.back()} hitSlop={15}>
-          <Ionicons name="chevron-back" size={26} color={colors.text} />
+          <Icon name="chevron-back" size={26} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>
-          {isUz ? 'AI maslahatchi' : 'ИИ Консультант'}
+          {isUz ? 'AI Konsultant' : 'ИИ Консультант'}
         </Text>
         <View style={styles.headerRight}>
           <TouchableOpacity 
@@ -639,7 +672,7 @@ export default function AiChatScreen() {
              hitSlop={10}
              onPress={() => setHistoryModalVisible(true)}
           >
-            <Ionicons name="chatbubbles-outline" size={24} color={colors.text} />
+            <Icon name="time-outline" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
@@ -653,36 +686,60 @@ export default function AiChatScreen() {
 
           {messages.length === 0 ? (
             <>
-              {/* Greeting Area */}
               <View style={styles.greetingContainer}>
-                <Text style={[styles.greetingTitle, { color: colors.text }]}>
-                  {isUz ? 'Assalomu alaykum,' : 'Здравствуйте,'}
-                </Text>
-                <Text style={[styles.greetingSubtitle, { color: colors.textSecondary }]}>
-                  {isUz ? 'Sizni nima bezovta qilmoqda?' : 'Что вас беспокоит?'}
-                </Text>
+                <View style={{ flex: 1, paddingRight: 8 }}>
+                  <Text style={[styles.greetingTitle, { color: colors.text }]}>
+                    {isUz ? 'Salom! 👋 Qanday yordam berishim mumkin?' : 'Привет! 👋 Чем могу помочь?'}
+                  </Text>
+                  <Text style={[styles.greetingSubtitle, { color: colors.textSecondary }]}>
+                    {isUz ? 'Alomatlaringizni yozing yoki savolingizni bering.' : 'Опишите симптомы или задайте вопрос.'}
+                  </Text>
+                </View>
+                <Image source={ROBOT} style={styles.welcomeRobot} resizeMode="contain" />
               </View>
 
-              {/* Sample Questions (Horizontal scroll) */}
-              <View style={styles.samplesWrapper}>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.samplesScrollContainer}>
-                  {SAMPLE_QUESTIONS.map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={[styles.sampleCard, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}
-                      activeOpacity={0.7}
-                      onPress={() => {
-                        setInputText(item.title);
-                        sendMessage(item.title);
-                      }}
-                    >
-                      <Text style={[styles.sampleTitle, { color: colors.text }]}>{item.title}</Text>
-                      <Text style={[styles.sampleSubtitle, { color: colors.textSecondary }]} numberOfLines={2}>
-                        {item.subtitle}
+              <View style={styles.promptList}>
+                {SAMPLE_QUESTIONS.map((item, index) => (
+                  <TouchableOpacity
+                    key={index}
+                    style={[styles.promptRow, { backgroundColor: colors.backgroundCard, borderColor: ACCENT + '55' }]}
+                    activeOpacity={0.75}
+                    onPress={() => {
+                      if (item.analyze) {
+                        router.push('/ai-analyze');
+                        return;
+                      }
+                      const q = isUz ? item.promptUz : item.promptRu;
+                      setInputText(q);
+                      void sendMessage(q);
+                    }}
+                  >
+                    <View style={[styles.promptIcon, { backgroundColor: '#EFF6FF' }]}>
+                      <Icon
+                        name={
+                          index === 0
+                            ? 'pulse-outline'
+                            : index === 1
+                              ? 'book-outline'
+                              : index === 2
+                                ? 'document-text-outline'
+                                : 'medkit-outline'
+                        }
+                        size={20}
+                        color={ACCENT}
+                      />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.sampleTitle, { color: colors.text }]}>
+                        {isUz ? item.titleUz : item.titleRu}
                       </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                      <Text style={[styles.sampleSubtitle, { color: colors.textSecondary }]} numberOfLines={2}>
+                        {isUz ? item.subtitleUz : item.subtitleRu}
+                      </Text>
+                    </View>
+                    <Icon name="chevron-forward" size={16} color={ACCENT} />
+                  </TouchableOpacity>
+                ))}
               </View>
             </>
           ) : (
@@ -730,13 +787,13 @@ export default function AiChatScreen() {
                           <ActivityIndicator size="small" color={colors.primary} />
                         ) : (
                           <>
-                            <Ionicons name="medical-outline" size={20} color={colors.primary} />
+                            <Icon name="medical-outline" size={20} color={colors.primary} />
                             <Text style={[styles.doctorOfferBtnText, { color: colors.primary }]}>
                               {isUz
                                 ? `${msg.doctorOffer.specialtyLabel} shifokorlarini ko‘rishni xohlaysizmi?`
                                 : `Показать врачей: ${msg.doctorOffer.specialtyLabel}?`}
                             </Text>
-                            <Ionicons name="chevron-forward" size={18} color={colors.primary} />
+                            <Icon name="chevron-forward" size={18} color={colors.primary} />
                           </>
                         )}
                       </TouchableOpacity>
@@ -763,7 +820,7 @@ export default function AiChatScreen() {
                               <Text style={[styles.doctorName, { color: colors.text }]} numberOfLines={1}>{doc.doctorName}</Text>
                               <Text style={[styles.doctorSpec, { color: colors.textSecondary }]} numberOfLines={1}>{doc.specialty}</Text>
                               <View style={styles.docMetaRow}>
-                                <Ionicons name="star" size={13} color="#f59e0b" />
+                                <Icon name="star" size={13} color="#f59e0b" />
                                 <Text style={[styles.docMetaText, { color: colors.textSecondary }]}>
                                   {doc.ratingAvg.toFixed(1)} · {doc.reviewsCount}
                                 </Text>
@@ -771,7 +828,7 @@ export default function AiChatScreen() {
                               <Text style={[styles.docClinic, { color: colors.text }]} numberOfLines={1}>{doc.clinicName}</Text>
                               <Text style={[styles.docAddr, { color: colors.textTertiary }]} numberOfLines={1}>{doc.address}</Text>
                             </View>
-                            <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                            <Icon name="chevron-forward" size={18} color={colors.textTertiary} />
                           </TouchableOpacity>
                         ))}
                       </View>
@@ -847,26 +904,34 @@ export default function AiChatScreen() {
         </ScrollView>
 
         {/* Bottom Input Area */}
-        <View style={[styles.inputContainer, { backgroundColor: colors.background, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
-          <View style={[styles.inputWrapper, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
-            <TextInput
-              style={[styles.textInput, { color: colors.text }]}
-              placeholder={isUz ? "Biror narsa so'rang" : "Спросите что-нибудь"}
-              placeholderTextColor={colors.textTertiary}
-              value={inputText}
-              onChangeText={setInputText}
-              multiline
-              maxLength={200}
-            />
+        <View style={[styles.inputContainer, { backgroundColor: colors.background, paddingBottom: Math.max(insets.bottom, 12) }]}>
+          <View style={styles.inputRow}>
+            <View style={[styles.inputWrapper, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
+              <TextInput
+                style={[styles.textInput, { color: colors.text }]}
+                placeholder={isUz ? "Alomatlaringizni yozing yoki savolingizni bering" : 'Опишите симптомы или задайте вопрос'}
+                placeholderTextColor={colors.textTertiary}
+                value={inputText}
+                onChangeText={setInputText}
+                multiline
+                maxLength={200}
+              />
+              <TouchableOpacity
+                hitSlop={8}
+                onPress={() => Alert.alert(isUz ? 'Tez kunda' : 'Скоро', isUz ? 'Ovozli kiritish qo‘shiladi.' : 'Голосовой ввод появится позже.')}
+              >
+                <Icon name="mic-outline" size={22} color={colors.textTertiary} />
+              </TouchableOpacity>
+            </View>
             <TouchableOpacity
               style={[
                 styles.sendBtn,
-                { backgroundColor: inputText.trim() && !loading ? colors.primary : colors.border }
+                { backgroundColor: inputText.trim() && !loading ? ACCENT : colors.border },
               ]}
               disabled={!inputText.trim() || loading}
               onPress={() => sendMessage(inputText)}
             >
-              <Ionicons name="arrow-up" size={18} color="#fff" />
+              <Icon name="send" size={18} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -887,7 +952,7 @@ export default function AiChatScreen() {
                 {isUz ? 'Suhbatlar tarixi' : 'История чатов'}
               </Text>
               <TouchableOpacity onPress={() => setHistoryModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.text} />
+                <Icon name="close" size={24} color={colors.text} />
               </TouchableOpacity>
             </View>
 
@@ -896,7 +961,7 @@ export default function AiChatScreen() {
               onPress={startNewChat}
               activeOpacity={0.8}
             >
-              <Ionicons name="add" size={20} color="#FFF" />
+              <Icon name="add" size={20} color="#FFF" />
               <Text style={styles.newChatBtnText}>
                 {isUz ? 'Yangi suhbat' : 'Новый чат'}
               </Text>
@@ -924,7 +989,7 @@ export default function AiChatScreen() {
                        </Text>
                      </View>
                      <TouchableOpacity hitSlop={10} onPress={() => deleteChat(sess.id)}>
-                        <Ionicons name="trash-outline" size={20} color="#FF4D4D" />
+                        <Icon name="trash-outline" size={20} color="#FF4D4D" />
                      </TouchableOpacity>
                    </TouchableOpacity>
                  ))
@@ -947,7 +1012,7 @@ export default function AiChatScreen() {
                 {isUz ? 'AI-botimizning ishini baholang' : 'Оцените работу ИИ-бота'}
               </Text>
               <TouchableOpacity onPress={onCloseFeedback} hitSlop={12}>
-                <Ionicons name="close" size={26} color={colors.textSecondary} />
+                <Icon name="close" size={26} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
             <Text style={[styles.feedbackSub, { color: colors.textSecondary }]}>
@@ -956,7 +1021,7 @@ export default function AiChatScreen() {
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((n) => (
                 <TouchableOpacity key={n} onPress={() => setFeedbackRating(n)} hitSlop={8}>
-                  <Ionicons
+                  <Icon
                     name={feedbackRating >= n ? 'star' : 'star-outline'}
                     size={38}
                     color={feedbackRating >= n ? '#fbbf24' : '#d4d4d8'}
@@ -1021,24 +1086,45 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   greetingContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 80,
-    marginBottom: 40,
+    marginTop: 20,
+    marginBottom: 16,
     paddingHorizontal: 20,
   },
   greetingTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: 22,
+    fontWeight: '800',
     marginBottom: 8,
-    textAlign: 'center',
   },
   greetingSubtitle: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: '400',
-    textAlign: 'center',
+    lineHeight: 20,
   },
-  samplesWrapper: {
-    marginTop: 'auto',
+  welcomeRobot: {
+    width: 108,
+    height: 108,
+  },
+  promptList: {
+    paddingHorizontal: 16,
+    gap: 10,
+    paddingBottom: 8,
+  },
+  promptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    borderWidth: 1.5,
+    borderRadius: 16,
+    padding: 14,
+  },
+  promptIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   samplesScrollContainer: {
     paddingHorizontal: 16,
@@ -1063,9 +1149,14 @@ const styles = StyleSheet.create({
   inputContainer: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    gap: 10,
   },
   inputWrapper: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
     borderWidth: 1,
@@ -1084,12 +1175,11 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   sendBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
   },
   chatContainer: {
     paddingHorizontal: 16,

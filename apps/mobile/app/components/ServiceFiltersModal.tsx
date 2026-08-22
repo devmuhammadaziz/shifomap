@@ -13,7 +13,7 @@ import {
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { getServiceFilterOptions, type ServiceFilterOptions, type ServiceFilters } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
 import { getTranslations } from '../../lib/translations';
@@ -82,7 +82,7 @@ export default function ServiceFiltersModal({ visible, onClose, initialFilters =
           <View style={styles.header}>
             <Text style={styles.title}>{t.filters}</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={28} color="#a1a1aa" />
+              <Icon name="close" size={28} color="#a1a1aa" />
             </TouchableOpacity>
           </View>
           {loading ? (

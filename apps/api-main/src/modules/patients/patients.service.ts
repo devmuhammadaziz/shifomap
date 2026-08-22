@@ -21,9 +21,9 @@ import type {
   UpdatePatientBody,
   ChangePatientPasswordBody,
 } from "./patients.model"
-import { mapDocToPublicPatient } from "./patients.model"
+import { mapDocToPublicPatient, normalizeUzPhone } from "./patients.model"
 import { signPatientToken } from "@/common/middleware/auth"
-import { unauthorized, badRequest } from "@/common/errors"
+import { unauthorized, badRequest, conflict } from "@/common/errors"
 import { env } from "@/env"
 import type { PatientLanguage } from "./patients.model"
 
@@ -170,69 +170,82 @@ export async function authPhone(body: AuthPhoneBody, preferredLanguage: PatientL
   }
 }
 
-export async function authPhonePassword(
-  body: AuthPhonePasswordBody,
-  preferredLanguage: PatientLanguage = "uz"
-) {
-  logger.info("[patients.service] authPhonePassword start", { phone: body.phone })
-  let patient = await findPatientByPhone(body.phone)
-  if (!patient) {
-    logger.info("[patients.service] authPhonePassword: new user, creating with password")
-    const passwordHash = await hashPassword(body.password)
-    patient = await insertPatient({
-      fullName: "",
-      gender: "male",
-      age: null,
-      avatarUrl: DEFAULT_AVATAR,
-      contacts: { phone: body.phone, email: null, telegram: null },
-      status: "active",
-      auth: {
-        passwordHash,
-        type: "phone",
-        lastLoginAt: null,
-      },
-      location: { city: "Tashkent" },
-      preferences: { language: preferredLanguage, notificationsEnabled: true },
-    })
-    await updatePatientLastLogin(patient._id)
-    patient = await findPatientById(patient._id)
-    if (!patient) throw unauthorized("Patient not found")
-    const token = await signPatientToken(patient._id.toHexString())
-    logger.info("[patients.service] authPhonePassword success (new user)", {
-      patientId: patient._id.toHexString(),
-    })
-    return {
-      token,
-      patient: mapDocToPublicPatient(patient),
-      expiresIn: env.JWT_EXPIRES_IN,
-      needsProfile: true,
-    }
-  }
-  if (patient.status !== "active") {
-    throw unauthorized("Account is not active")
-  }
-  if (patient.auth.passwordHash) {
-    const valid = await verifyPassword(body.password, patient.auth.passwordHash)
-    if (!valid) throw unauthorized("Invalid password")
-  } else {
-    const passwordHash = await hashPassword(body.password)
-    await updatePatientPassword(patient._id, passwordHash)
-  }
-  await updatePatientLastLogin(patient._id)
-  patient = await findPatientById(patient._id)
+function isIncompleteProfile(patient: { fullName?: string | null }): boolean {
+  return !patient.fullName || patient.fullName.trim() === ""
+}
+
+async function issuePatientSession(patientId: ObjectId) {
+  await updatePatientLastLogin(patientId)
+  const patient = await findPatientById(patientId)
   if (!patient) throw unauthorized("Patient not found")
   const token = await signPatientToken(patient._id.toHexString())
-  const needsProfile = !patient.fullName || patient.fullName === ""
-  logger.info("[patients.service] authPhonePassword success (existing)", {
-    patientId: patient._id.toHexString(),
-    needsProfile,
-  })
+  const needsProfile = isIncompleteProfile(patient)
   return {
     token,
     patient: mapDocToPublicPatient(patient),
     expiresIn: env.JWT_EXPIRES_IN,
     needsProfile,
   }
+}
+
+export async function authPhonePassword(
+  body: AuthPhonePasswordBody,
+  preferredLanguage: PatientLanguage = "uz"
+) {
+  const phone = normalizeUzPhone(body.phone)
+  logger.info("[patients.service] authPhonePassword start", { phone, intent: body.intent })
+  let patient = await findPatientByPhone(phone)
+  const passwordHash = await hashPassword(body.password)
+
+  if (!patient) {
+    logger.info("[patients.service] authPhonePassword: creating new patient")
+    try {
+      patient = await insertPatient({
+        fullName: "",
+        gender: "male",
+        age: null,
+        avatarUrl: DEFAULT_AVATAR,
+        contacts: { phone, email: null, telegram: null },
+        status: "active",
+        auth: {
+          passwordHash,
+          type: "phone",
+          lastLoginAt: null,
+        },
+        location: { city: "Tashkent" },
+        preferences: { language: preferredLanguage, notificationsEnabled: true },
+      })
+    } catch (err) {
+      const code = (err as { code?: number }).code
+      if (code !== 11000) throw err
+      patient = await findPatientByPhone(phone)
+      if (!patient) throw err
+    }
+  }
+
+  if (patient.status !== "active") {
+    throw unauthorized("Account is not active")
+  }
+
+  const incomplete = isIncompleteProfile(patient)
+
+  if (body.intent === "signup" && !incomplete && patient.auth.passwordHash) {
+    throw conflict("Phone already registered")
+  }
+
+  if (incomplete || !patient.auth.passwordHash) {
+    await updatePatientPassword(patient._id, passwordHash)
+  } else {
+    const valid = await verifyPassword(body.password, patient.auth.passwordHash)
+    if (!valid) throw unauthorized("Invalid password")
+  }
+
+  const result = await issuePatientSession(patient._id)
+  logger.info("[patients.service] authPhonePassword success", {
+    patientId: patient._id.toHexString(),
+    needsProfile: result.needsProfile,
+  })
+  return result
 }
 
 export async function getMe(patientId: string) {

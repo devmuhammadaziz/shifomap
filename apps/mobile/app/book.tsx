@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { getClinicDetail, getServiceById, createBooking, getBookedSlots, type ClinicDetailPublic, type ClinicDoctorPublic, type ClinicBranchPublic, type ClinicServicePublic } from '../lib/api';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -326,7 +326,7 @@ export default function BookScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]}>{t.bookAppointment}</Text>
         <View style={{ width: 40 }} />
@@ -339,7 +339,7 @@ export default function BookScreen() {
           <View style={[styles.infoCard, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
             <View style={styles.infoCardRow}>
               <View style={[styles.infoIcon, { backgroundColor: colors.primaryBg }]}>
-                <Ionicons name="medical" size={22} color={colors.primary} />
+                <Icon name="medical" size={22} color={colors.primary} />
               </View>
               <View style={styles.infoCardBody}>
                 <Text style={[styles.infoCardTitle, { color: colors.text }]}>{service.title}</Text>
@@ -350,13 +350,13 @@ export default function BookScreen() {
             </View>
             {selectedDoctor && (
               <View style={[styles.infoMetaRow, { borderTopColor: colors.border }]}>
-                <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
+                <Icon name="person-outline" size={16} color={colors.textSecondary} />
                 <Text style={[styles.infoMetaText, { color: colors.textSecondary }]}>{selectedDoctor.fullName}</Text>
               </View>
             )}
             {clinic && (
               <View style={styles.infoMetaRow2}>
-                <Ionicons name="business-outline" size={16} color={colors.textSecondary} />
+                <Icon name="business-outline" size={16} color={colors.textSecondary} />
                 <Text style={[styles.infoMetaText, { color: colors.textSecondary }]}>{clinic.clinicDisplayName}</Text>
               </View>
             )}
@@ -399,11 +399,11 @@ export default function BookScreen() {
                   activeOpacity={0.8}
                 >
                   <View style={styles.branchRowLeft}>
-                    <Ionicons name="location-outline" size={18} color={isActive ? colors.primary : colors.textSecondary} />
+                    <Icon name="location-outline" size={18} color={isActive ? colors.primary : colors.textSecondary} />
                     <Text style={[styles.branchRowText, { color: colors.text }]}>{b.name}</Text>
                   </View>
                   <TouchableOpacity hitSlop={12} onPress={() => setBranchModalBranch(b)}>
-                    <Ionicons name="information-circle-outline" size={20} color={colors.textTertiary} />
+                    <Icon name="information-circle-outline" size={20} color={colors.textTertiary} />
                   </TouchableOpacity>
                 </TouchableOpacity>
               );
@@ -423,7 +423,7 @@ export default function BookScreen() {
               disabled={!canGoPrev}
               hitSlop={12}
             >
-              <Ionicons name="chevron-back" size={22} color={colors.text} />
+              <Icon name="chevron-back" size={22} color={colors.text} />
             </TouchableOpacity>
             <Text style={[styles.weekNavLabel, { color: colors.text }]}>{weekRangeLabel}</Text>
             <TouchableOpacity
@@ -431,7 +431,7 @@ export default function BookScreen() {
               style={styles.weekNavArrow}
               hitSlop={12}
             >
-              <Ionicons name="chevron-forward" size={22} color={colors.text} />
+              <Icon name="chevron-forward" size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
 
@@ -478,7 +478,7 @@ export default function BookScreen() {
             </View>
           ) : isNotWorkingDay ? (
             <View style={[styles.emptySlots, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-              <Ionicons name="calendar-outline" size={32} color={colors.textTertiary} />
+              <Icon name="calendar-outline" size={32} color={colors.textTertiary} />
               <Text style={[styles.emptySlotsTitle, { color: colors.text }]}>{t.notWorkingDay}</Text>
               <Text style={[styles.emptySlotsText, { color: colors.textTertiary }]}>
                 {language === 'ru' ? 'Попробуйте другую дату' : 'Boshqa sanani tanlang'}
@@ -486,7 +486,7 @@ export default function BookScreen() {
             </View>
           ) : allSlotsBooked ? (
             <View style={[styles.emptySlots, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-              <Ionicons name="alert-circle-outline" size={32} color="#F59E0B" />
+              <Icon name="alert-circle-outline" size={32} color="#F59E0B" />
               <Text style={[styles.emptySlotsTitle, { color: colors.text }]}>{t.noSlotsAvailable}</Text>
               <Text style={[styles.emptySlotsText, { color: colors.textTertiary }]}>
                 {language === 'ru' ? 'Все слоты заняты, выберите другой день' : "Barcha vaqtlar band, boshqa kunni tanlang"}
@@ -494,7 +494,7 @@ export default function BookScreen() {
             </View>
           ) : slots.length === 0 ? (
             <View style={[styles.emptySlots, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-              <Ionicons name="time-outline" size={28} color={colors.textTertiary} />
+              <Icon name="time-outline" size={28} color={colors.textTertiary} />
               <Text style={[styles.emptySlotsText, { color: colors.textTertiary }]}>
                 {language === 'ru' ? 'Выберите дату и врача' : 'Sana va shifokorni tanlang'}
               </Text>
@@ -514,7 +514,7 @@ export default function BookScreen() {
                     activeOpacity={0.8}
                   >
                     <Text style={[styles.slotChipText, { color: isActive ? '#fff' : colors.text }]}>{slot}</Text>
-                    {isActive && <Ionicons name="checkmark" size={14} color="#fff" style={styles.slotCheck} />}
+                    {isActive && <Icon name="checkmark" size={14} color="#fff" style={styles.slotCheck} />}
                   </TouchableOpacity>
                 );
               })}
@@ -538,7 +538,7 @@ export default function BookScreen() {
           ) : (
             <>
               <Text style={styles.confirmBtnText}>{t.confirmAppointment}</Text>
-              <Ionicons name="arrow-forward" size={20} color="#fff" />
+              <Icon name="arrow-forward" size={20} color="#fff" />
             </>
           )}
         </TouchableOpacity>
@@ -549,22 +549,22 @@ export default function BookScreen() {
         <View style={styles.successOverlay}>
           <Animated.View style={[styles.successCard, { backgroundColor: colors.backgroundCard, transform: [{ scale: successScale }], opacity: successOpacity }]}>
             <View style={[styles.successIconCircle, { backgroundColor: '#E8F5E9' }]}>
-              <Ionicons name="checkmark-circle" size={56} color="#4CAF50" />
+              <Icon name="checkmark-circle" size={56} color="#4CAF50" />
             </View>
             <Text style={[styles.successTitle, { color: colors.text }]}>{t.bookingSuccess}</Text>
             {service && selectedDate && selectedTime && (
               <View style={styles.successDetails}>
                 <View style={styles.successDetailRow}>
-                  <Ionicons name="medical-outline" size={16} color={colors.textSecondary} />
+                  <Icon name="medical-outline" size={16} color={colors.textSecondary} />
                   <Text style={[styles.successDetailText, { color: colors.textSecondary }]}>{service.title}</Text>
                 </View>
                 <View style={styles.successDetailRow}>
-                  <Ionicons name="calendar-outline" size={16} color={colors.textSecondary} />
+                  <Icon name="calendar-outline" size={16} color={colors.textSecondary} />
                   <Text style={[styles.successDetailText, { color: colors.textSecondary }]}>{selectedDate.split('-').reverse().join('/')} · {selectedTime}</Text>
                 </View>
                 {selectedDoctor && (
                   <View style={styles.successDetailRow}>
-                    <Ionicons name="person-outline" size={16} color={colors.textSecondary} />
+                    <Icon name="person-outline" size={16} color={colors.textSecondary} />
                     <Text style={[styles.successDetailText, { color: colors.textSecondary }]}>{selectedDoctor.fullName}</Text>
                   </View>
                 )}
@@ -583,13 +583,13 @@ export default function BookScreen() {
               <Text style={[styles.branchModalTitle, { color: colors.text }]}>{branchModalBranch.name}</Text>
               {branchModalBranch.phone ? (
                 <View style={styles.branchModalInfoRow}>
-                  <Ionicons name="call-outline" size={18} color={colors.textSecondary} />
+                  <Icon name="call-outline" size={18} color={colors.textSecondary} />
                   <Text style={[styles.branchModalInfoText, { color: colors.textSecondary }]}>{branchModalBranch.phone}</Text>
                 </View>
               ) : null}
               {(branchModalBranch.address?.city || branchModalBranch.address?.street) && (
                 <View style={styles.branchModalInfoRow}>
-                  <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+                  <Icon name="location-outline" size={18} color={colors.textSecondary} />
                   <Text style={[styles.branchModalInfoText, { color: colors.textSecondary }]}>
                     {[branchModalBranch.address?.city, branchModalBranch.address?.street].filter(Boolean).join(', ')}
                   </Text>
@@ -602,7 +602,7 @@ export default function BookScreen() {
                   if (lat != null && lng != null) openYandexMaps(lat, lng);
                 }}
               >
-                <Ionicons name="navigate" size={20} color="#fff" />
+                <Icon name="navigate" size={20} color="#fff" />
                 <Text style={styles.yandexBtnText}>{t.openInYandexMaps}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.branchModalCloseBtn} onPress={() => setBranchModalBranch(null)}>

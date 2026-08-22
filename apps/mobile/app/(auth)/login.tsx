@@ -10,18 +10,23 @@ import {
   Alert,
   ScrollView,
   Image,
-  Linking,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
 import { getTokens } from '../../lib/design';
-import { Button } from '../../components/ui';
-import { isValidUzPhone9, UZ_PHONE_INLINE_ERROR_RU, UZ_PHONE_INLINE_ERROR_UZ } from '../../lib/uz-phone';
+import {
+  formatUzNationalDigits,
+  isValidUzPhone9,
+  UZ_PHONE_INLINE_ERROR_RU,
+  UZ_PHONE_INLINE_ERROR_UZ,
+} from '../../lib/uz-phone';
+import { WaveBackground } from '../../components/auth/WaveBackground';
+import { AuthCtaButton } from '../../components/auth/AuthCtaButton';
+import { GoogleMark } from '../../components/auth/GoogleMark';
 
 const PHONE_PREFIX = '+998';
 const LOGO_IMG = require('../../assets/play_store_512-Photoroom.png');
@@ -40,10 +45,19 @@ export default function Login() {
 
   const isValid = digits.length === 9 && isValidUzPhone9(digits);
   const showOperatorError = digits.length === 9 && !isValidUzPhone9(digits);
+  const brandBlue = tokens.brand.iris;
+  const fieldBg = theme === 'dark' ? tokens.colors.backgroundInput : '#FFFFFF';
 
-  const onPhoneNext = () => {
+  const goToPassword = (mode: 'login' | 'signup') => {
     if (!isValid) {
-      Alert.alert('', digits.length === 9 ? (language === 'ru' ? UZ_PHONE_INLINE_ERROR_RU : UZ_PHONE_INLINE_ERROR_UZ) : t.loginError);
+      Alert.alert(
+        '',
+        digits.length === 9
+          ? language === 'ru'
+            ? UZ_PHONE_INLINE_ERROR_RU
+            : UZ_PHONE_INLINE_ERROR_UZ
+          : t.loginError
+      );
       return;
     }
     const fullPhone = PHONE_PREFIX + digits;
@@ -51,148 +65,110 @@ export default function Login() {
     setNavigating(true);
     requestAnimationFrame(() => {
       setTimeout(() => {
-        router.push(`/(auth)/password?phone=${encodeURIComponent(fullPhone)}`);
+        router.push(
+          `/(auth)/password?phone=${encodeURIComponent(fullPhone)}&mode=${mode}`
+        );
         setNavigating(false);
       }, 0);
     });
   };
 
+  const onGoogle = () => {
+    Alert.alert(t.comingSoonTitle, t.comingSoonMessage);
+  };
+
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top', 'bottom']}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+      <WaveBackground />
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <LinearGradient
-            colors={tokens.gradients.soft as [string, string, ...string[]]}
-            style={styles.heroGradient}
+          <View style={styles.hero}>
+            <View
+              style={[
+                styles.logoWrap,
+                {
+                  backgroundColor: tokens.colors.backgroundCard,
+                  shadowColor: brandBlue,
+                },
+              ]}
+            >
+              <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
+            </View>
+            <Text style={[styles.brandName, { color: brandBlue }]}>ShifoYo'l</Text>
+            <Text style={[styles.tagline, { color: tokens.brand.indigo }]}>{t.loginBrandTagline}</Text>
+            <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>{t.homeSubtitle}</Text>
+          </View>
+
+          <View
+            style={[
+              styles.phonePill,
+              {
+                backgroundColor: fieldBg,
+                borderColor: focused ? brandBlue : tokens.colors.border,
+              },
+            ]}
           >
-            <View style={styles.heroContent}>
-              <View style={styles.brandRow}>
-                <View style={styles.logoWrap}>
-                  <Image source={LOGO_IMG} style={styles.logo} resizeMode="contain" />
-                </View>
-                <Text style={[tokens.type.title, { color: tokens.colors.text }]}>ShifoYo'l</Text>
-              </View>
-
-              <View style={styles.heroBody}>
-                <Text style={[tokens.type.display, { color: tokens.colors.text }]}>
-                  {t.loginWelcome}
-                </Text>
-                <Text style={{ color: tokens.colors.textSecondary, fontSize: 15, lineHeight: 22, marginTop: 10 }}>
-                  {t.homeSubtitle}
-                </Text>
-              </View>
-
-              <View
-                style={[
-                  styles.pillStat,
-                  {
-                    backgroundColor: tokens.colors.backgroundCard,
-                    borderColor: tokens.colors.border,
-                    borderWidth: theme === 'dark' ? StyleSheet.hairlineWidth : 0,
-                  },
-                ]}
-              >
-                <View style={[styles.pillDot, { backgroundColor: tokens.brand.mint }]} />
-                <Text style={{ color: tokens.colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
-                  {language === 'uz' ? '1000+ shifokor onlayn' : '1000+ врачей онлайн'}
-                </Text>
-              </View>
+            <View style={styles.prefixRow}>
+              <Text style={styles.flag}>🇺🇿</Text>
+              <Text style={[styles.prefixText, { color: tokens.colors.text }]}>{PHONE_PREFIX}</Text>
+              <Icon name="chevron-down" size={14} color={tokens.colors.textTertiary} />
             </View>
-          </LinearGradient>
-
-          <View style={styles.form}>
-            <Text style={[tokens.type.caption, { color: tokens.colors.textSecondary, marginBottom: 10, marginLeft: 4 }]}>
-              {t.loginPhoneLabel}
-            </Text>
-
-            <View style={styles.phoneRow}>
-              <View
-                style={[
-                  styles.prefix,
-                  { backgroundColor: tokens.colors.backgroundInput, borderColor: tokens.colors.border },
-                ]}
-              >
-                <Text style={{ color: tokens.colors.text, fontWeight: '700' }}>{PHONE_PREFIX}</Text>
-              </View>
-              <View
-                style={[
-                  styles.inputBox,
-                  {
-                    backgroundColor: tokens.colors.backgroundInput,
-                    borderColor: focused ? tokens.brand.iris : tokens.colors.border,
-                  },
-                ]}
-              >
-                <TextInput
-                  style={[styles.input, { color: tokens.colors.text }]}
-                  placeholder="90 123 45 67"
-                  placeholderTextColor={tokens.colors.textPlaceholder}
-                  value={digits}
-                  onChangeText={(v) => setDigits(v.replace(/\D/g, '').slice(0, 9))}
-                  onFocus={() => setFocused(true)}
-                  onBlur={() => setFocused(false)}
-                  keyboardType="phone-pad"
-                  maxLength={9}
-                  editable={!navigating}
-                />
-              </View>
-            </View>
-            {showOperatorError ? (
-              <Text style={{ color: tokens.colors.error, fontSize: 12, marginTop: 8, marginLeft: 4 }}>
-                {language === 'ru' ? UZ_PHONE_INLINE_ERROR_RU : UZ_PHONE_INLINE_ERROR_UZ}
-              </Text>
-            ) : null}
-
-            <View style={{ height: 22 }} />
-            <Button
-              title={t.loginNext}
-              variant="gradient"
-              size="lg"
-              rightIcon="arrow-forward"
-              loading={navigating}
-              disabled={!isValid}
-              onPress={onPhoneNext}
+            <View style={[styles.vDivider, { backgroundColor: tokens.colors.border }]} />
+            <TextInput
+              style={[styles.input, { color: tokens.colors.text }]}
+              placeholder="90 123 45 67"
+              placeholderTextColor={tokens.colors.textPlaceholder}
+              value={formatUzNationalDigits(digits)}
+              onChangeText={(v) => setDigits(v.replace(/\D/g, '').slice(0, 9))}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              keyboardType="phone-pad"
+              maxLength={13}
+              editable={!navigating}
             />
+          </View>
+          {showOperatorError ? (
+            <Text style={{ color: tokens.colors.error, fontSize: 12, marginTop: 8, marginLeft: 8 }}>
+              {language === 'ru' ? UZ_PHONE_INLINE_ERROR_RU : UZ_PHONE_INLINE_ERROR_UZ}
+            </Text>
+          ) : null}
 
-            <View style={styles.dividerRow}>
-              <View style={[styles.dividerLine, { backgroundColor: tokens.colors.border }]} />
-              <Text style={{ color: tokens.colors.textTertiary, fontSize: 12, fontWeight: '600' }}>
-                {language === 'uz' ? 'yoki' : 'или'}
+          <View style={{ height: 18 }} />
+          <AuthCtaButton title={t.loginTitle} pill loading={navigating} disabled={!isValid} onPress={() => goToPassword('login')} />
+
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: tokens.colors.border }]} />
+            <Text style={{ color: tokens.colors.textTertiary, fontSize: 13, fontWeight: '500' }}>
+              {language === 'uz' ? 'yoki' : 'или'}
+            </Text>
+            <View style={[styles.dividerLine, { backgroundColor: tokens.colors.border }]} />
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.googleBtn,
+              {
+                borderColor: tokens.colors.border,
+                backgroundColor: fieldBg,
+              },
+            ]}
+            onPress={onGoogle}
+            activeOpacity={0.85}
+          >
+            <GoogleMark size={20} />
+            <Text style={{ color: tokens.colors.text, fontWeight: '600', fontSize: 15 }}>{t.loginGoogle}</Text>
+          </TouchableOpacity>
+
+          <View style={styles.footer}>
+            <Text style={{ color: tokens.colors.textSecondary, fontSize: 14 }}>
+              {t.loginNoAccount}{' '}
+              <Text style={{ color: brandBlue, fontWeight: '700' }} onPress={() => goToPassword('signup')}>
+                {t.loginSignUpCta}
               </Text>
-              <View style={[styles.dividerLine, { backgroundColor: tokens.colors.border }]} />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.contactBtn, { borderColor: tokens.colors.border }]}
-              onPress={() => Linking.openURL('https://t.me/shifoyol_contact_bot')}
-              activeOpacity={0.85}
-            >
-              <Ionicons name="paper-plane-outline" size={18} color={tokens.brand.iris} />
-              <Text style={{ color: tokens.colors.text, fontWeight: '600', fontSize: 14 }}>
-                {t.contactUs}
-              </Text>
-            </TouchableOpacity>
-
-            <Text
-              style={{
-                color: tokens.colors.textTertiary,
-                fontSize: 11,
-                textAlign: 'center',
-                marginTop: 22,
-                paddingHorizontal: 20,
-                lineHeight: 16,
-              }}
-            >
-              {language === 'uz'
-                ? "Davom etib, siz Foydalanish shartlari va Maxfiylik siyosatiga rozilik bildirasiz"
-                : 'Продолжая, вы принимаете Условия использования и Политику конфиденциальности'}
             </Text>
           </View>
         </ScrollView>
@@ -203,66 +179,61 @@ export default function Login() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingBottom: 30 },
-  heroGradient: {
-    paddingTop: 10,
-    paddingHorizontal: 24,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
-    overflow: 'hidden',
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    paddingTop: 36,
+    paddingBottom: 24,
+    justifyContent: 'center',
   },
-  heroContent: { marginBottom: 10 },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 60,
-  },
+  hero: { alignItems: 'center', marginBottom: 36 },
   logoWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#fff',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 18,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  logo: { width: 26, height: 26 },
-  heroBody: { marginBottom: 26 },
-  pillStat: {
+  logo: { width: 52, height: 52 },
+  brandName: {
+    fontSize: 32,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  tagline: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 10,
+    paddingHorizontal: 24,
+  },
+  phonePill: {
+    height: 56,
+    borderRadius: 999,
+    borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
-    alignSelf: 'flex-start',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-  },
-  pillDot: { width: 8, height: 8, borderRadius: 4 },
-  form: { padding: 24, paddingTop: 30 },
-  phoneRow: { flexDirection: 'row', gap: 12 },
-  prefix: {
     paddingHorizontal: 16,
-    height: 56,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+  },
+  prefixRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 6,
   },
-  inputBox: {
-    flex: 1,
-    height: 56,
-    borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
-    paddingHorizontal: 14,
-    justifyContent: 'center',
-  },
-  input: { fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
+  flag: { fontSize: 18 },
+  prefixText: { fontSize: 15, fontWeight: '700' },
+  vDivider: { width: 1, height: 22, marginHorizontal: 12 },
+  input: { flex: 1, fontSize: 16, fontWeight: '600', letterSpacing: 0.3, paddingVertical: 0 },
   dividerRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -271,13 +242,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dividerLine: { flex: 1, height: StyleSheet.hairlineWidth },
-  contactBtn: {
-    height: 52,
-    borderRadius: 16,
+  googleBtn: {
+    height: 56,
+    borderRadius: 999,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
+  },
+  footer: {
+    alignItems: 'center',
+    marginTop: 36,
   },
 });

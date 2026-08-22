@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 
 type Lang = 'uz' | 'ru' | 'en';
 
@@ -13,9 +13,15 @@ const DAY_LABELS: Record<Lang, [string, string, string, string, string, string, 
 };
 
 const CLOSED_LABEL: Record<Lang, string> = {
-  uz: 'Yopiq',
+  uz: 'Dam olish kuni',
   ru: 'Выходной',
   en: 'Closed',
+};
+
+const OPEN_NOW: Record<Lang, string> = {
+  uz: 'Hozir ochiq',
+  ru: 'Открыто сейчас',
+  en: 'Open now',
 };
 
 const TODAY_LABEL: Record<Lang, string> = {
@@ -27,6 +33,17 @@ const TODAY_LABEL: Record<Lang, string> = {
 function getTodayIndex(): number {
   const d = new Date().getDay();
   return d === 0 ? 6 : d - 1;
+}
+
+function isCurrentlyOpen(from: string, to: string): boolean {
+  const [fh, fm] = from.split(':').map((n) => parseInt(n, 10));
+  const [th, tm] = to.split(':').map((n) => parseInt(n, 10));
+  if ([fh, fm, th, tm].some((n) => Number.isNaN(n))) return false;
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  const start = (fh ?? 0) * 60 + (fm ?? 0);
+  const end = (th ?? 0) * 60 + (tm ?? 0);
+  return cur >= start && cur <= end;
 }
 
 export interface WorkingHoursListProps {
@@ -98,7 +115,7 @@ export default function WorkingHoursList({
             <View style={styles.right}>
               {slot ? (
                 <>
-                  <Ionicons
+                  <Icon
                     name="time-outline"
                     size={13}
                     color={isToday ? accentColor : secondaryColor}
@@ -113,6 +130,11 @@ export default function WorkingHoursList({
                   >
                     {slot.from}–{slot.to}
                   </Text>
+                  {isToday && isCurrentlyOpen(slot.from, slot.to) ? (
+                    <Text style={{ color: '#16A34A', fontSize: 11, fontWeight: '700', marginLeft: 6 }}>
+                      {OPEN_NOW[lang]}
+                    </Text>
+                  ) : null}
                 </>
               ) : (
                 <Text style={{ color: secondaryColor, fontSize: 13, fontStyle: 'italic' }}>

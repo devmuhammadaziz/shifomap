@@ -9,17 +9,21 @@ import {
   Platform,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Icon } from '../../components/icons/Icon';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
 import { completeProfile } from '../../lib/api';
 import { getTranslations } from '../../lib/translations';
 import { getTokens } from '../../lib/design';
-import { Button } from '../../components/ui';
+import { WaveBackground } from '../../components/auth/WaveBackground';
+import { AuthCtaButton } from '../../components/auth/AuthCtaButton';
+import { AuthBackButton } from '../../components/auth/AuthBackButton';
+
+const AVATAR_IMG = require('../../assets/auth-profile-avatar.png');
 
 export default function CompleteProfileScreen() {
   const router = useRouter();
@@ -35,6 +39,8 @@ export default function CompleteProfileScreen() {
 
   const t = getTranslations(language);
   const tokens = getTokens(theme);
+  const brandBlue = tokens.brand.iris;
+  const fieldBg = theme === 'dark' ? tokens.colors.backgroundInput : '#FFFFFF';
 
   const onDone = async () => {
     const name = fullName.trim();
@@ -61,55 +67,35 @@ export default function CompleteProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top', 'bottom']}>
+      <WaveBackground />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <LinearGradient
-            colors={tokens.gradients.cool as [string, string, ...string[]]}
-            style={styles.avatarBubble}
-          >
-            <View style={[styles.avatarInner, { backgroundColor: tokens.colors.backgroundCard }]}>
-              <Ionicons name="person" size={48} color={tokens.brand.iris} />
-            </View>
-          </LinearGradient>
-
-          <View style={{ paddingHorizontal: 24, alignItems: 'center', marginTop: 18 }}>
-            <Text style={[tokens.type.display, { color: tokens.colors.text, textAlign: 'center' }]}>
-              {t.completeTitle}
-            </Text>
-            <Text
-              style={{
-                color: tokens.colors.textSecondary,
-                fontSize: 14,
-                textAlign: 'center',
-                marginTop: 8,
-                lineHeight: 20,
-              }}
-            >
-              {language === 'uz'
-                ? "Shaxsiy ma'lumotlaringiz xavfsiz saqlanadi"
-                : 'Ваши данные хранятся в безопасности'}
-            </Text>
+          <View style={styles.topRow}>
+            <AuthBackButton onPress={() => router.back()} />
           </View>
 
+          <Image source={AVATAR_IMG} style={styles.avatar} resizeMode="contain" />
+
+          <Text style={[styles.title, { color: tokens.colors.text }]}>{t.completeTitle}</Text>
+          <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>{t.completeSubtitle}</Text>
+
           <View style={styles.form}>
-            <View style={{ marginBottom: 18 }}>
-              <Text style={[tokens.type.caption, { color: tokens.colors.textSecondary, marginBottom: 8, marginLeft: 4 }]}>
-                {t.completeFullName}
-              </Text>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.fieldLabel, { color: tokens.colors.text }]}>{t.completeFullName}</Text>
               <View
                 style={[
                   styles.inputBox,
                   {
-                    backgroundColor: tokens.colors.backgroundInput,
-                    borderColor: focusedField === 'name' ? tokens.brand.iris : tokens.colors.border,
+                    backgroundColor: fieldBg,
+                    borderColor: focusedField === 'name' ? brandBlue : tokens.colors.border,
                   },
                 ]}
               >
-                <Ionicons name="person-outline" size={18} color={tokens.colors.textTertiary} />
+                <Icon name="person-outline" size={18} color={tokens.colors.textTertiary} />
                 <TextInput
                   style={[styles.input, { color: tokens.colors.text }]}
                   placeholder={t.completeFullNamePlaceholder}
@@ -124,20 +110,18 @@ export default function CompleteProfileScreen() {
               </View>
             </View>
 
-            <View style={{ marginBottom: 18 }}>
-              <Text style={[tokens.type.caption, { color: tokens.colors.textSecondary, marginBottom: 8, marginLeft: 4 }]}>
-                {t.completeAge}
-              </Text>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.fieldLabel, { color: tokens.colors.text }]}>{t.completeAge}</Text>
               <View
                 style={[
                   styles.inputBox,
                   {
-                    backgroundColor: tokens.colors.backgroundInput,
-                    borderColor: focusedField === 'age' ? tokens.brand.iris : tokens.colors.border,
+                    backgroundColor: fieldBg,
+                    borderColor: focusedField === 'age' ? brandBlue : tokens.colors.border,
                   },
                 ]}
               >
-                <Ionicons name="calendar-outline" size={18} color={tokens.colors.textTertiary} />
+                <Icon name="calendar-outline" size={18} color={tokens.colors.textTertiary} />
                 <TextInput
                   style={[styles.input, { color: tokens.colors.text }]}
                   placeholder={t.completeAgePlaceholder}
@@ -153,9 +137,7 @@ export default function CompleteProfileScreen() {
             </View>
 
             <View style={{ marginBottom: 24 }}>
-              <Text style={[tokens.type.caption, { color: tokens.colors.textSecondary, marginBottom: 8, marginLeft: 4 }]}>
-                {t.completeGender}
-              </Text>
+              <Text style={[styles.fieldLabel, { color: tokens.colors.text }]}>{t.completeGender}</Text>
               <View style={styles.genderRow}>
                 {(['male', 'female'] as const).map((g) => {
                   const active = gender === g;
@@ -165,38 +147,49 @@ export default function CompleteProfileScreen() {
                       style={[
                         styles.genderBtn,
                         {
-                          backgroundColor: active ? tokens.colors.text : tokens.colors.backgroundInput,
-                          borderColor: active ? 'transparent' : tokens.colors.border,
+                          backgroundColor: active
+                            ? theme === 'dark'
+                              ? tokens.colors.primaryBg
+                              : '#E8F0FE'
+                            : fieldBg,
+                          borderColor: active ? brandBlue : tokens.colors.border,
                         },
                       ]}
                       onPress={() => setGender(g)}
                       disabled={loading}
                       activeOpacity={0.85}
                     >
-                      <Ionicons
+                      <Icon
                         name={g === 'male' ? 'male' : 'female'}
                         size={18}
-                        color={active ? tokens.colors.background : tokens.colors.textSecondary}
+                        color={active ? brandBlue : tokens.colors.textTertiary}
                       />
                       <Text
                         style={{
+                          flex: 1,
                           fontSize: 15,
                           fontWeight: '700',
-                          color: active ? tokens.colors.background : tokens.colors.text,
+                          color: active ? brandBlue : tokens.colors.text,
                         }}
                       >
                         {g === 'male' ? t.completeMale : t.completeFemale}
                       </Text>
+                      <View
+                        style={[
+                          styles.radioOuter,
+                          { borderColor: active ? brandBlue : tokens.colors.border },
+                        ]}
+                      >
+                        {active ? <View style={[styles.radioInner, { backgroundColor: brandBlue }]} /> : null}
+                      </View>
                     </TouchableOpacity>
                   );
                 })}
               </View>
             </View>
 
-            <Button
+            <AuthCtaButton
               title={t.completeDone}
-              variant="gradient"
-              size="lg"
               rightIcon="checkmark"
               loading={loading}
               onPress={onDone}
@@ -210,27 +203,28 @@ export default function CompleteProfileScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  scrollContent: { flexGrow: 1, paddingBottom: 40, paddingTop: 20 },
-  avatarBubble: {
-    alignSelf: 'center',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
+  scrollContent: { flexGrow: 1, paddingBottom: 32 },
+  topRow: { paddingHorizontal: 20, paddingTop: 4 },
+  avatar: { width: 148, height: 148, alignSelf: 'center', marginTop: 4 },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    textAlign: 'center',
+    paddingHorizontal: 24,
   },
-  avatarInner: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+    paddingHorizontal: 32,
   },
-  form: { paddingHorizontal: 24, paddingTop: 28 },
+  form: { paddingHorizontal: 24, paddingTop: 24 },
+  fieldLabel: { fontSize: 14, fontWeight: '700', marginBottom: 8, marginLeft: 4 },
   inputBox: {
     height: 56,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -242,10 +236,23 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 56,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1.5,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 12,
     gap: 8,
+  },
+  radioOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
 });

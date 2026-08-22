@@ -9,7 +9,7 @@ import {
   Keyboard,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -73,12 +73,11 @@ export default function NotificationsScreen() {
   };
 
   const renderNotification = (item: NotificationItem) => {
-    const IconLib = item.iconLib === 'Ionicons' ? Ionicons : MaterialCommunityIcons;
     return (
       <View key={item.id} style={[styles.card, { backgroundColor: colors.backgroundCard, shadowColor: colors.text }]}>
         <View style={styles.cardHeader}>
           <View style={[styles.iconContainer, { backgroundColor: item.iconColor + '15' }]}>
-            <IconLib name={item.icon as any} size={22} color={item.iconColor} />
+            <Icon name={item.icon} size={22} color={item.iconColor} />
           </View>
           <View style={styles.cardTextContent}>
             <View style={styles.cardTitleRow}>
@@ -120,7 +119,7 @@ export default function NotificationsScreen() {
           onPress={() => router.back()}
           hitSlop={12}
         >
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Icon name="chevron-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1}>{t.notificationsTitle || 'Notifications'}</Text>
         <TouchableOpacity onPress={clearAll} hitSlop={12}>
@@ -160,7 +159,7 @@ export default function NotificationsScreen() {
         {sections.length === 0 ? (
           <View style={styles.emptyContainer}>
             <View style={[styles.emptyIconContainer, { backgroundColor: colors.backgroundSecondary }]}>
-              <Ionicons name="notifications-off-outline" size={48} color={colors.textTertiary} />
+              <Icon name="notifications-off-outline" size={48} color={colors.textTertiary} />
             </View>
             <Text style={[styles.emptyText, { color: colors.textTertiary }]}>{t.noResultsFound || 'No notifications'}</Text>
           </View>

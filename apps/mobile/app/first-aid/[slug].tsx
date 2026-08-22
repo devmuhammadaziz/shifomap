@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
@@ -43,7 +43,7 @@ export default function FirstAidDetail() {
       <ScrollView contentContainerStyle={{ padding: 20, gap: 14, paddingBottom: 40 }}>
         <View style={[styles.hero, { backgroundColor: guide.color + '14' }]}>
           <View style={[styles.iconWrap, { backgroundColor: guide.color }]}>
-            <Ionicons name={guide.icon as any} size={26} color="#fff" />
+            <Icon name={guide.icon} size={26} color="#fff" />
           </View>
           <Text style={[tokens.type.titleXl, { color: tokens.colors.text, marginTop: 12 }]}>{title}</Text>
           <Text style={{ color: tokens.colors.textSecondary, fontSize: 14, marginTop: 4 }}>{summary}</Text>
@@ -64,7 +64,7 @@ export default function FirstAidDetail() {
         </Card>
 
         <View style={[styles.warning, { backgroundColor: '#fef3c7', borderColor: '#fde68a' }]}>
-          <Ionicons name="warning" size={18} color="#b45309" />
+          <Icon name="warning" size={18} color="#b45309" />
           <Text style={{ color: '#92400e', fontSize: 13, fontWeight: '600', flex: 1, lineHeight: 18 }}>{warning}</Text>
         </View>
       </ScrollView>

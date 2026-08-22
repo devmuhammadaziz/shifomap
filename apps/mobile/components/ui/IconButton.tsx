@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, TouchableOpacity, ViewStyle, StyleProp, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTokens } from '../../lib/design';
 
 interface Props {
-  icon: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
   onPress?: () => void;
   size?: number;
   color?: string;
@@ -46,7 +46,7 @@ export function IconButton({
         style,
       ]}
     >
-      <Ionicons name={icon} size={Math.round(size * 0.48)} color={color ?? tokens.colors.text} />
+      <Icon name={icon} size={Math.round(size * 0.48)} color={color ?? tokens.colors.text} />
       {badge != null && badge > 0 ? (
         <View style={[styles.badge, { backgroundColor: tokens.colors.error }]}>
           <View style={styles.badgeInner} />

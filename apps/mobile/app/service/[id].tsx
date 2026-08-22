@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServiceById, getReviews, type ServiceDetailResponse, type ReviewItem } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
@@ -157,7 +157,7 @@ export default function ServiceDetailScreen() {
           <Image source={{ uri: service.serviceImage || DEFAULT_IMAGE }} style={styles.heroImage} />
           <LinearGradient colors={['rgba(0,0,0,0.08)', 'rgba(0,0,0,0.62)']} style={styles.heroOverlay}>
             <TouchableOpacity style={styles.heroBackBtn} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
+              <Icon name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <View style={styles.heroStarWrap}>
               <SaveServiceStar service={service} size={22} />
@@ -177,7 +177,7 @@ export default function ServiceDetailScreen() {
             <View style={styles.discountBlock}>
               <View style={styles.discountTopRow}>
                 <View style={[styles.discountBadge, { backgroundColor: colors.error ?? '#dc2626' }]}>
-                  <Ionicons name="pricetag" size={12} color="#fff" />
+                  <Icon name="pricetag" size={12} color="#fff" />
                   <Text style={styles.discountBadgeText}>−{data.activeDiscount.percentOff}%</Text>
                 </View>
                 <Text style={[styles.discountUntil, { color: colors.textTertiary }]}>
@@ -207,7 +207,7 @@ export default function ServiceDetailScreen() {
           <View style={styles.inlineMeta}>
             {service.durationMin > 0 ? (
               <View style={styles.metaItem}>
-                <Ionicons name="time-outline" size={13} color={colors.textTertiary} />
+                <Icon name="time-outline" size={13} color={colors.textTertiary} />
                 <Text style={[styles.metaTextEditorial, { color: colors.textSecondary }]}>
                   {service.durationMin} {t.minutes}
                 </Text>
@@ -218,7 +218,7 @@ export default function ServiceDetailScreen() {
             ) : null}
             {(serviceRating?.count ?? 0) > 0 ? (
               <View style={styles.metaItem}>
-                <Ionicons name="star" size={13} color={colors.warning} />
+                <Icon name="star" size={13} color={colors.warning} />
                 <Text style={[styles.metaStrong, { color: colors.text }]}>
                   {serviceRating!.avg.toFixed(1)}
                 </Text>
@@ -256,7 +256,7 @@ export default function ServiceDetailScreen() {
                     <View style={styles.linkRowInfo}>
                       <Text style={[styles.linkRowText, { color: colors.text }]} numberOfLines={2}>{b.name}</Text>
                     </View>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                    <Icon name="chevron-forward" size={18} color={colors.textTertiary} />
                   </TouchableOpacity>
                   {idx < branchList.length - 1 ? (
                     <View style={[styles.rowDivider, { backgroundColor: colors.border }]} />
@@ -283,7 +283,7 @@ export default function ServiceDetailScreen() {
                       style={[styles.doctorAvatar, { backgroundColor: colors.border }]}
                     />
                     <Text style={[styles.doctorName, { color: colors.text }]} numberOfLines={1}>{name}</Text>
-                    <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                    <Icon name="chevron-forward" size={18} color={colors.textTertiary} />
                   </TouchableOpacity>
                   {idx < doctorNames.length - 1 ? (
                     <View style={[styles.rowDivider, { backgroundColor: colors.border, marginLeft: 50 }]} />
@@ -307,7 +307,7 @@ export default function ServiceDetailScreen() {
                   {clinic.clinicDisplayName}
                 </Text>
               </View>
-              <Ionicons name="chevron-forward" size={18} color={colors.primaryLight} />
+              <Icon name="chevron-forward" size={18} color={colors.primaryLight} />
             </TouchableOpacity>
           </View>
 
@@ -396,9 +396,9 @@ export default function ServiceDetailScreen() {
           activeOpacity={0.9}
           onPress={() => router.push({ pathname: '/book', params: { clinicId: clinic._id, serviceId: id as string } })}
         >
-          <Ionicons name="calendar" size={22} color="#fff" style={styles.bookIcon} />
+          <Icon name="calendar" size={22} color="#fff" style={styles.bookIcon} />
           <Text style={styles.bookButtonText}>{t.bookAppointment}</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
+          <Icon name="arrow-forward" size={20} color="#fff" />
         </TouchableOpacity>
       </View>
     </View>

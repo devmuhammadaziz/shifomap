@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -57,7 +57,7 @@ export default function DoctorSearchScreen() {
       <Text style={[styles.rowLabel, { color: tokens.colors.text }]}>
         {specialtyDisplayName(item, language)}
       </Text>
-      <Ionicons name="chevron-forward" size={18} color={tokens.colors.textTertiary} />
+      <Icon name="chevron-forward" size={18} color={tokens.colors.textTertiary} />
     </TouchableOpacity>
   );
 
@@ -65,7 +65,7 @@ export default function DoctorSearchScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={12} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={28} color={tokens.colors.primary} />
+          <Icon name="chevron-back" size={28} color={tokens.colors.primary} />
         </TouchableOpacity>
         <Text style={[styles.title, { color: tokens.colors.text }]}>
           {isUz ? 'Shifokor qidirish' : 'Поиск врача'}
@@ -73,7 +73,7 @@ export default function DoctorSearchScreen() {
       </View>
 
       <View style={[styles.searchBox, { backgroundColor: tokens.colors.backgroundInput, borderColor: tokens.colors.border }]}>
-        <Ionicons name="search" size={20} color={tokens.colors.textTertiary} />
+        <Icon name="search" size={20} color={tokens.colors.textTertiary} />
         <TextInput
           style={[styles.searchInput, { color: tokens.colors.text }]}
           placeholder={isUz ? 'Mutaxassislik yoki F.I.Sh.' : 'Специализация или ФИО'}
@@ -87,7 +87,7 @@ export default function DoctorSearchScreen() {
         />
         {query ? (
           <TouchableOpacity hitSlop={8} onPress={() => setQuery('')}>
-            <Ionicons name="close-circle" size={20} color={tokens.colors.textTertiary} />
+            <Icon name="close-circle" size={20} color={tokens.colors.textTertiary} />
           </TouchableOpacity>
         ) : null}
       </View>

@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import QRCode from 'react-native-qrcode-svg';
 import { getMyBookings, type Booking, type BookingStatus } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
@@ -141,7 +141,7 @@ export default function AppointmentsScreen() {
           </View>
 
           <View style={[styles.addressRow, { borderColor: colors.borderLight }]}>
-            <Ionicons name="location-outline" size={14} color={colors.textTertiary} />
+            <Icon name="location-outline" size={14} color={colors.textTertiary} />
             <Text style={[styles.addressText, { color: colors.textTertiary }]} numberOfLines={1}>
               {item.branchName || (language === 'ru' ? 'Филиал не указан' : 'Filial ko‘rsatilmagan')}
             </Text>
@@ -188,16 +188,10 @@ export default function AppointmentsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 8 }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>{t.allAppointments}</Text>
-          <Text style={[styles.headerSub, { color: colors.textTertiary }]}>
-            {language === 'ru' ? 'Управляйте своими записями' : 'Navbatlaringizni boshqaring'}
-          </Text>
-        </View>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>
+          {language === 'ru' ? 'Записи' : 'Yozuvlar'}
+        </Text>
       </View>
       <View style={[styles.tabsWrap, { borderBottomColor: colors.border }]}>
       <View style={styles.tabs}>
@@ -206,8 +200,8 @@ export default function AppointmentsScreen() {
             key={key}
             style={[
               styles.tab,
-              { backgroundColor: '#ececec' },
-              tab === (key === 'complete' ? 'completed' : key) && { backgroundColor: colors.primary }
+              { backgroundColor: colors.backgroundSecondary },
+              tab === (key === 'complete' ? 'completed' : key) && { backgroundColor: '#2563EB' }
             ]}
             onPress={() => setTab(key === 'complete' ? 'completed' : key)}
           >
@@ -229,7 +223,7 @@ export default function AppointmentsScreen() {
       ) : filtered.length === 0 ? (
         <View style={styles.centered}>
           <View style={[styles.emptyIconWrap, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
-            <Ionicons name="calendar-outline" size={42} color={colors.textTertiary} />
+            <Icon name="calendar-outline" size={42} color={colors.textTertiary} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>{t.noResultsFound}</Text>
           <Text style={[styles.emptySub, { color: colors.textSecondary }]}>
@@ -347,15 +341,10 @@ function buildTicketPayload(booking: Booking): string {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 10,
-    borderBottomWidth: 1,
   },
-  backBtn: { padding: 8, marginLeft: -8 },
-  headerTitle: { fontSize: 30, fontWeight: '800', marginLeft: 8, letterSpacing: -0.6 },
-  headerSub: { marginLeft: 8, marginTop: 2, fontSize: 13, fontWeight: '500' },
+  headerTitle: { fontSize: 22, fontWeight: '800' },
   tabsWrap: {
     borderBottomWidth: StyleSheet.hairlineWidth,
     paddingBottom: 12,
@@ -379,7 +368,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: { fontSize: 16, fontWeight: '700' },
   emptySub: { marginTop: 6, fontSize: 13, textAlign: 'center', paddingHorizontal: 36, lineHeight: 19 },
-  listContent: { padding: 16, paddingBottom: 40, paddingTop: 14 },
+  listContent: { padding: 16, paddingBottom: 140, paddingTop: 14 },
   blockWrap: { marginBottom: 12 },
   dayLabel: { fontSize: 19, fontWeight: '800', marginBottom: 9, marginLeft: 2 },
   card: {
@@ -430,7 +419,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(10, 47, 184, 0.92)',
+    backgroundColor: '#2563EB',
   },
   actionBtnDarkText: { color: '#fff', fontSize: 14, fontWeight: '700' },
   ticketOverlay: {

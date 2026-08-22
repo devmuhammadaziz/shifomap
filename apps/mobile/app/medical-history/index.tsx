@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
@@ -79,7 +79,7 @@ export default function MedicalHistoryIndex() {
         ) : items.length === 0 ? (
           <Card>
             <View style={{ alignItems: 'center', padding: 20 }}>
-              <Ionicons name="medical" size={42} color={tokens.brand.iris} />
+              <Icon name="medical" size={42} color={tokens.brand.iris} />
               <Text style={[tokens.type.title, { color: tokens.colors.text, marginTop: 10 }]}>
                 {tr('Yozuv yo‘q', 'Пока пусто', 'No entries yet')}
               </Text>
@@ -105,7 +105,7 @@ export default function MedicalHistoryIndex() {
                   </Text>
                 </View>
                 <TouchableOpacity onPress={() => confirmDelete(it._id)}>
-                  <Ionicons name="trash-outline" size={18} color={tokens.colors.error} />
+                  <Icon name="trash-outline" size={18} color={tokens.colors.error} />
                 </TouchableOpacity>
               </View>
               {it.description ? (

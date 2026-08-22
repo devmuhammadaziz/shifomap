@@ -1,35 +1,37 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions, Image } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../../components/icons/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/theme-store';
-import { getTokens } from '../../lib/design';
+import { useAuthStore } from '../../store/auth-store';
 import TabBarCurveBackground, { TAB_BAR_NOTCH_LIFT, TAB_BAR_NOTCH_HALF } from './TabBarCurveBackground';
 
-const LOGO_BLUE = '#0A2FB8';
-const BAR_BODY_HEIGHT = 58;
-const AI_SIZE = 54;
-const CENTER_SLOT = TAB_BAR_NOTCH_HALF * 2 + 12;
-/** AI sits in the cradle — moves with notch height. */
-const AI_BOTTOM_OFFSET = 8;
+const ACCENT = '#2563EB';
+const BAR_BODY_HEIGHT = 62;
+const AI_SIZE = 62;
+const CENTER_SLOT = TAB_BAR_NOTCH_HALF * 2 + 8;
+const AI_BOTTOM_OFFSET = 10;
+const LOGO = require('../../assets/play_store_512-Photoroom.png');
 
 type TabDef = {
   key: string;
   route: string;
-  icon: keyof typeof Ionicons.glyphMap;
-  iconActive: keyof typeof Ionicons.glyphMap;
+  icon: IconName;
+  iconActive: IconName;
+  uz: string;
+  ru: string;
 };
 
 const LEFT_TABS: TabDef[] = [
-  { key: 'index', route: 'index', icon: 'home-outline', iconActive: 'home' },
-  { key: 'feed', route: 'feed', icon: 'play-circle-outline', iconActive: 'play-circle' },
+  { key: 'index', route: 'index', icon: 'home-outline', iconActive: 'home', uz: 'Bosh sahifa', ru: 'Главная' },
+  { key: 'clinics', route: 'clinics', icon: 'medkit-outline', iconActive: 'medkit', uz: 'Klinikalar', ru: 'Клиники' },
 ];
 
 const RIGHT_TABS: TabDef[] = [
-  { key: 'appointments', route: 'appointments', icon: 'calendar-outline', iconActive: 'calendar' },
-  { key: 'profile', route: 'profile', icon: 'person-outline', iconActive: 'person' },
+  { key: 'appointments', route: 'appointments', icon: 'calendar-outline', iconActive: 'calendar', uz: 'Yozuvlar', ru: 'Записи' },
+  { key: 'profile', route: 'profile', icon: 'person-outline', iconActive: 'person', uz: 'Profil', ru: 'Профиль' },
 ];
 
 export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
@@ -37,18 +39,14 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const { width: screenW } = useWindowDimensions();
   const router = useRouter();
   const theme = useThemeStore((s) => s.theme);
-  const tokens = getTokens(theme);
+  const language = useAuthStore((s) => s.language) ?? 'uz';
   const isDark = theme === 'dark';
 
   const activeRouteName = state.routes[state.index]?.name;
-
-  if (activeRouteName === 'feed') {
-    return null;
-  }
+  if (activeRouteName === 'feed') return null;
 
   const barBg = isDark ? '#18181b' : '#ffffff';
   const inactiveIcon = isDark ? '#a1a1aa' : '#94a3b8';
-  const activeIcon = LOGO_BLUE;
   const totalHeight = BAR_BODY_HEIGHT + TAB_BAR_NOTCH_LIFT + insets.bottom;
 
   const handlePress = (routeName: string) => {
@@ -73,20 +71,15 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         style={styles.slot}
         activeOpacity={0.75}
       >
-        <Ionicons
-          name={(focused ? tab.iconActive : tab.icon) as keyof typeof Ionicons.glyphMap}
-          size={focused ? 25 : 24}
-          color={focused ? activeIcon : inactiveIcon}
+        <Icon
+          name={focused ? tab.iconActive : tab.icon}
+          size={22}
+          color={focused ? ACCENT : inactiveIcon}
+          variant={focused ? 'Bold' : 'Linear'}
         />
-        <View
-          style={[
-            styles.activeDot,
-            {
-              backgroundColor: focused ? LOGO_BLUE : 'transparent',
-              opacity: focused ? 1 : 0,
-            },
-          ]}
-        />
+        <Text style={[styles.label, { color: focused ? ACCENT : inactiveIcon }]} numberOfLines={1}>
+          {language === 'ru' ? tab.ru : tab.uz}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -118,14 +111,13 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
           styles.aiFab,
           {
             bottom: insets.bottom + AI_BOTTOM_OFFSET,
-            backgroundColor: isDark ? '#27272a' : '#ffffff',
+            backgroundColor: ACCENT,
+            shadowColor: ACCENT,
           },
         ]}
         activeOpacity={0.9}
       >
-        <View style={styles.aiInner}>
-          <Ionicons name="sparkles" size={25} color="#fff" />
-        </View>
+        <Image source={LOGO} style={styles.aiLogo} resizeMode="contain" />
       </TouchableOpacity>
     </View>
   );
@@ -148,7 +140,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
   },
   sideGroup: {
     flex: 1,
@@ -161,12 +153,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 48,
-    gap: 5,
+    gap: 3,
   },
-  activeDot: {
-    width: 5,
-    height: 5,
-    borderRadius: 2.5,
+  label: {
+    fontSize: 10,
+    fontWeight: '600',
   },
   aiFab: {
     position: 'absolute',
@@ -176,26 +167,17 @@ const styles = StyleSheet.create({
     width: AI_SIZE,
     height: AI_SIZE,
     borderRadius: AI_SIZE / 2,
-    padding: 5,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 20,
     ...Platform.select({
       ios: {
-        shadowColor: '#0A2FB8',
-        shadowOffset: { width: 0, height: 3 },
-        shadowOpacity: 0.3,
-        shadowRadius: 10,
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35,
+        shadowRadius: 12,
       },
-      android: { elevation: 12 },
+      android: { elevation: 14 },
     }),
   },
-  aiInner: {
-    width: '100%',
-    height: '100%',
-    borderRadius: (AI_SIZE - 8) / 2,
-    backgroundColor: LOGO_BLUE,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  aiLogo: { width: 34, height: 34 },
 });

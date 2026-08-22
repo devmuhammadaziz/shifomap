@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
-import { getColors } from '../../lib/theme';
+import { getTokens } from '../../lib/design';
+import { WaveBackground } from '../../components/auth/WaveBackground';
+import { AuthCtaButton } from '../../components/auth/AuthCtaButton';
 
 const LOGO = require('../../assets/play_store_512-Photoroom.png');
 
 type Lang = 'uz' | 'ru';
 
 export default function LanguageScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const setLanguage = useAuthStore((s) => s.setLanguage);
   const onboardingSeen = useAuthStore((s) => s.onboardingSeen);
@@ -21,7 +21,8 @@ export default function LanguageScreen() {
   const theme = useThemeStore((s) => s.theme);
   const tUz = getTranslations('uz');
   const tRu = getTranslations('ru');
-  const colors = getColors(theme);
+  const tokens = getTokens(theme);
+  const brandBlue = tokens.brand.iris;
 
   const [selected, setSelected] = useState<Lang>('uz');
 
@@ -36,64 +37,50 @@ export default function LanguageScreen() {
     }
   };
 
-  const options: { lang: Lang; label: string }[] = [
-    { lang: 'uz', label: tUz.languageUzbek },
-    { lang: 'ru', label: tRu.languageRussian },
+  const options: { lang: Lang; flag: string; label: string }[] = [
+    { lang: 'uz', flag: '🇺🇿', label: "O'zbekcha" },
+    { lang: 'ru', flag: '🇷🇺', label: 'Русский' },
   ];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top, paddingBottom: insets.bottom + 16 }]}>
+    <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top', 'bottom']}>
+      <WaveBackground />
       <View style={styles.content}>
-        <Image source={LOGO} style={styles.logo} resizeMode="contain" />
-        <Text style={[styles.title, { color: colors.text }]}>{tUz.languageTitle}</Text>
-        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+        <View style={[styles.logoWrap, { backgroundColor: tokens.colors.backgroundCard, shadowColor: brandBlue }]}>
+          <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+        </View>
+        <Text style={[styles.brand, { color: brandBlue }]}>ShifoYo'l</Text>
+        <Text style={[styles.title, { color: tokens.colors.text }]}>
           {tUz.languageSubtitle} / {tRu.languageSubtitle}
+        </Text>
+        <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>
+          {tUz.loginBrandTagline} · {tRu.loginBrandTagline}
         </Text>
 
         <View style={styles.cards}>
-          {options.map(({ lang, label }) => {
-            const isSelected = selected === lang;
+          {options.map(({ lang, flag, label }) => {
+            const active = selected === lang;
             return (
               <TouchableOpacity
                 key={lang}
                 style={[
                   styles.card,
                   {
-                    backgroundColor: isSelected ? colors.primary : colors.backgroundCard,
-                    borderColor: isSelected ? colors.primary : colors.border,
-                    borderWidth: isSelected ? 0 : 1,
+                    backgroundColor: active
+                      ? theme === 'dark'
+                        ? tokens.colors.primaryBg
+                        : '#E8F0FE'
+                      : tokens.colors.backgroundCard,
+                    borderColor: active ? brandBlue : tokens.colors.border,
                   },
                 ]}
                 onPress={() => setSelected(lang)}
-                activeOpacity={0.8}
+                activeOpacity={0.85}
               >
-                <Ionicons
-                  name="language-outline"
-                  size={24}
-                  color={isSelected ? '#fff' : colors.textSecondary}
-                  style={styles.cardIcon}
-                />
-                <Text
-                  style={[
-                    styles.cardText,
-                    { color: isSelected ? '#fff' : colors.text },
-                  ]}
-                  numberOfLines={1}
-                >
-                  {label}
-                </Text>
-                <View
-                  style={[
-                    styles.radio,
-                    {
-                      borderColor: isSelected ? '#fff' : colors.textPlaceholder,
-                      backgroundColor: isSelected ? 'transparent' : 'transparent',
-                    },
-                  ]}
-                >
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={18} color="#fff" />
-                  )}
+                <Text style={styles.flag}>{flag}</Text>
+                <Text style={[styles.cardText, { color: active ? brandBlue : tokens.colors.text }]}>{label}</Text>
+                <View style={[styles.radioOuter, { borderColor: active ? brandBlue : tokens.colors.border }]}>
+                  {active ? <View style={[styles.radioInner, { backgroundColor: brandBlue }]} /> : null}
                 </View>
               </TouchableOpacity>
             );
@@ -101,89 +88,52 @@ export default function LanguageScreen() {
         </View>
       </View>
 
-      <View style={[styles.footer, { paddingHorizontal: 24 }]}>
-        <TouchableOpacity
-          style={[styles.continueButton, { backgroundColor: colors.primary }]}
-          onPress={confirmLanguage}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.continueText}>{getTranslations(selected).passwordContinue}</Text>
-          <Ionicons name="arrow-forward" size={20} color="#fff" />
-        </TouchableOpacity>
+      <View style={styles.footer}>
+        <AuthCtaButton title={getTranslations(selected).passwordContinue} onPress={() => void confirmLanguage()} />
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  content: {
-    flex: 1,
+  root: { flex: 1 },
+  content: { flex: 1, alignItems: 'center', paddingHorizontal: 28, paddingTop: 36, justifyContent: 'center' },
+  logoWrap: {
+    width: 88,
+    height: 88,
+    borderRadius: 44,
     alignItems: 'center',
-    paddingHorizontal: 32,
-    paddingTop: 24,
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 24,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    marginBottom: 40,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  cards: {
-    width: '100%',
-    gap: 16,
-  },
+  logo: { width: 52, height: 52 },
+  brand: { fontSize: 28, fontWeight: '800', letterSpacing: -0.4 },
+  title: { fontSize: 18, fontWeight: '700', marginTop: 8, textAlign: 'center' },
+  subtitle: { fontSize: 14, marginTop: 6, marginBottom: 28, textAlign: 'center' },
+  cards: { width: '100%', gap: 12 },
   card: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 16,
-    paddingVertical: 18,
-    paddingHorizontal: 20,
+    borderRadius: 18,
+    borderWidth: 1.5,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    gap: 12,
   },
-  cardIcon: {
-    marginRight: 14,
-  },
-  cardText: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  radio: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  flag: { fontSize: 22 },
+  cardText: { flex: 1, fontSize: 16, fontWeight: '700' },
+  radioOuter: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  footer: {
-    paddingBottom: 8,
-  },
-  continueButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    borderRadius: 16,
-  },
-  continueText: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#fff',
-  },
+  radioInner: { width: 9, height: 9, borderRadius: 5 },
+  footer: { paddingHorizontal: 24, paddingBottom: 16 },
 });

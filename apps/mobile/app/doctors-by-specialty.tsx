@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore, DEFAULT_AVATAR } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
@@ -123,14 +123,14 @@ export default function DoctorsBySpecialtyScreen() {
         </Text>
         {(item.ratingAvg ?? 0) > 0 ? (
           <View style={styles.ratingRow}>
-            <Ionicons name="star" size={13} color="#f59e0b" />
+            <Icon name="star" size={13} color="#f59e0b" />
             <Text style={{ color: tokens.colors.textSecondary, fontSize: 12, fontWeight: '600' }}>
               {item.ratingAvg.toFixed(1)} · {item.reviewsCount}
             </Text>
           </View>
         ) : null}
       </View>
-      <Ionicons name="chevron-forward" size={20} color={tokens.colors.textTertiary} />
+      <Icon name="chevron-forward" size={20} color={tokens.colors.textTertiary} />
     </TouchableOpacity>
   );
 
@@ -165,7 +165,7 @@ export default function DoctorsBySpecialtyScreen() {
       ) : null}
       {!loading && doctors.length === 0 ? (
         <View style={[styles.emptyBox, { backgroundColor: tokens.colors.backgroundSecondary }]}>
-          <Ionicons name="person-outline" size={40} color={tokens.colors.textTertiary} />
+          <Icon name="person-outline" size={40} color={tokens.colors.textTertiary} />
           <Text style={[styles.emptyTitle, { color: tokens.colors.text }]}>
             {isUz ? "Bu yo'nalishda hozircha shifokor yo'q" : 'В этом направлении врачи пока не найдены'}
           </Text>
@@ -209,7 +209,7 @@ export default function DoctorsBySpecialtyScreen() {
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top']}>
       <View style={styles.topBar}>
         <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
-          <Ionicons name="chevron-back" size={28} color={tokens.colors.primary} />
+          <Icon name="chevron-back" size={28} color={tokens.colors.primary} />
         </TouchableOpacity>
         <Text style={[styles.topTitle, { color: tokens.colors.text }]} numberOfLines={1}>
           {title}

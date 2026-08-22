@@ -1,11 +1,11 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTokens } from '../../lib/design';
 
 interface Props {
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: IconName;
   iconColor?: string;
   iconBg?: string;
   title: string;
@@ -42,7 +42,7 @@ export function ListItem({
             { backgroundColor: iconBg ?? tokens.colors.primaryBg },
           ]}
         >
-          <Ionicons name={icon} size={18} color={iconColor ?? tokens.brand.iris} />
+          <Icon name={icon} size={18} color={iconColor ?? tokens.brand.iris} />
         </View>
       ) : null}
       <View style={{ flex: 1 }}>
@@ -62,7 +62,7 @@ export function ListItem({
       {rightLabel ? (
         <Text style={{ color: tokens.colors.textTertiary, fontSize: 13, marginRight: 6 }}>{rightLabel}</Text>
       ) : null}
-      {chevron ? <Ionicons name="chevron-forward" size={18} color={tokens.colors.textTertiary} /> : null}
+      {chevron ? <Icon name="chevron-forward" size={18} color={tokens.colors.textTertiary} /> : null}
     </TouchableOpacity>
   );
 }

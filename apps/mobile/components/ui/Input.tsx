@@ -9,14 +9,14 @@ import {
   ViewStyle,
   StyleProp,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon, type IconName } from '../icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { getTokens } from '../../lib/design';
 
 interface Props extends Omit<TextInputProps, 'style'> {
   label?: string;
-  icon?: keyof typeof Ionicons.glyphMap;
-  rightIcon?: keyof typeof Ionicons.glyphMap;
+  icon?: IconName;
+  rightIcon?: IconName;
   onRightIconPress?: () => void;
   errorText?: string;
   containerStyle?: StyleProp<ViewStyle>;
@@ -46,7 +46,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
         ]}
       >
         {icon ? (
-          <Ionicons name={icon} size={18} color={tokens.colors.textTertiary} style={{ marginRight: 8 }} />
+          <Icon name={icon} size={18} color={tokens.colors.textTertiary} style={{ marginRight: 8 }} />
         ) : null}
         <TextInput
           ref={ref}
@@ -64,7 +64,7 @@ export const Input = forwardRef<TextInput, Props>(function Input(
         />
         {rightIcon ? (
           <TouchableOpacity hitSlop={10} onPress={onRightIconPress}>
-            <Ionicons name={rightIcon} size={18} color={tokens.colors.textTertiary} />
+            <Icon name={rightIcon} size={18} color={tokens.colors.textTertiary} />
           </TouchableOpacity>
         ) : null}
       </View>

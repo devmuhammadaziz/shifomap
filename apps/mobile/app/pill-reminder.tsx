@@ -10,7 +10,7 @@ import {
     Alert,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../components/icons/Icon';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
 import { getTranslations } from '../lib/translations';
@@ -132,7 +132,7 @@ const PillReminderScreen = () => {
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
             <View style={[styles.header, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7} hitSlop={15}>
-                    <Ionicons name="chevron-back" size={28} color={colors.text} />
+                    <Icon name="chevron-back" size={28} color={colors.text} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.text }]}>{t.pillReminders}</Text>
                 <View style={{ width: 28 }} />
@@ -162,7 +162,7 @@ const PillReminderScreen = () => {
                                 },
                             ]}
                         >
-                            <Ionicons name="medical" size={44} color={colors.primary} />
+                            <Icon name="medical" size={44} color={colors.primary} />
                         </View>
 
                         <Text style={[styles.emptyTitle, { color: colors.text }]}>
@@ -213,7 +213,7 @@ const PillReminderScreen = () => {
                                     ]}
                                 >
                                     <View style={[styles.benefitIcon, { backgroundColor: colors.primaryBg }]}>
-                                        <Ionicons name={b.icon} size={18} color={colors.primary} />
+                                        <Icon name={b.icon} size={18} color={colors.primary} />
                                     </View>
                                     <View style={{ flex: 1, minWidth: 0 }}>
                                         <Text style={[styles.benefitTitle, { color: colors.text }]} numberOfLines={1}>
@@ -232,7 +232,7 @@ const PillReminderScreen = () => {
                             activeOpacity={0.88}
                             onPress={openAddWizard}
                         >
-                            <Ionicons name="add" size={22} color="#fff" />
+                            <Icon name="add" size={22} color="#fff" />
                             <Text style={styles.emptyCtaText}>
                                 {language === 'uz' ? "Birinchi eslatmani qo'shish" : 'Добавить первое напоминание'}
                             </Text>
@@ -250,7 +250,7 @@ const PillReminderScreen = () => {
                             >
                                 <View style={styles.cardRow}>
                                     <View style={[styles.iconMini, { backgroundColor: colors.primaryBg }]}>
-                                        <Ionicons name="person-outline" size={16} color={colors.primary} />
+                                        <Icon name="person-outline" size={16} color={colors.primary} />
                                     </View>
                                     <View style={styles.cardBody}>
                                         <Text style={[styles.pillName, { color: colors.text }]} numberOfLines={1}>
@@ -260,7 +260,7 @@ const PillReminderScreen = () => {
                                             {p.clinicName || '—'} • {t.medicines}: {p.medicinesCount}
                                         </Text>
                                     </View>
-                                    <Ionicons name="chevron-forward" size={18} color={colors.textTertiary} />
+                                    <Icon name="chevron-forward" size={18} color={colors.textTertiary} />
                                 </View>
                             </TouchableOpacity>
                         ))}
@@ -320,7 +320,7 @@ const PillReminderScreen = () => {
                                                 style={[styles.scheduleDelete, { backgroundColor: colors.backgroundSecondary }]}
                                                 activeOpacity={0.8}
                                             >
-                                                <Ionicons name="trash-outline" size={18} color="#ef4444" />
+                                                <Icon name="trash-outline" size={18} color="#ef4444" />
                                             </TouchableOpacity>
                                         </View>
                                     );
@@ -339,7 +339,7 @@ const PillReminderScreen = () => {
                     onPress={openAddWizard}
                     activeOpacity={0.85}
                 >
-                    <Ionicons name="add" size={32} color="#FFF" />
+                    <Icon name="add" size={32} color="#FFF" />
                 </TouchableOpacity>
             ) : null}
 

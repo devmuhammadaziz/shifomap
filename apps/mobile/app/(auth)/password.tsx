@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  TouchableOpacity,
   TextInput,
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -12,11 +11,12 @@ import {
   Modal,
   Pressable,
   ScrollView,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Icon } from '../../components/icons/Icon';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
 import {
@@ -26,8 +26,12 @@ import {
 } from '../../lib/api';
 import { getTranslations } from '../../lib/translations';
 import { getTokens } from '../../lib/design';
-import { Button } from '../../components/ui';
-import { isValidUzPhone9 } from '../../lib/uz-phone';
+import { formatUzNationalDigits, isValidUzPhone9 } from '../../lib/uz-phone';
+import { WaveBackground } from '../../components/auth/WaveBackground';
+import { AuthCtaButton } from '../../components/auth/AuthCtaButton';
+import { AuthBackButton } from '../../components/auth/AuthBackButton';
+
+const SHIELD_IMG = require('../../assets/auth-shield-lock.png');
 
 function isUzPhoneValid(phone: string): boolean {
   const d = phone.replace(/\D/g, '');
@@ -45,17 +49,9 @@ function normalizePhone(raw: string): string {
   return s.startsWith('+') ? s : `+${s}`;
 }
 
-function formatPhoneForDisplay(phone: string): string {
-  const d = phone.replace(/\D/g, '').slice(-9);
-  if (d.length <= 2) return d;
-  if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`;
-  if (d.length <= 7) return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`;
-  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7)}`;
-}
-
 export default function PasswordScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ phone?: string }>();
+  const params = useLocalSearchParams<{ phone?: string; mode?: string }>();
   const pendingPhone = useAuthStore((s) => s.pendingPhone);
   const setPendingPhone = useAuthStore((s) => s.setPendingPhone);
   const rawPhone = (params.phone ?? pendingPhone ?? '').trim();
@@ -76,6 +72,9 @@ export default function PasswordScreen() {
 
   const t = getTranslations(language);
   const hasValidPhone = phone.length > 0 && isUzPhoneValid(phone);
+  const brandBlue = tokens.brand.iris;
+  const fieldBg = theme === 'dark' ? tokens.colors.backgroundInput : '#F4F7FF';
+  const rulesBg = theme === 'dark' ? tokens.colors.backgroundSecondary : '#F3F4F6';
 
   useEffect(() => {
     if (redirectDone.current) return;
@@ -109,15 +108,14 @@ export default function PasswordScreen() {
     setLoading(true);
     setErrorPopover(null);
     try {
-      const data = await authPhonePassword(phone, pwd, language as 'uz' | 'ru' | 'en');
+      const intent = params.mode === 'login' ? 'login' : 'signup';
+      const data = await authPhonePassword(phone, pwd, language as 'uz' | 'ru' | 'en', intent);
+      if (!data.token) throw new Error('Auth failed');
       setToken(data.token);
       setPatient(data.patient);
       setPendingPhone(null);
-      if (data.needsProfile) {
-        router.replace('/(auth)/complete-profile');
-      } else {
-        router.replace('/(tabs)');
-      }
+      const needsProfile = data.needsProfile ?? !data.patient?.fullName;
+      router.replace(needsProfile ? '/(auth)/complete-profile' : '/(tabs)');
     } catch (e) {
       const apiMsg = getApiErrorMessage(e);
       const isNetwork =
@@ -126,11 +124,15 @@ export default function PasswordScreen() {
           (e as { code?: string })?.code === 'ERR_NETWORK');
       if (isNetwork) {
         Alert.alert('Error', getConnectionErrorMessage(e));
+      } else if (apiMsg === 'Invalid password') {
+        setErrorPopover({ title: t.passwordWrongTitle, message: t.passwordWrongMessage });
+      } else if (apiMsg === 'Phone already registered') {
+        setErrorPopover({ title: t.passwordTitle, message: t.phoneAlreadyRegistered });
       } else {
-        const title = t.passwordWrongTitle;
-        const message =
-          apiMsg && apiMsg !== 'Invalid password' ? apiMsg : t.passwordWrongMessage;
-        setErrorPopover({ title, message });
+        setErrorPopover({
+          title: t.passwordTitle,
+          message: apiMsg && apiMsg !== 'Auth failed' ? apiMsg : t.authServerError,
+        });
       }
     } finally {
       setLoading(false);
@@ -140,17 +142,56 @@ export default function PasswordScreen() {
   if (!showScreen) {
     return (
       <View style={[styles.loadingRoot, { backgroundColor: tokens.colors.background }]}>
-        <ActivityIndicator size="large" color={tokens.brand.iris} />
+        <ActivityIndicator size="large" color={brandBlue} />
       </View>
     );
   }
 
   const pwd = password.trim();
   const isValid = pwd.length >= 8 && /[A-Z]/.test(pwd) && /\d/.test(pwd);
-  const phoneDisplay = isUzPhoneValid(phone) ? '+998 ' + formatPhoneForDisplay(phone) : phone;
+  const phoneDisplay = isUzPhoneValid(phone)
+    ? '+998 ' + formatUzNationalDigits(phone.replace(/\D/g, '').slice(-9))
+    : phone;
+
+  const rules = [
+    {
+      key: 'length',
+      ok: pwd.length >= 8,
+      icon: 'shield-checkmark-outline' as const,
+      label:
+        language === 'ru'
+          ? 'Минимум 8 символов'
+          : language === 'en'
+            ? 'At least 8 characters'
+            : "Kamida 8 ta belgi",
+    },
+    {
+      key: 'upper',
+      ok: /[A-Z]/.test(pwd),
+      glyph: 'Aa',
+      label:
+        language === 'ru'
+          ? 'Хотя бы 1 заглавная буква (A–Z)'
+          : language === 'en'
+            ? 'At least 1 uppercase letter (A–Z)'
+            : "Kamida 1 ta katta harf (A-Z)",
+    },
+    {
+      key: 'digit',
+      ok: /\d/.test(pwd),
+      glyph: '123',
+      label:
+        language === 'ru'
+          ? 'Хотя бы 1 цифра (0–9)'
+          : language === 'en'
+            ? 'At least 1 number (0–9)'
+            : "Kamida 1 ta raqam (0-9)",
+    },
+  ] as const;
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top', 'bottom']}>
+      <WaveBackground />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -158,61 +199,43 @@ export default function PasswordScreen() {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.topRow}>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              style={[styles.backBtn, { backgroundColor: tokens.colors.backgroundCard, borderColor: tokens.colors.border }]}
-            >
-              <Ionicons name="chevron-back" size={22} color={tokens.colors.text} />
-            </TouchableOpacity>
+            <AuthBackButton onPress={() => router.back()} />
           </View>
 
-          <LinearGradient
-            colors={tokens.gradients.cool as [string, string, ...string[]]}
-            style={[styles.lockBubble]}
-          >
-            <View style={[styles.lockInner, { backgroundColor: tokens.colors.backgroundCard }]}>
-              <Ionicons name="lock-closed" size={32} color={tokens.brand.iris} />
-            </View>
-          </LinearGradient>
+          <Image source={SHIELD_IMG} style={styles.shield} resizeMode="contain" />
 
-          <View style={{ paddingHorizontal: 24, alignItems: 'center', marginTop: 24 }}>
-            <Text style={[tokens.type.display, { color: tokens.colors.text, textAlign: 'center' }]}>
-              {t.passwordTitle}
-            </Text>
-            <Text
-              style={{
-                color: tokens.colors.textSecondary,
-                fontSize: 14,
-                textAlign: 'center',
-                marginTop: 8,
-                lineHeight: 20,
-                paddingHorizontal: 20,
-              }}
-            >
-              {t.passwordSubtitle}
-            </Text>
-            <View style={[styles.phoneChip, { backgroundColor: tokens.colors.backgroundSecondary, borderColor: tokens.colors.border }]}>
-              <Ionicons name="call" size={14} color={tokens.brand.iris} />
-              <Text style={{ color: tokens.colors.text, fontWeight: '700', fontSize: 13 }}>
-                {phoneDisplay}
-              </Text>
-            </View>
+          <Text style={[styles.title, { color: tokens.colors.text }]}>
+            {params.mode === 'login' ? t.passwordLoginTitle : t.passwordCreateTitle}
+          </Text>
+          <Text style={[styles.subtitle, { color: tokens.colors.textSecondary }]}>
+            {params.mode === 'login' ? t.passwordLoginSubtitle : t.passwordCreateSubtitle}
+          </Text>
+
+          <View
+            style={[
+              styles.phoneChip,
+              {
+                backgroundColor: tokens.colors.backgroundCard,
+                shadowColor: tokens.colors.cardShadow,
+              },
+            ]}
+          >
+            <Icon name="call" size={14} color={brandBlue} />
+            <Text style={{ color: tokens.colors.text, fontWeight: '700', fontSize: 13 }}>{phoneDisplay}</Text>
           </View>
 
           <View style={styles.form}>
-            <Text style={[tokens.type.caption, { color: tokens.colors.textSecondary, marginBottom: 10, marginLeft: 4 }]}>
-              {t.passwordTitle}
-            </Text>
+            <Text style={[styles.fieldLabel, { color: tokens.colors.text }]}>{t.passwordTitle}</Text>
             <View
               style={[
                 styles.inputBox,
                 {
-                  backgroundColor: tokens.colors.backgroundInput,
-                  borderColor: focused ? tokens.brand.iris : tokens.colors.border,
+                  backgroundColor: fieldBg,
+                  borderColor: focused ? brandBlue : tokens.colors.border,
                 },
               ]}
             >
-              <Ionicons name="key-outline" size={18} color={tokens.colors.textTertiary} />
+              <Icon name="lock-closed-outline" size={18} color={tokens.colors.textTertiary} />
               <TextInput
                 style={[styles.input, { color: tokens.colors.text }]}
                 placeholder={t.passwordPlaceholder}
@@ -227,89 +250,47 @@ export default function PasswordScreen() {
                 editable={!loading}
               />
               <TouchableOpacity onPress={() => setSecure((s) => !s)} hitSlop={10}>
-                <Ionicons name={secure ? 'eye-off' : 'eye'} size={20} color={tokens.colors.textTertiary} />
+                <Icon name={secure ? 'eye-off-outline' : 'eye-outline'} size={20} color={tokens.colors.textTertiary} />
               </TouchableOpacity>
             </View>
-            <View style={styles.rulesWrap}>
-              {(
-                [
-                  {
-                    key: 'length',
-                    ok: pwd.length >= 8,
-                    label:
-                      language === 'ru'
-                        ? 'Минимум 8 символов'
-                        : language === 'en'
-                          ? 'At least 8 characters'
-                          : "Kamida 8 ta belgi",
-                  },
-                  {
-                    key: 'upper',
-                    ok: /[A-Z]/.test(pwd),
-                    label:
-                      language === 'ru'
-                        ? 'Хотя бы 1 заглавная буква (A–Z)'
-                        : language === 'en'
-                          ? 'At least 1 uppercase letter (A–Z)'
-                          : "Kamida 1 ta katta harf (A–Z)",
-                  },
-                  {
-                    key: 'digit',
-                    ok: /\d/.test(pwd),
-                    label:
-                      language === 'ru'
-                        ? 'Хотя бы 1 цифра (0–9)'
-                        : language === 'en'
-                          ? 'At least 1 number (0–9)'
-                          : "Kamida 1 ta raqam (0–9)",
-                  },
-                ] as const
-              ).map((rule) => {
+
+            <View style={[styles.rulesWrap, { backgroundColor: rulesBg }]}>
+              {rules.map((rule) => {
                 const inactive = pwd.length === 0;
-                const tone = inactive
-                  ? tokens.colors.textTertiary
-                  : rule.ok
-                    ? tokens.colors.success
-                    : tokens.colors.error;
-                const bg = inactive
-                  ? tokens.colors.backgroundSecondary
-                  : rule.ok
-                    ? tokens.colors.successBg
-                    : tokens.colors.errorBg;
+                const tone = inactive ? tokens.colors.textSecondary : rule.ok ? tokens.colors.success : tokens.colors.error;
                 return (
                   <View key={rule.key} style={styles.ruleRow}>
-                    <View style={[styles.ruleDot, { backgroundColor: bg }]}>
-                      <Ionicons
-                        name={inactive ? 'ellipse-outline' : rule.ok ? 'checkmark' : 'close'}
-                        size={12}
-                        color={tone}
-                      />
-                    </View>
-                    <Text
-                      style={{
-                        color: inactive ? tokens.colors.textSecondary : tone,
-                        fontSize: 12,
-                        fontWeight: '600',
-                        flex: 1,
-                      }}
+                    <View
+                      style={[
+                        styles.ruleCircle,
+                        { borderColor: inactive ? tokens.colors.border : tone },
+                      ]}
                     >
-                      {rule.label}
-                    </Text>
+                      {!inactive && rule.ok ? <View style={[styles.ruleDot, { backgroundColor: tone }]} /> : null}
+                    </View>
+                    {'icon' in rule && rule.icon ? (
+                      <Icon name={rule.icon} size={15} color={brandBlue} />
+                    ) : (
+                      <Text style={[styles.ruleGlyph, { color: brandBlue }]}>{'glyph' in rule ? rule.glyph : ''}</Text>
+                    )}
+                    <Text style={{ color: tone, fontSize: 13, fontWeight: '600', flex: 1 }}>{rule.label}</Text>
                   </View>
                 );
               })}
             </View>
 
-            <View style={{ height: 18 }} />
-            <Button
+            <View style={{ height: 22 }} />
+            <AuthCtaButton
               title={t.passwordContinue}
-              variant="gradient"
-              size="lg"
-              rightIcon="arrow-forward"
               loading={loading}
               disabled={!isValid}
               onPress={onSubmit}
             />
+          </View>
+
+          <View style={styles.secureRow}>
+            <Icon name="shield-checkmark" size={14} color={brandBlue} />
+            <Text style={{ color: tokens.colors.textTertiary, fontSize: 12 }}>{t.passwordProtected}</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -321,7 +302,7 @@ export default function PasswordScreen() {
             onPress={(ev) => ev.stopPropagation()}
           >
             <View style={[styles.popoverIconWrap, { backgroundColor: tokens.colors.errorBg }]}>
-              <Ionicons name="alert-circle" size={28} color={tokens.colors.error} />
+              <Icon name="alert-circle" size={28} color={tokens.colors.error} />
             </View>
             <Text style={[tokens.type.title, { color: tokens.colors.text, marginBottom: 8, textAlign: 'center' }]}>
               {errorPopover?.title ?? ''}
@@ -329,7 +310,7 @@ export default function PasswordScreen() {
             <Text style={{ color: tokens.colors.textSecondary, fontSize: 14, lineHeight: 20, textAlign: 'center', marginBottom: 18 }}>
               {errorPopover?.message ?? ''}
             </Text>
-            <Button title={t.errorDismiss} onPress={() => setErrorPopover(null)} />
+            <AuthCtaButton title={t.errorDismiss} onPress={() => setErrorPopover(null)} rightIcon="close" />
           </Pressable>
         </Pressable>
       </Modal>
@@ -340,47 +321,43 @@ export default function PasswordScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1 },
   loadingRoot: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { flexGrow: 1, paddingBottom: 40 },
-  topRow: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 8 },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
-    alignItems: 'center',
-    justifyContent: 'center',
+  scrollContent: { flexGrow: 1, paddingBottom: 28 },
+  topRow: { paddingHorizontal: 20, paddingTop: 4, paddingBottom: 4 },
+  shield: { width: 168, height: 168, alignSelf: 'center', marginTop: 4 },
+  title: {
+    fontSize: 26,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginTop: 4,
+    paddingHorizontal: 24,
   },
-  lockBubble: {
-    alignSelf: 'center',
-    marginTop: 20,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  lockInner: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
-    alignItems: 'center',
-    justifyContent: 'center',
+  subtitle: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 8,
+    lineHeight: 20,
+    paddingHorizontal: 36,
   },
   phoneChip: {
+    alignSelf: 'center',
     marginTop: 16,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderRadius: 999,
-    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  form: { paddingHorizontal: 24, paddingTop: 28 },
+  form: { paddingHorizontal: 24, paddingTop: 22 },
+  fieldLabel: { fontSize: 14, fontWeight: '700', marginBottom: 8, marginLeft: 4 },
   inputBox: {
     height: 56,
     borderRadius: 16,
-    borderWidth: StyleSheet.hairlineWidth,
+    borderWidth: 1,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -388,21 +365,33 @@ const styles = StyleSheet.create({
   },
   input: { flex: 1, fontSize: 15, fontWeight: '600' },
   rulesWrap: {
-    marginTop: 14,
-    paddingHorizontal: 4,
-    gap: 8,
+    marginTop: 12,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 10,
   },
   ruleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
   },
-  ruleDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  ruleCircle: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1.5,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  ruleDot: { width: 8, height: 8, borderRadius: 4 },
+  ruleGlyph: { fontSize: 11, fontWeight: '800', width: 22, textAlign: 'center' },
+  secureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 22,
   },
   popoverOverlay: {
     flex: 1,

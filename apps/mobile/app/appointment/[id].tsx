@@ -17,7 +17,7 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import { Icon } from '../../components/icons/Icon';
 import { getBookingById, cancelBooking, type Booking } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
@@ -133,12 +133,12 @@ export default function AppointmentDetailScreen() {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-            <Ionicons name="arrow-back" size={24} color={colors.text} />
+            <Icon name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         </View>
         <View style={styles.emptyContainer}>
           <View style={[styles.emptyIconCircle, { backgroundColor: colors.backgroundCard, shadowColor: '#000' }]}>
-            <Ionicons name="document-text-outline" size={64} color={colors.textTertiary} />
+            <Icon name="document-text-outline" size={64} color={colors.textTertiary} />
           </View>
           <Text style={[styles.emptyTitle, { color: colors.text }]}>{t.noResultsFound}</Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
@@ -194,7 +194,7 @@ export default function AppointmentDetailScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border, paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
+          <Icon name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t.yourAppointment}</Text>
@@ -220,7 +220,7 @@ export default function AppointmentDetailScreen() {
         <View style={[styles.glassCard, { backgroundColor: colors.backgroundCard, shadowColor: '#000' }]}>
           <View style={styles.dateTimeHeader}>
             <View style={[styles.iconBox, { backgroundColor: colors.primaryBg }]}>
-              <Ionicons name="calendar-outline" size={24} color={colors.primary} />
+              <Icon name="calendar-outline" size={24} color={colors.primary} />
             </View>
             <View>
               <Text style={[styles.dateBig, { color: colors.text }]}>{dateFull}</Text>
@@ -267,7 +267,7 @@ export default function AppointmentDetailScreen() {
           {booking.status === 'cancelled' ? (
             <View style={[styles.cancelledAlert, { backgroundColor: colors.errorBg }]}>
               <View style={styles.cancelledRow}>
-                <Ionicons name="alert-circle" size={24} color={colors.error} />
+                <Icon name="alert-circle" size={24} color={colors.error} />
                 <Text style={[styles.cancelledAlertText, { color: colors.error }]}>{t.cancelled}</Text>
               </View>
               {booking.cancel?.reason && (
@@ -294,7 +294,7 @@ export default function AppointmentDetailScreen() {
                         borderColor: done ? colors.primary : colors.border,
                         borderWidth: done ? 0 : 2
                       }]}>
-                        {done && <Ionicons name={s.icon as any} size={14} color="#fff" />}
+                        {done && <Icon name={s.icon} size={14} color="#fff" />}
                       </View>
                       {!last && (
                         <View style={[styles.timelineLine, { backgroundColor: done ? colors.primary : colors.border }]} />

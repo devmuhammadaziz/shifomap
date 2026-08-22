@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb"
 import { getDb, PATIENTS_COLLECTION } from "@/db/mongo"
 import type { PatientDoc } from "./patients.model"
 import type { PatientLanguage } from "./patients.model"
+import { uzPhoneLookupValues } from "./patients.model"
 
 export interface InsertPatientInput {
   fullName: string
@@ -52,9 +53,10 @@ export async function findPatientByGoogleId(googleId: string): Promise<PatientDo
 
 export async function findPatientByPhone(phone: string): Promise<PatientDoc | null> {
   const db = getDb()
-  return db
-    .collection<PatientDoc>(PATIENTS_COLLECTION)
-    .findOne({ "contacts.phone": phone, deletedAt: null })
+  return db.collection<PatientDoc>(PATIENTS_COLLECTION).findOne({
+    "contacts.phone": { $in: uzPhoneLookupValues(phone) },
+    deletedAt: null,
+  })
 }
 
 export async function findPatientById(id: ObjectId): Promise<PatientDoc | null> {
