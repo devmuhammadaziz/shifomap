@@ -23,10 +23,10 @@ import { getTokens } from '../../lib/design';
 import { searchServicesSuggest, type PublicServiceItem, type ClinicListItem } from '../../lib/api';
 import { IconButton, SkeletonBlock } from '../../components/ui';
 import HomePriceFilterSheet from '../components/HomePriceFilterSheet';
+import { BRAND_LOGO, SHIFO_ROBOT, preloadHomeImages } from '../../lib/home-images';
 
 const ACCENT = '#2563EB';
-const LOGO = require('../../assets/play_store_512-Photoroom.png');
-const ROBOT = require('../../assets/ai-shifo-robot.png');
+preloadHomeImages();
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=400&q=80';
 
 type QuickItem = {
@@ -164,7 +164,13 @@ export default function HomeScreen() {
         <View style={styles.header}>
           <View style={styles.brandRow}>
             <View style={styles.logoCircle}>
-              <Image source={LOGO} style={styles.logo} resizeMode="contain" />
+              <Image
+                source={BRAND_LOGO}
+                defaultSource={BRAND_LOGO}
+                fadeDuration={0}
+                style={styles.logo}
+                resizeMode="contain"
+              />
             </View>
             <View>
               <Text style={[styles.brand, { color: ACCENT }]}>ShifoYo'l</Text>
@@ -311,7 +317,13 @@ export default function HomeScreen() {
               <Icon name="arrow-forward" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Image source={ROBOT} style={styles.robot} resizeMode="contain" />
+          <Image
+            source={SHIFO_ROBOT}
+            defaultSource={SHIFO_ROBOT}
+            fadeDuration={0}
+            style={styles.robot}
+            resizeMode="contain"
+          />
         </LinearGradient>
 
         <View style={styles.sectionHead}>
@@ -447,7 +459,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
-  robot: { width: 110, height: 110, marginRight: -8 },
+  robot: { width: 118, height: 150, marginRight: -6, marginBottom: -18 },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',

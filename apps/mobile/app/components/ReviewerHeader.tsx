@@ -44,13 +44,13 @@ export default function ReviewerHeader({
   size = 'md',
 }: {
   review: ReviewLike;
-  language: string;
+  language: string | null;
   textColor: string;
   secondaryColor: string;
   starColor: string;
   size?: 'sm' | 'md';
 }) {
-  const name = reviewerName(review, language);
+  const name = reviewerName(review, language ?? 'uz');
   const initial = (name[0] ?? '?').toUpperCase();
   const avatar = resolveAvatar(review.patientAvatar);
   const isSm = size === 'sm';

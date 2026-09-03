@@ -30,7 +30,7 @@ import {
   type DoctorSlotBySpecialty,
 } from '../lib/api';
 
-const ROBOT = require('../assets/ai-shifo-robot.png');
+import { SHIFO_ROBOT } from '../lib/home-images';
 const ACCENT = '#2563EB';
 
 const SAMPLE_QUESTIONS: Array<{
@@ -695,7 +695,13 @@ export default function AiChatScreen() {
                     {isUz ? 'Alomatlaringizni yozing yoki savolingizni bering.' : 'Опишите симптомы или задайте вопрос.'}
                   </Text>
                 </View>
-                <Image source={ROBOT} style={styles.welcomeRobot} resizeMode="contain" />
+                <Image
+                  source={SHIFO_ROBOT}
+                  defaultSource={SHIFO_ROBOT}
+                  fadeDuration={0}
+                  style={styles.welcomeRobot}
+                  resizeMode="contain"
+                />
               </View>
 
               <View style={styles.promptList}>

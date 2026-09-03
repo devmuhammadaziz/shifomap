@@ -13,7 +13,7 @@ const BAR_BODY_HEIGHT = 62;
 const AI_SIZE = 62;
 const CENTER_SLOT = TAB_BAR_NOTCH_HALF * 2 + 8;
 const AI_BOTTOM_OFFSET = 10;
-const LOGO = require('../../assets/play_store_512-Photoroom.png');
+import { BRAND_LOGO } from '../../lib/home-images';
 
 type TabDef = {
   key: string;
@@ -117,7 +117,13 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         ]}
         activeOpacity={0.9}
       >
-        <Image source={LOGO} style={styles.aiLogo} resizeMode="contain" />
+        <Image
+          source={BRAND_LOGO}
+          defaultSource={BRAND_LOGO}
+          fadeDuration={0}
+          style={styles.aiLogo}
+          resizeMode="contain"
+        />
       </TouchableOpacity>
     </View>
   );

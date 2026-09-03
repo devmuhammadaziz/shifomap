@@ -73,7 +73,9 @@ export function buildMetaLabel(meta: Omit<PillReminderMeta, 'v' | 'label' | 'gro
       : meta.frequency === 'every_other'
         ? tr(language, 'Kun oralab', 'Через день')
         : tr(language, 'Kerak bo‘lganda', 'По необходимости');
-  return `${formLabels[meta.form]} · ${freq} · ${foodLabels[meta.food]}`;
+  const formKey = (meta.form in formLabels ? meta.form : 'other') as PillFormType;
+  const foodKey = (meta.food in foodLabels ? meta.food : 'any') as PillFood;
+  return `${formLabels[formKey]} · ${freq} · ${foodLabels[foodKey]}`;
 }
 
 function TimeWheel({

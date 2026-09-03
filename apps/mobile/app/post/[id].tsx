@@ -131,9 +131,6 @@ export default function PostDetailScreen() {
     }
   };
 
-  const imageUrls = post.imageUrls?.length ? post.imageUrls : [post.imageUrl];
-  const multiImages = imageUrls.length > 1;
-
   if (loading) {
     return (
       <View style={[styles.center, { backgroundColor: tokens.colors.background }]}>
@@ -149,6 +146,9 @@ export default function PostDetailScreen() {
       </View>
     );
   }
+
+  const imageUrls = post.imageUrls?.length ? post.imageUrls : [post.imageUrl];
+  const multiImages = imageUrls.length > 1;
 
   return (
     <KeyboardAvoidingView

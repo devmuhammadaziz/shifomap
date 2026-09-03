@@ -6,6 +6,9 @@ import { StatusBar } from 'expo-status-bar';
 import { useSavedServicesStore } from '../store/saved-services-store';
 import { useThemeStore } from '../store/theme-store';
 import { getTokens } from '../lib/design';
+import { preloadHomeImages } from '../lib/home-images';
+
+preloadHomeImages();
 
 export default function RootLayout() {
   const hydrateSaved = useSavedServicesStore((s) => s.hydrate);
@@ -16,6 +19,7 @@ export default function RootLayout() {
   useEffect(() => {
     hydrateSaved();
     hydrateTheme();
+    preloadHomeImages();
     void initPillNotificationsForeground();
   }, [hydrateSaved, hydrateTheme]);
 
