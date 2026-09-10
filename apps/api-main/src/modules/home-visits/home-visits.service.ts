@@ -4,6 +4,7 @@ import { findClinicById } from "@/modules/clinics/clinics.repo"
 import type { PatientDoc } from "@/modules/patients/patients.model"
 import type { JwtPayload } from "@/common/middleware/auth"
 import { badRequest, forbidden, notFound, unauthorized } from "@/common/errors"
+import { toObjectId } from "@/common/utils/id"
 import {
   type CreateHomeVisitBody,
   type HomeVisitDoc,
@@ -21,11 +22,11 @@ export async function createHomeVisit(patientId: string, body: CreateHomeVisitBo
   const db = getDb()
   const patient = await db
     .collection<PatientDoc>(PATIENTS_COLLECTION)
-    .findOne({ _id: new ObjectId(patientId), deletedAt: null })
+    .findOne({ _id: toObjectId(patientId), deletedAt: null })
   if (!patient) throw notFound("Patient not found")
 
-  const clinicId = new ObjectId(body.clinicId)
-  const doctorId = new ObjectId(body.doctorId)
+  const clinicId = toObjectId(body.clinicId)
+  const doctorId = toObjectId(body.doctorId)
   const clinic = await findClinicById(clinicId)
   if (!clinic) throw notFound("Clinic not found")
 
@@ -35,7 +36,7 @@ export async function createHomeVisit(patientId: string, body: CreateHomeVisitBo
   const now = new Date()
   const doc: HomeVisitDoc = {
     _id: new ObjectId(),
-    patientId: new ObjectId(patientId),
+    patientId: toObjectId(patientId),
     clinicId,
     doctorId,
     patientName: patient.fullName?.trim() || "Patient",
@@ -65,7 +66,7 @@ async function findDocById(id: string): Promise<HomeVisitDoc | null> {
   if (!ObjectId.isValid(id)) return null
   const db = getDb()
   return db.collection<HomeVisitDoc>(HOME_VISITS_COLLECTION).findOne({
-    _id: new ObjectId(id),
+    _id: toObjectId(id),
     deletedAt: null,
   })
 }
@@ -86,7 +87,7 @@ export async function listHomeVisitsForDoctor(auth: JwtPayload, status?: HomeVis
   if (auth.role !== "doctor") throw forbidden("Doctor only")
   const db = getDb()
   const filter: Record<string, unknown> = {
-    doctorId: new ObjectId(auth.sub),
+    doctorId: toObjectId(auth.sub),
     deletedAt: null,
   }
   if (status) filter.status = status
@@ -103,7 +104,7 @@ export async function listHomeVisitsForClinic(auth: JwtPayload, status?: HomeVis
   if (!auth.role?.startsWith("clinic_") || !auth.clinicId) throw forbidden("Clinic staff only")
   const db = getDb()
   const filter: Record<string, unknown> = {
-    clinicId: new ObjectId(auth.clinicId),
+    clinicId: toObjectId(auth.clinicId),
     deletedAt: null,
   }
   if (status) filter.status = status

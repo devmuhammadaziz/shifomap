@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useToast } from '@/contexts/toast-context'
 
 type BookingItem = {
   _id: string
@@ -25,12 +26,15 @@ function isSameDay(a: Date, b: Date) {
 
 export default function MyAppointmentsPage() {
   const { t } = useLanguage()
+  const { toast } = useToast()
   const user = useAuthStore((s) => s.user)
   const token = useMemo(() => Cookies.get('clinic_auth_token') || null, [])
   const apiUrl = getApiUrl()
   const [loading, setLoading] = useState(true)
   const [list, setList] = useState<BookingItem[]>([])
   const [tab, setTab] = useState<'upcoming' | 'today' | 'past' | 'cancelled' | 'all'>('today')
+
+  const bk = ((t as any).bookings ?? {}) as Record<string, string>
 
   const load = useCallback(async () => {
     if (!token) return
@@ -40,25 +44,41 @@ export default function MyAppointmentsPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       const json = await res.json()
-      setList(res.ok && json?.success ? (json.data ?? []) : [])
+      if (res.ok && json?.success) {
+        setList(json.data ?? [])
+      } else {
+        setList([])
+        toast(json?.error ?? (bk.actionFailed ?? 'Amalni bajarib bo\'lmadi'), 'error')
+      }
     } catch {
       setList([])
+      toast(bk.actionFailed ?? 'Amalni bajarib bo\'lmadi', 'error')
     } finally {
       setLoading(false)
     }
-  }, [apiUrl, token])
+  }, [apiUrl, token, toast])
 
   const action = useCallback(
     async (id: string, path: string) => {
       if (!token) return
-      await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
-      })
-      await load()
+      try {
+        const res = await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
+        })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.success) {
+          toast(json?.error ?? (bk.actionFailed ?? 'Amalni bajarib bo\'lmadi'), 'error')
+          return
+        }
+        toast(bk.actionSuccess ?? 'Bajarildi', 'success')
+        await load()
+      } catch {
+        toast(bk.actionFailed ?? 'Amalni bajarib bo\'lmadi', 'error')
+      }
     },
-    [apiUrl, token, load]
+    [apiUrl, token, load, toast, bk]
   )
 
   useEffect(() => {
@@ -82,8 +102,6 @@ export default function MyAppointmentsPage() {
     if (tab === 'today') return normalized.filter((b) => isSameDay(b._dt, now) && b.status !== 'cancelled')
     return normalized.filter((b) => b._dt.getTime() >= now.getTime() && b.status !== 'cancelled')
   }, [normalized, tab])
-
-  const bk = (t as any).bookings ?? {} as Record<string, string>
 
   const statusLabel = (status: string) => {
     if (status === 'pending') return bk.statusPending ?? 'Kutilmoqda'

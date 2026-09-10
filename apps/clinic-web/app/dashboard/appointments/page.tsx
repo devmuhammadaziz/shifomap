@@ -6,9 +6,11 @@ import Cookies from 'js-cookie'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { getApiUrl } from '@/lib/api'
 import { Button } from '@/components/ui/button'
+import { useToast } from '@/contexts/toast-context'
 
 export default function AppointmentsPage() {
   const { t } = useLanguage()
+  const { toast } = useToast()
   const user = useAuthStore((s) => s.user)
   const token = useMemo(() => Cookies.get('clinic_auth_token') || null, [])
   const [loading, setLoading] = useState(true)
@@ -25,25 +27,41 @@ export default function AppointmentsPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       const json = await res.json()
-      setList(res.ok && json?.success ? (json.data ?? []) : [])
+      if (res.ok && json?.success) {
+        setList(json.data ?? [])
+      } else {
+        setList([])
+        toast(json?.error ?? (((t as any).bookings?.actionFailed) ?? 'Amalni bajarib bo\'lmadi'), 'error')
+      }
     } catch {
       setList([])
+      toast(((t as any).bookings?.actionFailed) ?? 'Amalni bajarib bo\'lmadi', 'error')
     } finally {
       setLoading(false)
     }
-  }, [apiUrl, token])
+  }, [apiUrl, token, toast, t])
 
   const action = useCallback(
     async (id: string, path: string) => {
       if (!token) return
-      await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
-      })
-      await load()
+      try {
+        const res = await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
+        })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.success) {
+          toast(json?.error ?? (bk.actionFailed ?? 'Amalni bajarib bo\'lmadi'), 'error')
+          return
+        }
+        toast(bk.actionSuccess ?? 'Bajarildi', 'success')
+        await load()
+      } catch {
+        toast(bk.actionFailed ?? 'Amalni bajarib bo\'lmadi', 'error')
+      }
     },
-    [apiUrl, token, load]
+    [apiUrl, token, load, toast, bk]
   )
 
   useEffect(() => {

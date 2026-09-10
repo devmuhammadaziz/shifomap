@@ -3,6 +3,7 @@ import { getDb, PATIENTS_COLLECTION } from "@/db/mongo"
 import type { PatientDoc } from "./patients.model"
 import type { PatientLanguage } from "./patients.model"
 import { uzPhoneLookupValues } from "./patients.model"
+import { badRequest } from "@/common/errors"
 
 export interface InsertPatientInput {
   fullName: string
@@ -33,7 +34,7 @@ export async function insertPatient(input: InsertPatientInput): Promise<PatientD
   }
   const result = await db.collection<PatientDoc>(PATIENTS_COLLECTION).insertOne(doc as PatientDoc)
   const inserted = await db.collection<PatientDoc>(PATIENTS_COLLECTION).findOne({ _id: result.insertedId })
-  if (!inserted) throw new Error("Insert patient failed")
+  if (!inserted) throw badRequest("Insert patient failed")
   return inserted
 }
 

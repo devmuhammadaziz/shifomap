@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
   },
   mapLoader: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,

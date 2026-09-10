@@ -62,7 +62,8 @@ import type {
   ClinicCategory,
 } from "./clinics.model"
 import { mapDocToPublicClinic, mapDocToDetailedClinic } from "./clinics.model"
-import { conflict, unauthorized, notFound, badRequest } from "@/common/errors"
+import { badRequest, conflict, notFound, unauthorized } from "@/common/errors"
+import { toObjectId } from "@/common/utils/id"
 import { signToken } from "@/common/middleware/auth"
 import { env } from "@/env"
 import { ObjectId } from "mongodb"
@@ -185,7 +186,7 @@ export async function getClinicDetails(clinicId: string) {
     throw notFound("Clinic not found")
   }
 
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) {
     throw notFound("Clinic not found")
   }
@@ -239,7 +240,7 @@ export async function stopClinic(clinicId: string) {
 
   const success = await updateClinicStatus(clinicId, "inactive")
   if (!success) {
-    throw new Error("Failed to stop clinic")
+    throw badRequest("Failed to stop clinic")
   }
 
   return { message: "Clinic stopped successfully" }
@@ -256,7 +257,7 @@ export async function activateClinic(clinicId: string) {
 
   const success = await updateClinicStatus(clinicId, "active")
   if (!success) {
-    throw new Error("Failed to activate clinic")
+    throw badRequest("Failed to activate clinic")
   }
 
   return { message: "Clinic activated successfully" }
@@ -273,7 +274,7 @@ export async function permanentlyDeleteClinic(clinicId: string) {
 
   const success = await deleteClinicPermanently(clinicId)
   if (!success) {
-    throw new Error("Failed to delete clinic")
+    throw badRequest("Failed to delete clinic")
   }
 
   return { message: "Clinic deleted permanently" }
@@ -290,7 +291,7 @@ export async function changeClinicPlan(clinicId: string, body: ChangePlanBody) {
 
   const success = await updateClinicPlan(clinicId, body.plan)
   if (!success) {
-    throw new Error("Failed to update clinic plan")
+    throw badRequest("Failed to update clinic plan")
   }
 
   return { message: "Clinic plan updated successfully", plan: body.plan }
@@ -337,12 +338,12 @@ export async function addOwnerToMyClinic(auth: { sub: string; role?: string; cli
 export async function setOwnerStatus(auth: { sub: string; role?: string; clinicId?: string }, ownerId: string, isActive: boolean) {
   const clinicId = await resolveClinicIdForOwner(auth)
   if (!clinicId) throw unauthorized("Clinic owner only")
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasOwner = clinic.owners?.some((o) => o._id.toHexString() === ownerId)
   if (!hasOwner) throw notFound("Owner not found")
   const success = await setOwnerStatusInClinic(clinicId, ownerId, isActive)
-  if (!success) throw new Error("Failed to update owner status")
+  if (!success) throw badRequest("Failed to update owner status")
   return { message: isActive ? "Admin activated" : "Admin set inactive" }
 }
 
@@ -352,13 +353,13 @@ export async function setOwnerStatus(auth: { sub: string; role?: string; clinicI
 export async function removeOwner(auth: { sub: string; role?: string; clinicId?: string }, ownerId: string) {
   const clinicId = await resolveClinicIdForOwner(auth)
   if (!clinicId) throw unauthorized("Clinic owner only")
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const target = clinic.owners?.find((o) => o._id.toHexString() === ownerId)
   if (!target) throw notFound("Owner not found")
   if (target.role === "owner") throw conflict("Cannot remove the clinic owner")
   const success = await removeOwnerFromClinic(clinicId, ownerId)
-  if (!success) throw new Error("Failed to remove owner")
+  if (!success) throw badRequest("Failed to remove owner")
   return { message: "Admin removed successfully" }
 }
 
@@ -366,7 +367,7 @@ export async function removeOwner(auth: { sub: string; role?: string; clinicId?:
  * Add branch to clinic (for clinic owner). Checks plan limits.
  */
 export async function addBranch(clinicId: string, body: CreateBranchBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) {
     throw notFound("Clinic not found")
   }
@@ -391,12 +392,12 @@ export async function addBranch(clinicId: string, body: CreateBranchBody) {
  * Update branch (for clinic owner)
  */
 export async function updateBranch(clinicId: string, branchId: string, body: CreateBranchBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasBranch = clinic.branches?.some((b) => b._id.toHexString() === branchId)
   if (!hasBranch) throw notFound("Branch not found")
   const success = await updateBranchInClinic(clinicId, branchId, body)
-  if (!success) throw new Error("Failed to update branch")
+  if (!success) throw badRequest("Failed to update branch")
   return { message: "Branch updated successfully" }
 }
 
@@ -404,12 +405,12 @@ export async function updateBranch(clinicId: string, branchId: string, body: Cre
  * Set branch active/inactive (for clinic owner)
  */
 export async function setBranchStatus(clinicId: string, branchId: string, isActive: boolean) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasBranch = clinic.branches?.some((b) => b._id.toHexString() === branchId)
   if (!hasBranch) throw notFound("Branch not found")
   const success = await setBranchStatusInClinic(clinicId, branchId, isActive)
-  if (!success) throw new Error("Failed to update branch status")
+  if (!success) throw badRequest("Failed to update branch status")
   return { message: isActive ? "Branch activated" : "Branch set inactive" }
 }
 
@@ -417,7 +418,7 @@ export async function setBranchStatus(clinicId: string, branchId: string, isActi
  * Delete branch (for clinic owner)
  */
 export async function deleteBranch(clinicId: string, branchId: string) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const success = await removeBranchFromClinic(clinicId, branchId)
   if (!success) throw notFound("Branch not found")
@@ -430,7 +431,7 @@ export async function deleteBranch(clinicId: string, branchId: string) {
  * Add doctor to clinic (clinic owner). Requires at least one branch.
  */
 export async function addDoctor(clinicId: string, body: CreateDoctorBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   if (!clinic.branches?.length) throw conflict("Cannot create a doctor without an existing branch. Create a branch first.")
   const existingDoctor = await findClinicDoctorByUsername(body.username)
@@ -468,7 +469,7 @@ export async function addDoctor(clinicId: string, body: CreateDoctorBody) {
  * Update doctor (clinic owner)
  */
 export async function updateDoctor(clinicId: string, doctorId: string, body: UpdateDoctorBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const doctor = clinic.doctors?.find((d) => d._id.toHexString() === doctorId)
   if (!doctor) throw notFound("Doctor not found")
@@ -484,7 +485,7 @@ export async function updateDoctor(clinicId: string, doctorId: string, body: Upd
   if (body.branchId != null) updates.branchId = body.branchId
   if (body.password != null) updates.passwordHash = await hashPassword(body.password)
   const success = await updateDoctorInClinic(clinicId, doctorId, updates)
-  if (!success) throw new Error("Failed to update doctor")
+  if (!success) throw badRequest("Failed to update doctor")
   return { message: "Doctor updated successfully" }
 }
 
@@ -492,12 +493,12 @@ export async function updateDoctor(clinicId: string, doctorId: string, body: Upd
  * Set doctor active/inactive (clinic owner)
  */
 export async function setDoctorStatus(clinicId: string, doctorId: string, isActive: boolean) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasDoctor = clinic.doctors?.some((d) => d._id.toHexString() === doctorId)
   if (!hasDoctor) throw notFound("Doctor not found")
   const success = await setDoctorStatusInClinic(clinicId, doctorId, isActive)
-  if (!success) throw new Error("Failed to update doctor status")
+  if (!success) throw badRequest("Failed to update doctor status")
   return { message: isActive ? "Doctor activated" : "Doctor set inactive" }
 }
 
@@ -505,7 +506,7 @@ export async function setDoctorStatus(clinicId: string, doctorId: string, isActi
  * Delete doctor (clinic owner)
  */
 export async function deleteDoctor(clinicId: string, doctorId: string) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const success = await removeDoctorFromClinic(clinicId, doctorId)
   if (!success) throw notFound("Doctor not found")
@@ -550,7 +551,7 @@ export async function loginDoctor(body: LoginDoctorBody, clientIP?: string | nul
  */
 export async function getMyDoctorProfile(auth: { role?: string; clinicId?: string; sub: string }) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinic = await findClinicById(new ObjectId(auth.clinicId))
+  const clinic = await findClinicById(toObjectId(auth.clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const doctor = clinic.doctors?.find((d) => d._id.toHexString() === auth.sub)
   if (!doctor) throw notFound("Doctor not found")
@@ -600,7 +601,7 @@ export async function getMyDoctorProfile(auth: { role?: string; clinicId?: strin
  */
 export async function updateMyDoctorProfile(auth: { role?: string; clinicId?: string; sub: string }, body: UpdateDoctorByDoctorBody) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinic = await findClinicById(new ObjectId(auth.clinicId))
+  const clinic = await findClinicById(toObjectId(auth.clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const doctor = clinic.doctors?.find((d) => d._id.toHexString() === auth.sub)
   if (!doctor) throw notFound("Doctor not found")
@@ -616,7 +617,7 @@ export async function updateMyDoctorProfile(auth: { role?: string; clinicId?: st
   if (body.avatarUrl !== undefined) updates.avatarUrl = body.avatarUrl
   if (body.password != null) updates.passwordHash = await hashPassword(body.password)
   const success = await updateDoctorInClinic(auth.clinicId, auth.sub, updates)
-  if (!success) throw new Error("Failed to update profile")
+  if (!success) throw badRequest("Failed to update profile")
   return { message: "Profile updated successfully" }
 }
 
@@ -625,12 +626,12 @@ export async function updateMyDoctorProfile(auth: { role?: string; clinicId?: st
  */
 export async function updateMyDoctorSchedule(auth: { role?: string; clinicId?: string; sub: string }, body: UpdateDoctorScheduleBody) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinic = await findClinicById(new ObjectId(auth.clinicId))
+  const clinic = await findClinicById(toObjectId(auth.clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasDoctor = clinic.doctors?.some((d) => d._id.toHexString() === auth.sub)
   if (!hasDoctor) throw notFound("Doctor not found")
   const success = await updateDoctorScheduleInClinic(auth.clinicId, auth.sub, body)
-  if (!success) throw new Error("Failed to update schedule")
+  if (!success) throw badRequest("Failed to update schedule")
   return { message: "Schedule updated successfully" }
 }
 
@@ -638,7 +639,7 @@ export async function updateMyDoctorSchedule(auth: { role?: string; clinicId?: s
  * Add category (clinic owner)
  */
 export async function addCategory(clinicId: string, body: CreateCategoryBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const category = await addCategoryToClinic(clinicId, body.name)
   return {
@@ -656,13 +657,13 @@ export async function addCategory(clinicId: string, body: CreateCategoryBody) {
  * Update category (clinic owner)
  */
 export async function updateCategory(clinicId: string, categoryId: string, body: UpdateCategoryBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasCategory = (clinic.categories ?? []).some((c) => c._id.toHexString() === categoryId)
   if (!hasCategory) throw notFound("Category not found")
   if (body.name == null) return { message: "No changes" }
   const success = await updateCategoryInClinic(clinicId, categoryId, body.name)
-  if (!success) throw new Error("Failed to update category")
+  if (!success) throw badRequest("Failed to update category")
   return { message: "Category updated successfully" }
 }
 
@@ -670,7 +671,7 @@ export async function updateCategory(clinicId: string, categoryId: string, body:
  * Delete category (clinic owner)
  */
 export async function deleteCategory(clinicId: string, categoryId: string) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const success = await removeCategoryFromClinic(clinicId, categoryId)
   if (!success) throw notFound("Category not found")
@@ -683,7 +684,7 @@ export async function deleteCategory(clinicId: string, categoryId: string) {
  * Add service (clinic owner). Requires at least one branch, one doctor, and one category. Checks plan limits.
  */
 export async function addService(clinicId: string, body: CreateServiceBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   if (!clinic.branches?.length) throw conflict("Cannot create a service without an existing branch. Create a branch first.")
   if (!clinic.doctors?.length) throw conflict("Cannot create a service without an existing doctor. Create a doctor first.")
@@ -727,7 +728,7 @@ export async function addService(clinicId: string, body: CreateServiceBody) {
  * Update service (clinic owner)
  */
 export async function updateService(clinicId: string, serviceId: string, body: UpdateServiceBody) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const existing = (clinic.services ?? []).find((s) => s._id.toHexString() === serviceId)
   if (!existing) throw notFound("Service not found")
@@ -757,7 +758,7 @@ export async function updateService(clinicId: string, serviceId: string, body: U
   if (body.branchIds != null) updates.branchIds = body.branchIds
   if (body.doctorIds != null) updates.doctorIds = body.doctorIds
   const success = await updateServiceInClinic(clinicId, serviceId, updates)
-  if (!success) throw new Error("Failed to update service")
+  if (!success) throw badRequest("Failed to update service")
   return { message: "Service updated successfully" }
 }
 
@@ -765,12 +766,12 @@ export async function updateService(clinicId: string, serviceId: string, body: U
  * Set service active/inactive (clinic owner)
  */
 export async function setServiceStatus(clinicId: string, serviceId: string, isActive: boolean) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const hasService = (clinic.services ?? []).some((s) => s._id.toHexString() === serviceId)
   if (!hasService) throw notFound("Service not found")
   const success = await setServiceStatusInClinic(clinicId, serviceId, isActive)
-  if (!success) throw new Error("Failed to update service status")
+  if (!success) throw badRequest("Failed to update service status")
   return { message: isActive ? "Service activated" : "Service set inactive" }
 }
 
@@ -778,7 +779,7 @@ export async function setServiceStatus(clinicId: string, serviceId: string, isAc
  * Delete service (clinic owner)
  */
 export async function deleteService(clinicId: string, serviceId: string) {
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) throw notFound("Clinic not found")
   const success = await removeServiceFromClinic(clinicId, serviceId)
   if (!success) throw notFound("Service not found")
@@ -802,9 +803,6 @@ function mapServiceToResponse(service: ClinicService) {
   }
 }
 
-function toObjectId(id: string): ObjectId {
-  return new ObjectId(id)
-}
 
 /**
  * Run migration to update all clinics with the latest plan limits
@@ -960,7 +958,7 @@ export async function publicGetClinicDetails(clinicId: string) {
   if (!ObjectId.isValid(clinicId)) {
     throw notFound("Clinic not found")
   }
-  const clinic = await findClinicById(new ObjectId(clinicId))
+  const clinic = await findClinicById(toObjectId(clinicId))
   if (!clinic) {
     throw notFound("Clinic not found")
   }

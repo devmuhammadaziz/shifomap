@@ -30,7 +30,7 @@ import {
   type DoctorSlotBySpecialty,
 } from '../lib/api';
 
-import { SHIFO_ROBOT } from '../lib/home-images';
+import ShifoRobot from './components/ShifoRobot';
 const ACCENT = '#2563EB';
 
 const SAMPLE_QUESTIONS: Array<{
@@ -555,7 +555,17 @@ export default function AiChatScreen() {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) {
+        const msg =
+          (typeof data?.error?.message === 'string' && data.error.message) ||
+          (typeof data?.error === 'string' && data.error) ||
+          (isUz
+            ? `AI javob bermadi (${res.status}). Qayta urinib ko'ring.`
+            : `ИИ не ответил (${res.status}). Попробуйте ещё раз.`);
+        setMessages((prev) => [...prev, { role: 'assistant', content: msg }]);
+        return;
+      }
       let finalMessages: ChatMessageItem[] = newMessages;
       if (data.choices && data.choices[0]) {
         const answer = String(data.choices[0].message.content ?? '');
@@ -695,13 +705,7 @@ export default function AiChatScreen() {
                     {isUz ? 'Alomatlaringizni yozing yoki savolingizni bering.' : 'Опишите симптомы или задайте вопрос.'}
                   </Text>
                 </View>
-                <Image
-                  source={SHIFO_ROBOT}
-                  defaultSource={SHIFO_ROBOT}
-                  fadeDuration={0}
-                  style={styles.welcomeRobot}
-                  resizeMode="contain"
-                />
+                <ShifoRobot style={styles.welcomeRobot} />
               </View>
 
               <View style={styles.promptList}>

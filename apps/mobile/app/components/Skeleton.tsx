@@ -24,7 +24,7 @@ export function Skeleton({ width, height = 16, style, borderRadius = 8 }: Skelet
 
   return (
     <View style={[styles.outer, { width: width ?? ('100%' as const), height, borderRadius, overflow: 'hidden' as const }, style]}>
-      <Animated.View style={[StyleSheet.absoluteFillObject, styles.skeleton, { borderRadius, opacity }]} />
+      <Animated.View style={[StyleSheet.absoluteFill, styles.skeleton, { borderRadius, opacity }]} />
     </View>
   );
 }

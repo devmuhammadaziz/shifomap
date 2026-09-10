@@ -1,12 +1,13 @@
 import { ObjectId } from "mongodb"
+import { badRequest } from "@/common/errors"
 
 /**
- * Convert string to ObjectId
- * Throws if invalid
+ * Convert string to ObjectId.
+ * Throws AppError 400 if invalid (never a bare Error → 500).
  */
-export function toObjectId(value: string): ObjectId {
-  if (!ObjectId.isValid(value)) {
-    throw new Error("Invalid ObjectId")
+export function toObjectId(value: string | undefined | null, field = "id"): ObjectId {
+  if (!value || !ObjectId.isValid(value)) {
+    throw badRequest(`Invalid ${field}`, "INVALID_OBJECT_ID")
   }
   return new ObjectId(value)
 }

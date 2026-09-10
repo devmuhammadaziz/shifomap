@@ -246,7 +246,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
 
 const styles = StyleSheet.create({
   flex: { flex: 1, justifyContent: 'flex-end' },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.55)' },
+  backdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(15,23,42,0.55)' },
   sheet: {
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,

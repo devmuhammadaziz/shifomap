@@ -20,6 +20,7 @@ import {
   findCustomRemindersByIds,
 } from "./prescriptions.repo"
 import type { CustomReminderPillEventBody } from "./prescriptions.model"
+import { toObjectId } from "@/common/utils/id"
 
 function genDefaultTimes(timesPerDay: number): string[] {
   if (timesPerDay <= 1) return ["09:00"]
@@ -55,9 +56,9 @@ function normalizeMedicines(meds: Array<Omit<PrescriptionMedicine, "scheduleTime
 
 export async function upsertPrescriptionByDoctor(auth: { role?: string; clinicId?: string; sub: string }, body: { bookingId: string; medicines: any[] }) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const doctorId = new ObjectId(auth.sub)
-  const bookingId = new ObjectId(body.bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const doctorId = toObjectId(auth.sub)
+  const bookingId = toObjectId(body.bookingId)
 
   const booking = await findBookingByIdForClinic(bookingId, clinicId)
   if (!booking) throw notFound("Booking not found")
@@ -92,7 +93,7 @@ export async function upsertPrescriptionByDoctor(auth: { role?: string; clinicId
 
 export async function listMyPrescriptions(auth: { role?: string; sub: string }) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
+  const userId = toObjectId(auth.sub)
   const list = await listPrescriptionsByUserId(userId)
 
   // best-effort clinic/doctor name hydration (from clinic doc)
@@ -116,8 +117,8 @@ export async function listMyPrescriptions(auth: { role?: string; sub: string }) 
 
 export async function getMyPrescriptionDetail(auth: { role?: string; sub: string }, prescriptionId: string, date?: string) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
-  const id = new ObjectId(prescriptionId)
+  const userId = toObjectId(auth.sub)
+  const id = toObjectId(prescriptionId)
   const doc = await findPrescriptionByIdForPatient(id, userId)
   if (!doc) throw notFound("Prescription not found")
   const clinic = await findClinicById(doc.clinicId)
@@ -158,8 +159,8 @@ export async function getMyPrescriptionDetail(auth: { role?: string; sub: string
 
 export async function setMyPrescriptionEvent(auth: { role?: string; sub: string }, prescriptionId: string, body: { medicineKey: string; date: string; time: string; action: "taken" | "skipped" }) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
-  const id = new ObjectId(prescriptionId)
+  const userId = toObjectId(auth.sub)
+  const id = toObjectId(prescriptionId)
   const doc = await findPrescriptionByIdForPatient(id, userId)
   if (!doc) throw notFound("Prescription not found")
 
@@ -194,7 +195,7 @@ type NextPillPayload = {
 
 export async function getMyNextPill(auth: { role?: string; sub: string }): Promise<NextPillPayload | null> {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
+  const userId = toObjectId(auth.sub)
   const today = new Date().toISOString().slice(0, 10)
   const nowTime = new Date().toISOString().slice(11, 16)
 
@@ -257,9 +258,9 @@ export async function recordCustomReminderPillEvent(
   body: CustomReminderPillEventBody
 ) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
+  const userId = toObjectId(auth.sub)
   if (!ObjectId.isValid(reminderIdStr)) throw badRequest("Invalid reminder id")
-  const reminderId = new ObjectId(reminderIdStr)
+  const reminderId = toObjectId(reminderIdStr)
   const rem = await findCustomReminderByIdForPatient(reminderId, userId)
   if (!rem) throw notFound("Reminder not found")
 
@@ -316,8 +317,8 @@ export async function getAdminPillCheckStats(fromStr: string, toStr: string, q: 
     }
   }
 
-  const userIds = [...new Set(Array.from(map.values(), (r) => r.userId.toHexString()))].map((id) => new ObjectId(id))
-  const reminderIds = [...new Set(Array.from(map.values(), (r) => r.reminderId.toHexString()))].map((h) => new ObjectId(h))
+  const userIds = [...new Set(Array.from(map.values(), (r) => r.userId.toHexString()))].map((id) => toObjectId(id))
+  const reminderIds = [...new Set(Array.from(map.values(), (r) => r.reminderId.toHexString()))].map((h) => toObjectId(h))
 
   const [patients, reminders] = await Promise.all([findPatientsByIds(userIds), findCustomRemindersByIds(reminderIds)])
   const patientById = new Map(patients.map((p) => [p._id.toHexString(), p]))
@@ -351,7 +352,7 @@ export async function getAdminPillCheckStats(fromStr: string, toStr: string, q: 
 export async function publicCreateCustomReminder(auth: { role?: string; sub: string }, body: { pillName: string; time: string; notes?: string | null; timesPerDay: number }) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
   if (!ObjectId.isValid(auth.sub)) throw badRequest("Invalid patient id")
-  const userId = new ObjectId(auth.sub)
+  const userId = toObjectId(auth.sub)
   const doc = await upsertCustomReminder(userId, body)
   return {
     id: doc._id.toHexString(),
@@ -365,7 +366,7 @@ export async function publicCreateCustomReminder(auth: { role?: string; sub: str
 
 export async function publicListCustomReminders(auth: { role?: string; sub: string }) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
+  const userId = toObjectId(auth.sub)
   const list = await listCustomRemindersByUserId(userId)
   return list.map(c => ({
     id: c._id.toHexString(),
@@ -379,8 +380,8 @@ export async function publicListCustomReminders(auth: { role?: string; sub: stri
 
 export async function publicDeleteCustomReminder(auth: { role?: string; sub: string }, id: string) {
   if (auth.role !== "patient") throw unauthorized("Patient access only")
-  const userId = new ObjectId(auth.sub)
-  const success = await deleteCustomReminder(new ObjectId(id), userId)
+  const userId = toObjectId(auth.sub)
+  const success = await deleteCustomReminder(toObjectId(id), userId)
   if (!success) throw notFound("Reminder not found")
   return { success: true }
 }

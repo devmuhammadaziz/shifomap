@@ -61,6 +61,11 @@ import {
   publicDoctorSlotsBySpecialty,
 } from "./clinics.service"
 import { requireAuth } from "@/common/middleware/auth"
+import { unauthorized } from "@/common/errors"
+
+function isPlatformAdmin(role?: string) {
+  return role === "SUPER_ADMIN_SHIFO" || role === "admin"
+}
 
 /**
  * Clinics routes under /v1/clinics
@@ -859,8 +864,9 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
     }
   })
   // Create clinic endpoint (platform admin only)
-  .post("/create", async ({ body, set }) => {
+  .post("/create", async ({ body, set, auth }) => {
     try {
+      if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
       const parsed = createClinicBodySchema.safeParse(body ?? {})
       if (!parsed.success) {
         set.status = 400
@@ -883,8 +889,9 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
       return { success: false, error: "Internal server error" }
     }
   })
-  // Get all clinics endpoint (protected)
-  .get("/", async ({ query, set }) => {
+  // Get all clinics endpoint (protected — platform admin)
+  .get("/", async ({ query, set, auth }) => {
+    if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
     const page = parseInt(query.page as string) || 1
     const limit = parseInt(query.limit as string) || 100
     const search = query.search as string | undefined
@@ -892,15 +899,17 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
     set.status = 200
     return { success: true, data: result }
   })
-  // Get single clinic details endpoint (protected)
-  .get("/:id", async ({ params, set }) => {
+  // Get single clinic details endpoint (protected — platform admin)
+  .get("/:id", async ({ params, set, auth }) => {
+    if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
     const result = await getClinicDetails(params.id)
     set.status = 200
     return { success: true, data: result }
   })
   // Stop clinic (soft delete) endpoint (protected)
-  .patch("/:id/stop", async ({ params, set }) => {
+  .patch("/:id/stop", async ({ params, set, auth }) => {
     try {
+      if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
       const result = await stopClinic(params.id)
       set.status = 200
       return { success: true, data: result }
@@ -914,8 +923,9 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
     }
   })
   // Activate clinic endpoint (protected)
-  .patch("/:id/activate", async ({ params, set }) => {
+  .patch("/:id/activate", async ({ params, set, auth }) => {
     try {
+      if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
       const result = await activateClinic(params.id)
       set.status = 200
       return { success: true, data: result }
@@ -929,8 +939,9 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
     }
   })
   // Delete clinic permanently endpoint (protected)
-  .delete("/:id", async ({ params, set }) => {
+  .delete("/:id", async ({ params, set, auth }) => {
     try {
+      if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
       const result = await permanentlyDeleteClinic(params.id)
       set.status = 200
       return { success: true, data: result }
@@ -944,8 +955,9 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
     }
   })
   // Change clinic plan endpoint (protected)
-  .patch("/:id/plan", async ({ params, body, set }) => {
+  .patch("/:id/plan", async ({ params, body, set, auth }) => {
     try {
+      if (!isPlatformAdmin(auth.role)) throw unauthorized("Admin only")
       const parsed = changePlanBodySchema.safeParse(body ?? {})
       if (!parsed.success) {
         set.status = 400

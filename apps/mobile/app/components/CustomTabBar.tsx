@@ -1,6 +1,10 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Platform, useWindowDimensions, Image } from 'react-native';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+type BottomTabBarProps = {
+  state: any;
+  descriptors: any;
+  navigation: any;
+};
 import { Icon, type IconName } from '../../components/icons/Icon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -50,7 +54,7 @@ export default function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const totalHeight = BAR_BODY_HEIGHT + TAB_BAR_NOTCH_LIFT + insets.bottom;
 
   const handlePress = (routeName: string) => {
-    const route = state.routes.find((r) => r.name === routeName);
+    const route = state.routes.find((r: { name: string }) => r.name === routeName);
     if (!route) return;
     const event = navigation.emit({
       type: 'tabPress',

@@ -15,6 +15,7 @@ import type {
   PillCheckEventDoc,
   PillCheckEventAction,
 } from "./prescriptions.model"
+import { badRequest } from "@/common/errors"
 
 export async function findPrescriptionByBookingId(bookingId: ObjectId): Promise<PrescriptionDoc | null> {
   const db = getDb()
@@ -52,7 +53,7 @@ export async function upsertPrescription(input: {
       { $set: { medicines: input.medicines, updatedAt: now } },
       { returnDocument: "after" }
     )
-    if (!result) throw new Error("Update prescription failed")
+    if (!result) throw badRequest("Update prescription failed")
     return result
   }
   const doc: Omit<PrescriptionDoc, "_id"> = {
@@ -67,7 +68,7 @@ export async function upsertPrescription(input: {
   }
   const inserted = await db.collection<PrescriptionDoc>(PRESCRIPTIONS_COLLECTION).insertOne(doc as PrescriptionDoc)
   const created = await db.collection<PrescriptionDoc>(PRESCRIPTIONS_COLLECTION).findOne({ _id: inserted.insertedId })
-  if (!created) throw new Error("Insert prescription failed")
+  if (!created) throw badRequest("Insert prescription failed")
   return created
 }
 
@@ -88,7 +89,7 @@ export async function upsertPrescriptionEvent(input: {
     },
     { upsert: true, returnDocument: "after" }
   )
-  if (!result) throw new Error("Upsert event failed")
+  if (!result) throw badRequest("Upsert event failed")
   return result
 }
 
@@ -116,7 +117,7 @@ export async function upsertCustomReminder(userId: ObjectId, input: { pillName: 
   }
   const inserted = await db.collection<CustomReminderDoc>(CUSTOM_REMINDERS_COLLECTION).insertOne(doc as CustomReminderDoc)
   const created = await db.collection<CustomReminderDoc>(CUSTOM_REMINDERS_COLLECTION).findOne({ _id: inserted.insertedId })
-  if (!created) throw new Error("Insert custom reminder failed")
+  if (!created) throw badRequest("Insert custom reminder failed")
   return created
 }
 
@@ -158,7 +159,7 @@ export async function upsertPillCheckEvent(input: {
     },
     { upsert: true, returnDocument: "after" }
   )
-  if (!result) throw new Error("Upsert pill check event failed")
+  if (!result) throw badRequest("Upsert pill check event failed")
   return result
 }
 

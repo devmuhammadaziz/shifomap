@@ -5,6 +5,7 @@ import { conflict, unauthorized, badRequest } from "@/common/errors"
 import { signToken } from "@/common/middleware/auth"
 import { env } from "@/env"
 import { ObjectId } from "mongodb"
+import { toObjectId } from "@/common/utils/id"
 
 /**
  * Create a new platform admin
@@ -76,7 +77,7 @@ export async function changeAdminPassword(adminId: string, body: ChangePasswordB
     throw badRequest("Invalid admin ID")
   }
 
-  const adminObjectId = new ObjectId(adminId)
+  const adminObjectId = toObjectId(adminId)
   const admin = await findAdminById(adminObjectId)
 
   if (!admin) {
@@ -107,7 +108,7 @@ export async function updateAdminProfileService(adminId: string, body: UpdatePro
     throw badRequest("Invalid admin ID")
   }
 
-  const adminObjectId = new ObjectId(adminId)
+  const adminObjectId = toObjectId(adminId)
   const admin = await findAdminById(adminObjectId)
 
   if (!admin) {

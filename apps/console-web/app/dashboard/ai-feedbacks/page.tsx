@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import Cookies from "js-cookie"
 import Link from "next/link"
+import { toast } from "sonner"
 import { getApiUrl } from "@/lib/api"
 import { MessageSquare, Star } from "lucide-react"
 
@@ -33,8 +34,14 @@ export default function AiFeedbacksPage() {
         headers: { Authorization: `Bearer ${token}` },
       })
       const json = await res.json()
-      setItems(res.ok && json?.success ? json.data?.items ?? [] : [])
+      if (!res.ok || !json?.success) {
+        toast.error(json?.error ?? "Failed to load AI feedbacks")
+        setItems([])
+        return
+      }
+      setItems(json.data?.items ?? [])
     } catch {
+      toast.error("Failed to load AI feedbacks")
       setItems([])
     } finally {
       setLoading(false)

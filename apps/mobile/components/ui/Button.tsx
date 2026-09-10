@@ -91,7 +91,7 @@ export function Button({
           colors={tokens.gradients.hero as [string, string, ...string[]]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.center, StyleSheet.absoluteFillObject, { borderRadius: radiusBySize[size] }]}
+          style={[styles.center, StyleSheet.absoluteFill, { borderRadius: radiusBySize[size] }]}
         />
         <View style={[styles.center, { height: '100%' }]}>{content}</View>
       </TouchableOpacity>

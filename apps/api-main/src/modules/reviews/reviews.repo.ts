@@ -4,6 +4,7 @@ import type { ReviewDoc } from "./reviews.model"
 import type { ClinicDoc } from "@/modules/clinics/clinics.model"
 import type { PatientDoc } from "@/modules/patients/patients.model"
 import { toObjectId } from "@/common/utils/id"
+import { notFound } from "@/common/errors"
 
 export interface InsertReviewInput {
   clinicId: string
@@ -32,7 +33,7 @@ export async function upsertReview(input: InsertReviewInput): Promise<ReviewDoc>
       { $set: { stars: input.stars, text: input.text ?? null } }
     )
     const updated = await db.collection<ReviewDoc>(REVIEWS_COLLECTION).findOne({ _id: existing._id })
-    if (!updated) throw new Error("Review not found after update")
+    if (!updated) throw notFound("Review not found after update")
     if (!updated.serviceId && !updated.doctorId) {
       await recalcClinicRating(clinicId)
     }

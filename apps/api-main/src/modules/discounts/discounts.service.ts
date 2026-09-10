@@ -11,6 +11,7 @@ import {
   softDeleteDiscount,
 } from "./discounts.repo"
 import type { DiscountDoc } from "./discounts.model"
+import { toObjectId } from "@/common/utils/id"
 
 function clinicCity(clinic: NonNullable<Awaited<ReturnType<typeof findClinicById>>>): string {
   const b = clinic.branches?.find((x) => x.isActive) ?? clinic.branches?.[0]
@@ -113,7 +114,7 @@ export async function listPublicDiscounts(city: string | undefined, limit: numbe
 export async function listMyDiscounts(auth: { role?: string; clinicId?: string; sub: string }) {
   const clinicIdStr = await resolveClinicIdForOwner(auth)
   if (!clinicIdStr) throw unauthorized("Clinic owner only")
-  const clinicId = new ObjectId(clinicIdStr)
+  const clinicId = toObjectId(clinicIdStr)
   const clinic = await findClinicById(clinicId)
   if (!clinic) throw notFound("Clinic not found")
   const list = await listDiscountsByClinic(clinicId)
@@ -139,11 +140,11 @@ export async function createDiscount(
 ) {
   const clinicIdStr = await resolveClinicIdForOwner(auth)
   if (!clinicIdStr) throw unauthorized("Clinic owner only")
-  const clinicId = new ObjectId(clinicIdStr)
+  const clinicId = toObjectId(clinicIdStr)
   const clinic = await findClinicById(clinicId)
   if (!clinic) throw notFound("Clinic not found")
   if (!ObjectId.isValid(body.serviceId)) throw badRequest("Invalid serviceId")
-  const serviceId = new ObjectId(body.serviceId)
+  const serviceId = toObjectId(body.serviceId)
   const svc = (clinic.services ?? []).find((s) => s._id.equals(serviceId) && s.isActive !== false)
   if (!svc) throw badRequest("Service not found on this clinic")
   const { amount, currency } = serviceOriginalPrice(svc as any)
@@ -162,7 +163,7 @@ export async function createDiscount(
     expiresAt: exp,
     posterUrl: body.posterUrl ?? null,
     title: body.title ?? null,
-    createdBy: new ObjectId(auth.sub),
+    createdBy: toObjectId(auth.sub),
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
@@ -179,8 +180,8 @@ export async function patchDiscount(
   const clinicIdStr = await resolveClinicIdForOwner(auth)
   if (!clinicIdStr) throw unauthorized("Clinic owner only")
   if (!ObjectId.isValid(id)) throw badRequest("Invalid id")
-  const clinicId = new ObjectId(clinicIdStr)
-  const _id = new ObjectId(id)
+  const clinicId = toObjectId(clinicIdStr)
+  const _id = toObjectId(id)
   const existing = await findDiscountByIdForClinic(_id, clinicId)
   if (!existing) throw notFound("Discount not found")
   const patch: Partial<DiscountDoc> = {}
@@ -206,7 +207,7 @@ export async function removeDiscount(auth: { role?: string; clinicId?: string; s
   const clinicIdStr = await resolveClinicIdForOwner(auth)
   if (!clinicIdStr) throw unauthorized("Clinic owner only")
   if (!ObjectId.isValid(id)) throw badRequest("Invalid id")
-  const ok = await softDeleteDiscount(new ObjectId(id), new ObjectId(clinicIdStr))
+  const ok = await softDeleteDiscount(toObjectId(id), toObjectId(clinicIdStr))
   if (!ok) throw notFound("Discount not found")
   return { success: true }
 }

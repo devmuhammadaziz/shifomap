@@ -570,7 +570,7 @@ const styles = StyleSheet.create({
   reBookBtnText: { fontSize: 15, fontWeight: '700' },
 
   // Cancel Sheet
-  sheetBackdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sheetBackdrop: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(0,0,0,0.45)' },
   sheetAvoid: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     borderTopLeftRadius: 32, borderTopRightRadius: 32,

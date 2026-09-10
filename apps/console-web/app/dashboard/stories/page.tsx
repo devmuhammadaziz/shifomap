@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Cookies from "js-cookie"
+import { toast } from "sonner"
 import { getApiUrl } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { ImagePlus, Plus, Trash2, Pencil, X } from "lucide-react"
@@ -37,7 +38,15 @@ export default function StoriesAdminPage() {
     try {
       const res = await fetch(`${apiUrl}/v1/stories/admin`, { headers: { Authorization: `Bearer ${token}` } })
       const json = await res.json()
-      setItems(res.ok && json?.success ? json.data?.items ?? [] : [])
+      if (!res.ok || !json?.success) {
+        toast.error(json?.error ?? "Failed to load stories")
+        setItems([])
+        return
+      }
+      setItems(json.data?.items ?? [])
+    } catch {
+      toast.error("Failed to load stories")
+      setItems([])
     } finally {
       setLoading(false)
     }

@@ -602,14 +602,11 @@ export async function createBooking(body: {
 }
 
 export async function getBookedSlots(clinicId: string, doctorId: string, date: string): Promise<string[]> {
-  try {
-    const { data } = await api.get<{ success: boolean; data: string[] }>('/bookings/booked-slots', {
-      params: { clinicId, doctorId, date },
-    });
-    return data.success ? data.data : [];
-  } catch {
-    return [];
-  }
+  const { data } = await api.get<{ success: boolean; data: string[]; error?: string }>('/bookings/booked-slots', {
+    params: { clinicId, doctorId, date },
+  });
+  if (!data.success) throw new Error(data.error || 'Failed to load booked slots');
+  return data.data ?? [];
 }
 
 export async function getMyBookings(status?: BookingStatus): Promise<Booking[]> {

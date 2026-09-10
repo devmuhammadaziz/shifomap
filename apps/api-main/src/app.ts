@@ -65,10 +65,12 @@ export const app = new Elysia()
       origin: [
         "https://clinic.shifoyol.uz",
         "https://console.shifoyol.uz",
-        // add any other frontend domains you use:
-        // "https://app.shifoyol.uz",
         "http://localhost:3000",
+        "http://localhost:3001",
         "http://localhost:4000",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+        "http://127.0.0.1:4000",
       ],
       credentials: true,
       allowedHeaders: ["Content-Type", "Authorization"],

@@ -128,10 +128,14 @@ export default function ClinicsPage() {
       })
 
       const data = await response.json()
-      if (data.success && data.data?.clinics) {
-        setClinics(data.data.clinics)
+      if (!response.ok || !data.success) {
+        toast.error(data.error || "Failed to load clinics")
+        if (!search) setClinics([])
+        return
       }
+      setClinics(data.data?.clinics ?? [])
     } catch (err) {
+      toast.error("Failed to load clinics")
       setError("Failed to load clinics")
     } finally {
       setLoading(false)
@@ -165,7 +169,9 @@ export default function ClinicsPage() {
       const data = await response.json()
 
       if (!response.ok || !data.success) {
-        setError(data.error || "Failed to create clinic")
+        const message = data.error || "Failed to create clinic"
+        setError(message)
+        toast.error(message)
         setCreating(false)
         return
       }
@@ -183,6 +189,7 @@ export default function ClinicsPage() {
       })
     } catch (err) {
       setError("Something went wrong")
+      toast.error("Something went wrong")
     } finally {
       setCreating(false)
     }
@@ -205,11 +212,13 @@ export default function ClinicsPage() {
       })
 
       const data = await response.json()
-      if (data.success && data.data) {
-        setSelectedClinic(data.data)
+      if (!response.ok || !data.success) {
+        toast.error(data.error || "Failed to load clinic details")
+        return
       }
+      setSelectedClinic(data.data)
     } catch (err) {
-      console.error("Failed to load clinic details:", err)
+      toast.error("Failed to load clinic details")
     } finally {
       setLoadingDetails(false)
     }

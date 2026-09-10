@@ -346,7 +346,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   coverWrap: { height: 176, backgroundColor: '#E5E7EB' },
-  coverSkeleton: { ...StyleSheet.absoluteFillObject, overflow: 'hidden' },
+  coverSkeleton: { ...StyleSheet.absoluteFill, overflow: 'hidden' },
   cover: { width: '100%', height: 176 },
   badgeRow: {
     position: 'absolute',

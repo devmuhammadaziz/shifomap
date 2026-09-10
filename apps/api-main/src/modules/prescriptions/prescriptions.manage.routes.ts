@@ -5,6 +5,7 @@ import { unauthorized, notFound } from "@/common/errors"
 import { findBookingByIdForClinic } from "@/modules/bookings/bookings.repo"
 import { findPrescriptionByBookingId } from "./prescriptions.repo"
 import { findClinicById } from "@/modules/clinics/clinics.repo"
+import { toObjectId } from "@/common/utils/id"
 
 export const prescriptionsManageRoutes = new Elysia({ prefix: "/prescriptions" })
   .use(requireAuth)
@@ -13,8 +14,8 @@ export const prescriptionsManageRoutes = new Elysia({ prefix: "/prescriptions" }
     if (!auth.clinicId) throw unauthorized("Clinic access only")
     if (!(auth.role === "doctor" || auth.role?.startsWith("clinic_"))) throw unauthorized("Clinic admin or doctor only")
     if (!ObjectId.isValid(params.bookingId)) throw notFound("Booking not found")
-    const clinicId = new ObjectId(auth.clinicId)
-    const bookingId = new ObjectId(params.bookingId)
+    const clinicId = toObjectId(auth.clinicId)
+    const bookingId = toObjectId(params.bookingId)
     const booking = await findBookingByIdForClinic(bookingId, clinicId)
     if (!booking) throw notFound("Booking not found")
     if (auth.role === "doctor") {

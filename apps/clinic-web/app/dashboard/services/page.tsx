@@ -254,13 +254,18 @@ export default function ServicesPage({ embedded }: ServicesPageProps) {
         `${getApiUrl()}/v1/clinics/my-clinic/services/${serviceId}/status`,
         { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ isActive }) }
       )
-      if (res.ok) {
+      const data = await res.json().catch(() => null)
+      if (res.ok && data?.success !== false) {
         fetchMyClinic()
         setSelectedService((prev) =>
           prev?._id === serviceId ? { ...prev, isActive } : prev
         )
         toast(isActive ? t.services.statusSetActive : t.services.statusSetInactive)
+      } else {
+        toast(data?.error || 'Failed to update status', 'error')
       }
+    } catch {
+      toast('Network error', 'error')
     } finally {
       setActionLoading(null)
     }
@@ -274,11 +279,16 @@ export default function ServicesPage({ embedded }: ServicesPageProps) {
         method: 'DELETE',
         headers: getAuthHeaders(),
       })
-      if (res.ok) {
+      const data = await res.json().catch(() => null)
+      if (res.ok && data?.success !== false) {
         if (selectedService?._id === serviceId) setSelectedService(null)
         fetchMyClinic()
         toast(t.services.deletedSuccess)
+      } else {
+        toast(data?.error || 'Failed to delete service', 'error')
       }
+    } catch {
+      toast('Network error', 'error')
     } finally {
       setActionLoading(null)
     }

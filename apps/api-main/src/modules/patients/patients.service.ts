@@ -26,6 +26,7 @@ import { signPatientToken } from "@/common/middleware/auth"
 import { unauthorized, badRequest, conflict } from "@/common/errors"
 import { env } from "@/env"
 import type { PatientLanguage } from "./patients.model"
+import { toObjectId } from "@/common/utils/id"
 
 const GOOGLE_JWKS = createRemoteJWKSet(
   new URL("https://www.googleapis.com/oauth2/v3/certs")
@@ -250,16 +251,16 @@ export async function authPhonePassword(
 
 export async function getMe(patientId: string) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
   return mapDocToPublicPatient(patient)
 }
 
 export async function completeProfile(patientId: string, body: CompleteProfileBody) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
-  const updated = await updatePatientProfile(new ObjectId(patientId), {
+  const updated = await updatePatientProfile(toObjectId(patientId), {
     fullName: body.fullName,
     gender: body.gender,
     age: body.age,
@@ -270,7 +271,7 @@ export async function completeProfile(patientId: string, body: CompleteProfileBo
 
 export async function updateMe(patientId: string, body: UpdatePatientBody) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
   const updates: Parameters<typeof updatePatientProfile>[1] = {}
   if (body.fullName !== undefined) updates.fullName = body.fullName
@@ -285,7 +286,7 @@ export async function updateMe(patientId: string, body: UpdatePatientBody) {
     updates["preferences.language"] = body.preferences.language
   if (body.preferences?.notificationsEnabled !== undefined)
     updates["preferences.notificationsEnabled"] = body.preferences.notificationsEnabled
-  const updated = await updatePatientProfile(new ObjectId(patientId), updates)
+  const updated = await updatePatientProfile(toObjectId(patientId), updates)
   if (!updated) throw badRequest("Failed to update profile")
   return mapDocToPublicPatient(updated)
 }
@@ -295,7 +296,7 @@ export async function changePatientPassword(
   body: ChangePatientPasswordBody
 ) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
   if (patient.auth.type !== "phone" || !patient.auth.passwordHash) {
     throw badRequest("Password change is not available for this account")
@@ -303,24 +304,24 @@ export async function changePatientPassword(
   const valid = await verifyPassword(body.oldPassword, patient.auth.passwordHash)
   if (!valid) throw unauthorized("Invalid password")
   const passwordHash = await hashPassword(body.newPassword)
-  const updated = await updatePatientPassword(new ObjectId(patientId), passwordHash)
+  const updated = await updatePatientPassword(toObjectId(patientId), passwordHash)
   if (!updated) throw badRequest("Failed to update password")
   return mapDocToPublicPatient(updated)
 }
 
 export async function deleteMe(patientId: string) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
-  const deleted = await deletePatient(new ObjectId(patientId))
+  const deleted = await deletePatient(toObjectId(patientId))
   if (!deleted) throw badRequest("Failed to delete account")
   return { success: true }
 }
 
 export async function registerPatientExpoPushToken(patientId: string, expoPushToken: string) {
   if (!ObjectId.isValid(patientId)) throw badRequest("Invalid patient ID")
-  const patient = await findPatientById(new ObjectId(patientId))
+  const patient = await findPatientById(toObjectId(patientId))
   if (!patient) throw unauthorized("Patient not found")
-  await upsertPatientExpoPushToken(new ObjectId(patientId), expoPushToken)
+  await upsertPatientExpoPushToken(toObjectId(patientId), expoPushToken)
   logger.info("[patients] expo push token registered", { patientId })
 }

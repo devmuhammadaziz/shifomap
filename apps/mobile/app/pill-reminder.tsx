@@ -19,6 +19,7 @@ import {
   getMyPrescriptions,
   getCustomReminders,
   deleteCustomReminder,
+  submitCustomReminderPillEvent,
   type PrescriptionCard,
   type CustomReminder,
 } from '../lib/api';
@@ -120,6 +121,40 @@ const PillReminderScreen = () => {
                 }
             ]
         );
+    };
+
+    const todayIso = useMemo(() => {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }, []);
+
+    const handlePillAction = async (reminder: CustomReminder, action: 'taken' | 'skipped') => {
+        try {
+            await submitCustomReminderPillEvent({
+                reminderId: reminder.id,
+                action,
+                date: todayIso,
+                time: reminder.time,
+            });
+            Alert.alert(
+                language === 'uz' ? 'Saqlandi' : 'Сохранено',
+                action === 'taken'
+                    ? language === 'uz'
+                        ? 'Qabul qilganingiz belgilandi'
+                        : 'Приём отмечен'
+                    : language === 'uz'
+                      ? 'O‘tkazib yuborildi deb belgilandi'
+                      : 'Отмечено как пропуск',
+            );
+        } catch {
+            Alert.alert(
+                language === 'uz' ? 'Xato' : 'Ошибка',
+                language === 'uz' ? 'Belgilab bo‘lmadi' : 'Не удалось сохранить',
+            );
+        }
     };
 
     useEffect(() => {
@@ -273,8 +308,8 @@ const PillReminderScreen = () => {
                             <Text style={[styles.todayBannerText, { color: tokens.brand.iris }]}>{todayHeading}</Text>
                             <Text style={[styles.todayBannerSub, { color: colors.textSecondary }]}>
                                 {language === 'uz'
-                                    ? "Qabul qilganingizni asosiy sahifada belgilang"
-                                    : 'Отметьте приём на главном экране'}
+                                    ? 'Qabul qilganingizni «Ichdim» tugmasi bilan belgilang'
+                                    : 'Отметьте приём кнопкой «Принял(а)»'}
                             </Text>
                         </View>
 
@@ -303,25 +338,47 @@ const PillReminderScreen = () => {
                                                 },
                                             ]}
                                         >
-                                            <View style={[styles.scheduleIcon, { backgroundColor: accentColor }]}>
-                                                <PillIcon iconId={meta?.shape} size={24} color="#fff" />
+                                            <View style={styles.scheduleCardTop}>
+                                                <View style={[styles.scheduleIcon, { backgroundColor: accentColor }]}>
+                                                    <PillIcon iconId={meta?.shape} size={24} color="#fff" />
+                                                </View>
+                                                <View style={styles.scheduleBody}>
+                                                    <Text style={[styles.scheduleTitle, { color: colors.text }]} numberOfLines={2}>
+                                                        {c.pillName}
+                                                    </Text>
+                                                    <Text style={[styles.scheduleHint, { color: colors.textSecondary }]} numberOfLines={2}>
+                                                        {subtitle}
+                                                    </Text>
+                                                </View>
+                                                <TouchableOpacity
+                                                    onPress={() => handleDelete(c.id)}
+                                                    hitSlop={10}
+                                                    style={[styles.scheduleDelete, { backgroundColor: colors.backgroundSecondary }]}
+                                                    activeOpacity={0.8}
+                                                >
+                                                    <Icon name="trash-outline" size={18} color="#ef4444" />
+                                                </TouchableOpacity>
                                             </View>
-                                            <View style={styles.scheduleBody}>
-                                                <Text style={[styles.scheduleTitle, { color: colors.text }]} numberOfLines={2}>
-                                                    {c.pillName}
-                                                </Text>
-                                                <Text style={[styles.scheduleHint, { color: colors.textSecondary }]} numberOfLines={2}>
-                                                    {subtitle}
-                                                </Text>
+                                            <View style={styles.scheduleActions}>
+                                                <TouchableOpacity
+                                                    style={[styles.scheduleActionBtn, { backgroundColor: colors.success + '22' }]}
+                                                    activeOpacity={0.85}
+                                                    onPress={() => handlePillAction(c, 'taken')}
+                                                >
+                                                    <Text style={[styles.scheduleActionText, { color: colors.success }]}>
+                                                        {t.taken || (language === 'uz' ? 'Ichdim' : 'Принял(а)')}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={[styles.scheduleActionBtn, { backgroundColor: colors.warning + '22' }]}
+                                                    activeOpacity={0.85}
+                                                    onPress={() => handlePillAction(c, 'skipped')}
+                                                >
+                                                    <Text style={[styles.scheduleActionText, { color: colors.warning }]}>
+                                                        {t.skip || (language === 'uz' ? 'O‘tkazib yuborish' : 'Пропустить')}
+                                                    </Text>
+                                                </TouchableOpacity>
                                             </View>
-                                            <TouchableOpacity
-                                                onPress={() => handleDelete(c.id)}
-                                                hitSlop={10}
-                                                style={[styles.scheduleDelete, { backgroundColor: colors.backgroundSecondary }]}
-                                                activeOpacity={0.8}
-                                            >
-                                                <Icon name="trash-outline" size={18} color="#ef4444" />
-                                            </TouchableOpacity>
                                         </View>
                                     );
                                 })}
@@ -520,13 +577,16 @@ const styles = StyleSheet.create({
     timeBlock: { marginBottom: 20 },
     timeHeading: { fontSize: 26, fontWeight: '800', letterSpacing: -0.5, marginBottom: 10 },
     scheduleCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
         gap: 12,
         padding: 14,
         borderRadius: 18,
         borderWidth: 1,
         marginBottom: 10,
+    },
+    scheduleCardTop: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
     },
     scheduleIcon: {
         width: 48,
@@ -544,6 +604,20 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    scheduleActions: {
+        flexDirection: 'row',
+        gap: 8,
+    },
+    scheduleActionBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 12,
+        alignItems: 'center',
+    },
+    scheduleActionText: {
+        fontSize: 13,
+        fontWeight: '700',
     },
     fab: {
         position: 'absolute',

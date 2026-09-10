@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',

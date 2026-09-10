@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb"
 import { getDb, PLATFORM_ADMIN_COLLECTION } from "@/db/mongo"
 import type { PlatformAdminDoc } from "./auth.model"
 import { ADMIN_ROLE, PERMISSION_ALL } from "@/shared/constants"
+import { badRequest } from "@/common/errors"
 
 export interface InsertAdminInput {
   username: string
@@ -41,7 +42,7 @@ export async function insertAdmin(input: InsertAdminInput): Promise<PlatformAdmi
     .collection<PlatformAdminDoc>(PLATFORM_ADMIN_COLLECTION)
     .findOne({ _id: result.insertedId })
 
-  if (!inserted) throw new Error("Insert failed")
+  if (!inserted) throw badRequest("Insert failed")
   return inserted
 }
 

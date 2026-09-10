@@ -17,6 +17,7 @@ import type { BookingDoc, BookingStatus } from "./bookings.model"
 import type { CreateBookingBody } from "./bookings.model"
 import { findPatientsByIds } from "@/modules/patients/patients.repo"
 import { badRequest, notFound, unauthorized } from "@/common/errors"
+import { toObjectId } from "@/common/utils/id"
 
 function getClinicDisplayNames(clinic: ClinicDoc | null, booking: BookingDoc) {
   if (!clinic) return { clinicDisplayName: "", serviceTitle: "", doctorName: null as string | null, branchName: null as string | null }
@@ -32,11 +33,11 @@ function getClinicDisplayNames(clinic: ClinicDoc | null, booking: BookingDoc) {
 }
 
 export async function createBooking(userId: string, body: CreateBookingBody) {
-  const clinicId = new ObjectId(body.clinicId)
-  const serviceId = new ObjectId(body.serviceId)
-  const branchId = body.branchId ? new ObjectId(body.branchId) : null
-  const doctorId = body.doctorId ? new ObjectId(body.doctorId) : null
-  const userIdObj = new ObjectId(userId)
+  const clinicId = toObjectId(body.clinicId)
+  const serviceId = toObjectId(body.serviceId)
+  const branchId = body.branchId ? toObjectId(body.branchId) : null
+  const doctorId = body.doctorId ? toObjectId(body.doctorId) : null
+  const userIdObj = toObjectId(userId)
 
   const clinic = await findClinicById(clinicId)
   if (!clinic) throw notFound("Clinic not found")
@@ -76,15 +77,15 @@ export async function createBooking(userId: string, body: CreateBookingBody) {
 }
 
 export async function getBookedSlots(clinicId: string, doctorId: string, date: string) {
-  const cId = new ObjectId(clinicId)
-  const dId = new ObjectId(doctorId)
+  const cId = toObjectId(clinicId)
+  const dId = toObjectId(doctorId)
   const bookedTimes = await findBookedTimesForDoctorOnDate(cId, dId, date)
   return bookedTimes
 }
 
 export async function getClinicBookings(auth: { role?: string; clinicId?: string; sub: string }, options?: { status?: BookingDoc["status"] }) {
   if (!auth.role?.startsWith("clinic_") || !auth.clinicId) throw unauthorized("Clinic admin access only")
-  const clinicId = new ObjectId(auth.clinicId)
+  const clinicId = toObjectId(auth.clinicId)
   const list = await findBookingsByClinicId(clinicId, { status: options?.status, limit: 500 })
   const clinic = await findClinicById(clinicId)
   return list.map((b) => {
@@ -95,8 +96,8 @@ export async function getClinicBookings(auth: { role?: string; clinicId?: string
 
 export async function getDoctorTodayBookings(auth: { role?: string; clinicId?: string; sub: string }) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const doctorId = new ObjectId(auth.sub)
+  const clinicId = toObjectId(auth.clinicId)
+  const doctorId = toObjectId(auth.sub)
   const start = new Date()
   start.setHours(0, 0, 0, 0)
   const end = new Date(start)
@@ -111,8 +112,8 @@ export async function getDoctorTodayBookings(auth: { role?: string; clinicId?: s
 
 export async function getDoctorBookings(auth: { role?: string; clinicId?: string; sub: string }) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const doctorId = new ObjectId(auth.sub)
+  const clinicId = toObjectId(auth.clinicId)
+  const doctorId = toObjectId(auth.sub)
   const list = await findBookingsByDoctorId(clinicId, doctorId, { limit: 500 })
   const clinic = await findClinicById(clinicId)
   return list
@@ -126,8 +127,8 @@ export async function getDoctorBookings(auth: { role?: string; clinicId?: string
 export async function getClinicBookingById(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string) {
   if (!auth.clinicId) throw unauthorized("Clinic access only")
   if (!(auth.role === "doctor" || auth.role?.startsWith("clinic_"))) throw unauthorized("Clinic admin or doctor only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const doc = await findBookingByIdForClinic(id, clinicId)
   if (!doc) throw notFound("Booking not found")
   if (auth.role === "doctor") {
@@ -144,8 +145,8 @@ function assertNotCancelled(doc: BookingDoc) {
 
 export async function clinicConfirmBooking(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string) {
   if (!auth.clinicId) throw unauthorized("Clinic access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const current = await findBookingByIdForClinic(id, clinicId)
   if (!current) throw notFound("Booking not found")
   assertNotCancelled(current)
@@ -155,7 +156,7 @@ export async function clinicConfirmBooking(auth: { role?: string; clinicId?: str
   } else if (!auth.role?.startsWith("clinic_")) {
     throw unauthorized("Clinic admin or doctor only")
   }
-  const actor = { role: auth.role === "doctor" ? ("doctor" as const) : ("clinic" as const), id: new ObjectId(auth.sub) }
+  const actor = { role: auth.role === "doctor" ? ("doctor" as const) : ("clinic" as const), id: toObjectId(auth.sub) }
   const updated = await updateBookingStatusByClinic(id, clinicId, "confirmed", actor)
   if (!updated) throw badRequest("Failed to confirm booking")
   const clinic = await findClinicById(clinicId)
@@ -165,13 +166,13 @@ export async function clinicConfirmBooking(auth: { role?: string; clinicId?: str
 
 export async function clinicMarkArrived(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string) {
   if (!auth.role?.startsWith("clinic_") || !auth.clinicId) throw unauthorized("Clinic admin access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const current = await findBookingByIdForClinic(id, clinicId)
   if (!current) throw notFound("Booking not found")
   assertNotCancelled(current)
   if (current.status !== "confirmed") throw badRequest("Patient can be marked arrived only after confirmation")
-  const actor = { role: "clinic" as const, id: new ObjectId(auth.sub) }
+  const actor = { role: "clinic" as const, id: toObjectId(auth.sub) }
   const updated = await updateBookingStatusByClinic(id, clinicId, "patient_arrived", actor)
   if (!updated) throw badRequest("Failed to update booking")
   const clinic = await findClinicById(clinicId)
@@ -181,8 +182,8 @@ export async function clinicMarkArrived(auth: { role?: string; clinicId?: string
 
 export async function doctorStartConsultation(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const current = await findBookingByIdForClinic(id, clinicId)
   if (!current) throw notFound("Booking not found")
   assertNotCancelled(current)
@@ -190,7 +191,7 @@ export async function doctorStartConsultation(auth: { role?: string; clinicId?: 
   if (current.status !== "patient_arrived" && current.status !== "confirmed") {
     throw badRequest("Doctor can start only after booking is confirmed")
   }
-  const actor = { role: "doctor" as const, id: new ObjectId(auth.sub) }
+  const actor = { role: "doctor" as const, id: toObjectId(auth.sub) }
   const updated = await updateBookingStatusByClinic(id, clinicId, "in_progress", actor)
   if (!updated) throw badRequest("Failed to update booking")
   const clinic = await findClinicById(clinicId)
@@ -200,14 +201,14 @@ export async function doctorStartConsultation(auth: { role?: string; clinicId?: 
 
 export async function doctorFinishConsultation(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string) {
   if (auth.role !== "doctor" || !auth.clinicId) throw unauthorized("Doctor access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const current = await findBookingByIdForClinic(id, clinicId)
   if (!current) throw notFound("Booking not found")
   assertNotCancelled(current)
   if (!current.doctorId || current.doctorId.toHexString() !== auth.sub) throw unauthorized("This booking is not assigned to you")
   if (current.status !== "in_progress") throw badRequest("Booking cannot be completed unless consultation started")
-  const actor = { role: "doctor" as const, id: new ObjectId(auth.sub) }
+  const actor = { role: "doctor" as const, id: toObjectId(auth.sub) }
   const updated = await updateBookingStatusByClinic(id, clinicId, "completed", actor)
   if (!updated) throw badRequest("Failed to update booking")
   const clinic = await findClinicById(clinicId)
@@ -217,8 +218,8 @@ export async function doctorFinishConsultation(auth: { role?: string; clinicId?:
 
 export async function clinicCancelBooking(auth: { role?: string; clinicId?: string; sub: string }, bookingId: string, reason: string | null) {
   if (!auth.clinicId) throw unauthorized("Clinic access only")
-  const clinicId = new ObjectId(auth.clinicId)
-  const id = new ObjectId(bookingId)
+  const clinicId = toObjectId(auth.clinicId)
+  const id = toObjectId(bookingId)
   const current = await findBookingByIdForClinic(id, clinicId)
   if (!current) throw notFound("Booking not found")
   assertNotCancelled(current)
@@ -228,7 +229,7 @@ export async function clinicCancelBooking(auth: { role?: string; clinicId?: stri
   } else if (!auth.role?.startsWith("clinic_")) {
     throw unauthorized("Clinic admin or doctor only")
   }
-  const actor = { role: auth.role === "doctor" ? ("doctor" as const) : ("clinic" as const), id: new ObjectId(auth.sub) }
+  const actor = { role: auth.role === "doctor" ? ("doctor" as const) : ("clinic" as const), id: toObjectId(auth.sub) }
   const updated = await updateBookingStatusByClinic(id, clinicId, "cancelled", actor, { cancelReason: reason ?? null })
   if (!updated) throw badRequest("Failed to cancel booking")
   const clinic = await findClinicById(clinicId)
@@ -237,12 +238,12 @@ export async function clinicCancelBooking(auth: { role?: string; clinicId?: stri
 }
 
 export async function getMyBookings(userId: string, status?: BookingDoc["status"]) {
-  const userIdObj = new ObjectId(userId)
+  const userIdObj = toObjectId(userId)
   const list = await findBookingsByUserId(userIdObj, { status, limit: 200 })
   const clinicIds = [...new Set(list.map((b) => b.clinicId.toHexString()))]
   const clinics = new Map<string, ClinicDoc | null>()
   for (const id of clinicIds) {
-    const clinic = await findClinicById(new ObjectId(id))
+    const clinic = await findClinicById(toObjectId(id))
     clinics.set(id, clinic)
   }
   return list.map((b) => {
@@ -253,8 +254,8 @@ export async function getMyBookings(userId: string, status?: BookingDoc["status"
 }
 
 export async function getBookingById(bookingId: string, userId: string) {
-  const id = new ObjectId(bookingId)
-  const userIdObj = new ObjectId(userId)
+  const id = toObjectId(bookingId)
+  const userIdObj = toObjectId(userId)
   const doc = await findBookingById(id, userIdObj)
   if (!doc) throw notFound("Booking not found")
   const clinic = await findClinicById(doc.clinicId)
@@ -263,7 +264,7 @@ export async function getBookingById(bookingId: string, userId: string) {
 }
 
 export async function getNextUpcoming(userId: string) {
-  const userIdObj = new ObjectId(userId)
+  const userIdObj = toObjectId(userId)
   const doc = await findNextUpcomingByUserId(userIdObj)
   if (!doc) return null
   const clinic = await findClinicById(doc.clinicId)
@@ -272,8 +273,8 @@ export async function getNextUpcoming(userId: string) {
 }
 
 export async function cancelBookingByPatient(bookingId: string, userId: string, reason: string | null) {
-  const id = new ObjectId(bookingId)
-  const userIdObj = new ObjectId(userId)
+  const id = toObjectId(bookingId)
+  const userIdObj = toObjectId(userId)
   const doc = await updateBookingCancel(id, userIdObj, reason)
   if (!doc) throw notFound("Booking not found or cannot be cancelled")
   const clinic = await findClinicById(doc.clinicId)
@@ -333,7 +334,7 @@ function priceAmount(p: BookingDoc["consultationPrice"]): number {
 
 export async function getClinicDashboardStats(auth: { role?: string; clinicId?: string; sub: string }) {
   if (!auth.role?.startsWith("clinic_") || !auth.clinicId) throw unauthorized("Clinic admin access only")
-  const clinicId = new ObjectId(auth.clinicId)
+  const clinicId = toObjectId(auth.clinicId)
   const clinic = await findClinicById(clinicId)
   if (!clinic) throw notFound("Clinic not found")
 
@@ -432,7 +433,7 @@ export async function getClinicDashboardStats(auth: { role?: string; clinicId?: 
   const recentDocs = [...list]
     .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
     .slice(0, 8)
-  const patientIds = [...new Set(recentDocs.map((d) => d.userId.toHexString()))].map((id) => new ObjectId(id))
+  const patientIds = [...new Set(recentDocs.map((d) => d.userId.toHexString()))].map((id) => toObjectId(id))
   const patients = await findPatientsByIds(patientIds)
   const patientMap = new Map(patients.map((p) => [p._id.toHexString(), p]))
 

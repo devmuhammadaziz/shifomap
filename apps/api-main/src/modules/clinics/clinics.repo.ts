@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb"
 import { getDb, CLINICS_COLLECTION, REVIEWS_COLLECTION } from "@/db/mongo"
 import type { ClinicDoc, ClinicOwner, ClinicBranch, ClinicDoctor, ClinicCategory, ClinicService } from "./clinics.model"
 import { toObjectId } from "@/common/utils/id"
+import { badRequest, conflict, notFound } from "@/common/errors"
 import { getDualLangSearchPattern } from "@/common/utils/transliterate"
 
 export interface InsertClinicInput {
@@ -123,7 +124,7 @@ export async function insertClinic(input: InsertClinicInput): Promise<ClinicDoc>
   const result = await db.collection<ClinicDoc>(CLINICS_COLLECTION).insertOne(doc as ClinicDoc)
   const inserted = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: result.insertedId })
 
-  if (!inserted) throw new Error("Insert failed")
+  if (!inserted) throw badRequest("Insert failed")
   return inserted
 }
 
@@ -220,17 +221,17 @@ export async function addOwnerToClinic(
   const now = new Date()
 
   const clinic = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: id })
-  if (!clinic) throw new Error("Clinic not found")
+  if (!clinic) throw notFound("Clinic not found")
 
   const currentCount = clinic.owners?.length ?? 0
   const maxAdmins = clinic.plan?.limits?.maxAdmins ?? 1
   if (currentCount >= maxAdmins) {
-    throw new Error(`Plan limit: max ${maxAdmins} admin(s) allowed`)
+    throw badRequest(`Plan limit: max ${maxAdmins} admin(s) allowed`)
   }
 
   const userNameLower = input.userName.toLowerCase()
   const existing = await findClinicOwnerByUsername(userNameLower)
-  if (existing) throw new Error("Username already exists")
+  if (existing) throw conflict("Username already exists")
 
   const owner: ClinicOwner = {
     _id: new ObjectId(),
@@ -590,7 +591,7 @@ export async function addBranchToClinic(clinicId: string, input: AddBranchInput)
   }
 
   const clinic = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: id })
-  if (!clinic) throw new Error("Clinic not found")
+  if (!clinic) throw notFound("Clinic not found")
   const newCount = (clinic.branches?.length ?? 0) + 1
 
   await db.collection<ClinicDoc>(CLINICS_COLLECTION).updateOne(
@@ -769,9 +770,9 @@ export async function addDoctorToClinic(clinicId: string, input: AddDoctorInput)
   }
 
   const clinic = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: cId })
-  if (!clinic) throw new Error("Clinic not found")
+  if (!clinic) throw notFound("Clinic not found")
   const branchExists = (clinic.branches ?? []).some((b) => b._id.equals(branchId))
-  if (!branchExists) throw new Error("Branch not found")
+  if (!branchExists) throw notFound("Branch not found")
   const newCount = (clinic.doctors?.length ?? 0) + 1
 
   await db.collection<ClinicDoc>(CLINICS_COLLECTION).updateOne(
@@ -928,7 +929,7 @@ export async function addCategoryToClinic(clinicId: string, name: string): Promi
     updatedAt: now,
   }
   const clinic = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: cId })
-  if (!clinic) throw new Error("Clinic not found")
+  if (!clinic) throw notFound("Clinic not found")
   const currentCategories = clinic.categories ?? []
   const updated = [...currentCategories, category]
   await db.collection<ClinicDoc>(CLINICS_COLLECTION).updateOne(
@@ -1055,7 +1056,7 @@ export async function addServiceToClinic(clinicId: string, input: AddServiceInpu
     updatedAt: now,
   }
   const clinic = await db.collection<ClinicDoc>(CLINICS_COLLECTION).findOne({ _id: cId })
-  if (!clinic) throw new Error("Clinic not found")
+  if (!clinic) throw notFound("Clinic not found")
   const currentServices = clinic.services ?? []
   const newCount = currentServices.length + 1
   await db.collection<ClinicDoc>(CLINICS_COLLECTION).updateOne(

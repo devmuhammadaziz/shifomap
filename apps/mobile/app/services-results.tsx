@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   activeFilterChipText: { fontSize: 12, fontWeight: '700', flexShrink: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
   filterBackdrop: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
   filterAvoid: { flex: 1, justifyContent: 'flex-end' },

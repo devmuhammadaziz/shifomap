@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb"
 import { getDb, BOOKINGS_COLLECTION } from "@/db/mongo"
 import type { BookingDoc } from "./bookings.model"
+import { badRequest } from "@/common/errors"
 
 export interface InsertBookingInput {
   clinicId: ObjectId
@@ -29,7 +30,7 @@ export async function insertBooking(input: InsertBookingInput): Promise<BookingD
   }
   const result = await db.collection<BookingDoc>(BOOKINGS_COLLECTION).insertOne(doc as BookingDoc)
   const inserted = await db.collection<BookingDoc>(BOOKINGS_COLLECTION).findOne({ _id: result.insertedId })
-  if (!inserted) throw new Error("Insert booking failed")
+  if (!inserted) throw badRequest("Insert booking failed")
   return inserted
 }
 

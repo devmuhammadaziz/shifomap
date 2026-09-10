@@ -6,8 +6,8 @@ export function getApiUrl(): string {
   if (raw) {
     return raw.replace(/\/+$/, "")
   }
-  // Dev fallback: use local api-main (pnpm dev in apps/api-main).
-  return "http://localhost:3000"
+  // Dev fallback: api-main default in this monorepo is :8080
+  return "http://localhost:8080"
 }
 
 /**

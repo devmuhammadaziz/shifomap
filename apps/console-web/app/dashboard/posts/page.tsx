@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Cookies from "js-cookie"
+import { toast } from "sonner"
 import { getApiUrl } from "@/lib/api"
 import { Button } from "@/components/ui/button"
 import { ImagePlus, Heart, MessageCircle, Trash2, Pencil, Plus, X, Search, MessagesSquare, Loader2 } from "lucide-react"
@@ -66,15 +67,23 @@ export default function PostsAdminPage() {
   const load = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`${apiUrl}/v1/posts?limit=50`)
+      const headers: HeadersInit = {}
+      if (token) headers.Authorization = `Bearer ${token}`
+      const res = await fetch(`${apiUrl}/v1/posts?limit=50`, { headers })
       const json = await res.json()
-      setItems(res.ok && json?.success ? json.data?.items ?? [] : [])
+      if (!res.ok || !json?.success) {
+        toast.error(json?.error ?? "Failed to load posts")
+        setItems([])
+        return
+      }
+      setItems(json.data?.items ?? [])
     } catch {
+      toast.error("Failed to load posts")
       setItems([])
     } finally {
       setLoading(false)
     }
-  }, [apiUrl])
+  }, [apiUrl, token])
 
   useEffect(() => {
     load()

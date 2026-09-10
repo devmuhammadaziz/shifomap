@@ -250,10 +250,20 @@ export default function BookScreen() {
     setLoadingSlots(true);
     getBookedSlots(clinicId, selectedDoctorId, selectedDate)
       .then((times) => { if (!cancelled) setBookedTimes(times); })
-      .catch(() => { if (!cancelled) setBookedTimes([]); })
+      .catch(() => {
+        if (!cancelled) {
+          setBookedTimes([]);
+          Alert.alert(
+            language === 'ru' ? 'Ошибка' : 'Xato',
+            language === 'ru'
+              ? 'Не удалось загрузить занятые слоты. Проверьте соединение.'
+              : "Band slotlarni yuklab bo'lmadi. Internetni tekshiring.",
+          );
+        }
+      })
       .finally(() => { if (!cancelled) setLoadingSlots(false); });
     return () => { cancelled = true; };
-  }, [clinicId, selectedDoctorId, selectedDate]);
+  }, [clinicId, selectedDoctorId, selectedDate, language]);
 
   // Available slots = schedule slots minus already-booked times
   const slots = useMemo(() => {

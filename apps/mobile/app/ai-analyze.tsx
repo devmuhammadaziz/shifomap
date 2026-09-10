@@ -134,7 +134,18 @@ export default function AiAnalyzeScreen() {
           ],
         }),
       });
-      const json = await res.json();
+      const json = await res.json().catch(() => ({} as any));
+      if (!res.ok) {
+        setSummary(
+          tr(
+            `AI tahlil qila olmadi (${res.status}). Qayta urinib ko'ring yoki shifokorga murojaat qiling.`,
+            `ИИ не смог проанализировать (${res.status}). Попробуйте ещё раз или обратитесь к врачу.`,
+            `AI could not analyze (${res.status}). Try again or consult a doctor.`,
+          ),
+        );
+        setAdvice(null);
+        return;
+      }
       const content = json?.choices?.[0]?.message?.content ?? '{}';
       try {
         const parsed = JSON.parse(content);

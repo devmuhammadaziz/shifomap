@@ -214,7 +214,7 @@ export function CreateServiceModal({
           { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify(payload) }
         )
         const data = await res.json()
-        if (!res.ok) {
+        if (!res.ok || data?.success === false) {
           setError(data.error || 'Failed to update service')
           setLoading(false)
           return
@@ -236,7 +236,7 @@ export function CreateServiceModal({
           body: JSON.stringify(payload),
         })
         const data = await res.json()
-        if (!res.ok) {
+        if (!res.ok || data?.success === false) {
           setError(data.error || 'Failed to create service')
           setLoading(false)
           return

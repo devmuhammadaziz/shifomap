@@ -247,7 +247,7 @@ export default function AppointmentsScreen() {
         onRequestClose={() => setTicketBooking(null)}
       >
         <View style={styles.ticketOverlay}>
-          <TouchableOpacity style={StyleSheet.absoluteFillObject} activeOpacity={1} onPress={() => setTicketBooking(null)} />
+          <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={() => setTicketBooking(null)} />
           {ticketBooking ? (
             <View style={[styles.ticketWrap, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
               <View style={styles.ticketHeader}>

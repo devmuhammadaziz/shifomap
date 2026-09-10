@@ -80,19 +80,26 @@ export default function DiscountsPage() {
         fetch(`${apiUrl}/v1/clinics/my-clinic`, { headers: authHeaders() }),
         fetch(`${apiUrl}/v1/discounts/clinics/me`, { headers: authHeaders() }),
       ])
-      const cJson = await cRes.json()
-      const dJson = await dRes.json()
+      const cJson = await cRes.json().catch(() => null)
+      const dJson = await dRes.json().catch(() => null)
       if (cRes.ok && cJson?.success) setClinic(cJson.data as ClinicData)
-      else setClinic(null)
+      else {
+        setClinic(null)
+        if (cJson?.error) toast(cJson.error, 'error')
+      }
       if (dRes.ok && dJson?.success) setDiscounts(dJson.data?.items ?? [])
-      else setDiscounts([])
-    } catch {
+      else {
+        setDiscounts([])
+        toast(dJson?.error || (language === 'uz' ? 'Chegirmalarni yuklab bo\'lmadi' : 'Не удалось загрузить скидки'), 'error')
+      }
+    } catch (e) {
       setClinic(null)
       setDiscounts([])
+      toast(e instanceof Error ? e.message : 'Failed', 'error')
     } finally {
       setLoading(false)
     }
-  }, [apiUrl])
+  }, [apiUrl, toast, language])
 
   useEffect(() => {
     load()

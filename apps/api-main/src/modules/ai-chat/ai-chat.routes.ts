@@ -9,6 +9,7 @@ import {
   PATIENTS_COLLECTION,
 } from "@/db/mongo"
 import { badRequest, notFound, unauthorized } from "@/common/errors"
+import { toObjectId } from "@/common/utils/id"
 
 type FeedbackStatus = "none" | "rated" | "dismissed"
 type MessageRole = "user" | "assistant"
@@ -108,11 +109,11 @@ export const aiChatPatientRoutes = new Elysia({ prefix: "/ai-chat" })
       return { success: false, error: "Validation failed", details: parsed.error.flatten().fieldErrors }
     }
     const db = getDb()
-    const patient = (await db.collection(PATIENTS_COLLECTION).findOne({ _id: new ObjectId(auth.sub) })) as PatientNamePhoneSource | null
+    const patient = (await db.collection(PATIENTS_COLLECTION).findOne({ _id: toObjectId(auth.sub) })) as PatientNamePhoneSource | null
     const now = new Date()
     const doc: AiChatConversationDoc = {
       _id: new ObjectId(),
-      patientId: new ObjectId(auth.sub),
+      patientId: toObjectId(auth.sub),
       patientName: pickPatientName(patient),
       patientPhone: pickPatientPhone(patient),
       title: parsed.data.title,
@@ -135,10 +136,10 @@ export const aiChatPatientRoutes = new Elysia({ prefix: "/ai-chat" })
       return { success: false, error: "Validation failed", details: parsed.error.flatten().fieldErrors }
     }
     const db = getDb()
-    const conversationId = new ObjectId(params.id)
+    const conversationId = toObjectId(params.id)
     const conv = await db
       .collection<AiChatConversationDoc>(AI_CHAT_CONVERSATIONS_COLLECTION)
-      .findOne({ _id: conversationId, patientId: new ObjectId(auth.sub) })
+      .findOne({ _id: conversationId, patientId: toObjectId(auth.sub) })
     if (!conv) throw notFound("Conversation not found")
     const msg: AiChatMessageDoc = {
       _id: new ObjectId(),
@@ -162,10 +163,10 @@ export const aiChatPatientRoutes = new Elysia({ prefix: "/ai-chat" })
       return { success: false, error: "Validation failed", details: parsed.error.flatten().fieldErrors }
     }
     const db = getDb()
-    const conversationId = new ObjectId(params.id)
+    const conversationId = toObjectId(params.id)
     const conv = await db
       .collection<AiChatConversationDoc>(AI_CHAT_CONVERSATIONS_COLLECTION)
-      .findOne({ _id: conversationId, patientId: new ObjectId(auth.sub) })
+      .findOne({ _id: conversationId, patientId: toObjectId(auth.sub) })
     if (!conv) throw notFound("Conversation not found")
     const dismissed = parsed.data.dismissed === true
     const rating = dismissed ? null : parsed.data.rating ?? null
@@ -262,7 +263,7 @@ export const aiChatAdminRoutes = new Elysia({ prefix: "/ai-chat/admin" })
     if (!isAdmin(auth.role)) throw unauthorized("Admin only")
     if (!ObjectId.isValid(params.id)) throw badRequest("Invalid conversation id")
     const db = getDb()
-    const conversationId = new ObjectId(params.id)
+    const conversationId = toObjectId(params.id)
     const conversation = await db
       .collection<AiChatConversationDoc>(AI_CHAT_CONVERSATIONS_COLLECTION)
       .findOne({ _id: conversationId })

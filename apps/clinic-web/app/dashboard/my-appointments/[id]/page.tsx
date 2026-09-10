@@ -10,9 +10,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuthStore } from '@/store/auth-store'
 import { useLanguage } from '@/contexts/language-context'
 import MedicalHistoryPanel from '@/components/medical-history-panel'
+import { useToast } from '@/contexts/toast-context'
 
 export default function DoctorBookingDetailPage() {
   const { t } = useLanguage()
+  const { toast } = useToast()
   const params = useParams<{ id: string }>()
   const id = params.id
   const router = useRouter()
@@ -55,14 +57,24 @@ export default function DoctorBookingDetailPage() {
   const action = useCallback(
     async (path: string) => {
       if (!token) return
-      await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
-      })
-      await load()
+      try {
+        const res = await fetch(`${apiUrl}/v1/bookings-manage/${id}/${path}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: path === 'cancel' ? JSON.stringify({ reason: null }) : undefined,
+        })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.success) {
+          toast(json?.error ?? (bk.actionFailed ?? 'Amalni bajarib bo\'lmadi'), 'error')
+          return
+        }
+        toast(bk.actionSuccess ?? 'Bajarildi', 'success')
+        await load()
+      } catch {
+        toast(bk.actionFailed ?? 'Amalni bajarib bo\'lmadi', 'error')
+      }
     },
-    [apiUrl, id, token, load]
+    [apiUrl, id, token, load, toast, bk]
   )
 
   useEffect(() => {

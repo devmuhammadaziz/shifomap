@@ -97,14 +97,9 @@ export const bookingsRoutes = new Elysia({ prefix: "/bookings" })
     return { success: true, data: result }
   })
   .get("/:id", async ({ params, auth, set }) => {
-    try {
-      const result = await getBookingById(params.id, auth.sub)
-      set.status = 200
-      return { success: true, data: result }
-    } catch (e: any) {
-      set.status = 500
-      return { success: false, error: e.stack || e.message || String(e) }
-    }
+    const result = await getBookingById(params.id, auth.sub)
+    set.status = 200
+    return { success: true, data: result }
   })
   .patch("/:id/cancel", async ({ params, body, auth, set }) => {
     const parsed = cancelBookingBodySchema.safeParse(body ?? {})

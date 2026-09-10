@@ -1,12 +1,13 @@
 import { ObjectId } from "mongodb"
 import { getDb, DISCOUNTS_COLLECTION } from "@/db/mongo"
 import type { DiscountDoc } from "./discounts.model"
+import { badRequest } from "@/common/errors"
 
 export async function insertDiscount(doc: Omit<DiscountDoc, "_id">): Promise<DiscountDoc> {
   const db = getDb()
   const res = await db.collection<DiscountDoc>(DISCOUNTS_COLLECTION).insertOne(doc as DiscountDoc)
   const created = await db.collection<DiscountDoc>(DISCOUNTS_COLLECTION).findOne({ _id: res.insertedId })
-  if (!created) throw new Error("Insert discount failed")
+  if (!created) throw badRequest("Insert discount failed")
   return created
 }
 

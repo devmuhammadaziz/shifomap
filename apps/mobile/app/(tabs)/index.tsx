@@ -20,10 +20,12 @@ import { useThemeStore } from '../../store/theme-store';
 import { useNotificationStore } from '../../store/notification-store';
 import { getTranslations } from '../../lib/translations';
 import { getTokens } from '../../lib/design';
-import { searchServicesSuggest, type PublicServiceItem, type ClinicListItem } from '../../lib/api';
+import { searchServicesSuggest, listStories, type PublicServiceItem, type ClinicListItem, type StoryItem } from '../../lib/api';
 import { IconButton, SkeletonBlock } from '../../components/ui';
 import HomePriceFilterSheet from '../components/HomePriceFilterSheet';
-import { BRAND_LOGO, SHIFO_ROBOT, preloadHomeImages } from '../../lib/home-images';
+import ShifoRobot from '../components/ShifoRobot';
+import StoriesRibbon from '../components/StoriesRibbon';
+import { BRAND_LOGO, preloadHomeImages } from '../../lib/home-images';
 
 const ACCENT = '#2563EB';
 preloadHomeImages();
@@ -110,6 +112,7 @@ export default function HomeScreen() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [priceFilterVisible, setPriceFilterVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [stories, setStories] = useState<StoryItem[]>([]);
 
   const { getUnreadCount, hydrated, hydrate } = useNotificationStore();
   const unread = getUnreadCount();
@@ -117,6 +120,12 @@ export default function HomeScreen() {
   useEffect(() => {
     if (!hydrated) hydrate();
   }, [hydrated, hydrate]);
+
+  useEffect(() => {
+    listStories(20)
+      .then(setStories)
+      .catch(() => setStories([]));
+  }, []);
 
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -146,6 +155,8 @@ export default function HomeScreen() {
     setRefreshing(true);
     try {
       await hydrate();
+      const next = await listStories(20).catch(() => [] as StoryItem[]);
+      setStories(next);
     } finally {
       setRefreshing(false);
     }
@@ -181,6 +192,8 @@ export default function HomeScreen() {
           </View>
           <IconButton icon="notifications-outline" onPress={() => router.push('/notifications')} badge={unread} />
         </View>
+
+        <StoriesRibbon stories={stories} language={language} />
 
         <View style={styles.searchWrap}>
           <View
@@ -317,14 +330,35 @@ export default function HomeScreen() {
               <Icon name="arrow-forward" size={14} color="#fff" />
             </TouchableOpacity>
           </View>
-          <Image
-            source={SHIFO_ROBOT}
-            defaultSource={SHIFO_ROBOT}
-            fadeDuration={0}
-            style={styles.robot}
-            resizeMode="contain"
-          />
+          <ShifoRobot style={styles.robot} />
         </LinearGradient>
+
+        <TouchableOpacity
+          style={[
+            styles.feedPromo,
+            {
+              backgroundColor: theme === 'dark' ? tokens.colors.backgroundCard : '#FFF7ED',
+              borderColor: theme === 'dark' ? tokens.colors.border : '#FED7AA',
+            },
+          ]}
+          activeOpacity={0.85}
+          onPress={() => router.push('/(tabs)/feed')}
+        >
+          <View style={[styles.feedPromoIcon, { backgroundColor: ACCENT }]}>
+            <Icon name="play-circle-outline" size={18} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.feedPromoTitle, { color: tokens.colors.text }]}>
+              {isUz ? 'Lenta va postlar' : 'Лента и посты'}
+            </Text>
+            <Text style={{ color: tokens.colors.textTertiary, fontSize: 12, marginTop: 2 }}>
+              {isUz ? 'Yangiliklar, layklar va izohlar' : 'Новости, лайки и комментарии'}
+            </Text>
+          </View>
+          <View style={styles.mapArrow}>
+            <Icon name="arrow-forward" size={14} color="#fff" />
+          </View>
+        </TouchableOpacity>
 
         <View style={styles.sectionHead}>
           <Text style={[styles.sectionTitle, { color: tokens.colors.text }]}>
@@ -460,6 +494,24 @@ const styles = StyleSheet.create({
   },
   aiBtnText: { color: '#fff', fontWeight: '700', fontSize: 13 },
   robot: { width: 118, height: 150, marginRight: -6, marginBottom: -18 },
+  feedPromo: {
+    marginHorizontal: 20,
+    marginTop: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  feedPromoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  feedPromoTitle: { fontSize: 14, fontWeight: '700' },
   sectionHead: {
     flexDirection: 'row',
     alignItems: 'center',

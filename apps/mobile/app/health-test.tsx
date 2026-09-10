@@ -245,12 +245,25 @@ export default function HealthTestScreen() {
             ],
           }),
         });
-        const json = await res.json();
+        const json = await res.json().catch(() => ({} as any));
+        if (!res.ok) {
+          ai = {
+            condition: language === 'uz' ? 'Vaqtincha ishlamayapti' : language === 'ru' ? 'Временно недоступно' : 'Temporarily unavailable',
+            advice:
+              language === 'uz'
+                ? `AI javob bermadi (${res.status}). Keyinroq qayta urinib ko'ring yoki shifokorga murojaat qiling.`
+                : language === 'ru'
+                  ? `ИИ не ответил (${res.status}). Попробуйте позже или обратитесь к врачу.`
+                  : `AI did not respond (${res.status}). Try again later or see a doctor.`,
+            severity: fallbackSeverity,
+          };
+        } else {
         const content = json?.choices?.[0]?.message?.content ?? '{}';
         try {
           ai = JSON.parse(content);
         } catch {
           ai = { condition: 'N/A', advice: content, severity: fallbackSeverity };
+        }
         }
       } else {
         ai = {
@@ -413,7 +426,7 @@ export default function HealthTestScreen() {
         )}
       </View>
       {loading ? (
-        <View style={StyleSheet.absoluteFillObject}>
+        <View style={StyleSheet.absoluteFill}>
           <View style={[styles.overlay]} />
           <View style={styles.loaderWrap}>
             <ActivityIndicator size="large" color={tokens.brand.iris} />
@@ -465,6 +478,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 999,
   },
-  overlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(15,23,42,0.35)' },
-  loaderWrap: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  overlay: { ...StyleSheet.absoluteFill, backgroundColor: 'rgba(15,23,42,0.35)' },
+  loaderWrap: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
 });

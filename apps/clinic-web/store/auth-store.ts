@@ -12,6 +12,24 @@ export interface User {
   fullName?: string
 }
 
+/** Doctor API returns `username`; owner returns `userName`. Normalize for the UI. */
+function normalizeUser(raw: Record<string, unknown> | null | undefined): User | null {
+  if (!raw || typeof raw !== 'object') return null
+  const userName =
+    (typeof raw.userName === 'string' && raw.userName) ||
+    (typeof raw.username === 'string' && raw.username) ||
+    ''
+  const displayName =
+    (typeof raw.displayName === 'string' && raw.displayName) ||
+    (typeof raw.fullName === 'string' && raw.fullName) ||
+    userName
+  return {
+    ...(raw as unknown as User),
+    userName,
+    displayName,
+  }
+}
+
 interface AuthState {
   isAuthenticated: boolean
   user: User | null
@@ -37,8 +55,13 @@ export const useAuthStore = create<AuthState>((set) => {
       try {
         const expiryDate = new Date(expiry)
         if (expiryDate > new Date()) {
-          const user = JSON.parse(userStr)
-          set({ isAuthenticated: true, user })
+          const user = normalizeUser(JSON.parse(userStr))
+          if (user) {
+            localStorage.setItem('clinic_user', JSON.stringify(user))
+            set({ isAuthenticated: true, user })
+          } else {
+            set({ isAuthenticated: false, user: null })
+          }
         } else {
           // Token expired, clear everything
           Cookies.remove('clinic_auth_token')
@@ -99,8 +122,12 @@ export const useAuthStore = create<AuthState>((set) => {
 
         if (response.ok && data.success) {
           // Handle both owner and doctor login responses
-          const { token, owner, doctor, expiresIn } = data.data
-          const user = owner || doctor // owner for clinic owner, doctor for doctor
+          const { token, owner, doctor } = data.data
+          const user = normalizeUser(owner || doctor) // owner: userName; doctor: username
+          if (!user) {
+            console.log('[LOGIN] Login failed - could not normalize user')
+            return false
+          }
           console.log('[LOGIN] Login successful! Token received, user:', user)
           
           // Calculate expiry date (7 days from now)
@@ -134,7 +161,8 @@ export const useAuthStore = create<AuthState>((set) => {
     updateUser: (updates: Partial<User>) => {
       set((state) => {
         if (!state.user) return state
-        const newUser = { ...state.user, ...updates }
+        const newUser = normalizeUser({ ...state.user, ...updates } as Record<string, unknown>)
+        if (!newUser) return state
         if (typeof window !== 'undefined') {
           localStorage.setItem('clinic_user', JSON.stringify(newUser))
         }

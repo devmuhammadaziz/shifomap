@@ -246,7 +246,7 @@ function PostCard({
       <LinearGradient
         colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.25)', 'rgba(0,0,0,0.75)']}
         locations={[0, 0.5, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
 
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   },
   card: { width: '100%', backgroundColor: '#111' },
   mediaWrap: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
