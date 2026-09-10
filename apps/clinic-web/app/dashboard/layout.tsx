@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth-store'
 import Sidebar from '@/components/sidebar'
+import { ClinicOnboardingGate } from '@/components/onboarding/ClinicOnboardingGate'
 
 export default function DashboardLayout({
   children,
@@ -47,9 +48,10 @@ export default function DashboardLayout({
     <div className="min-h-screen bg-gray-50">
       <Sidebar />
       <div className="lg:pl-64">
-        <main className="py-8 px-4 sm:px-6 lg:px-8">{children}</main>
+        <main className="py-8 px-4 sm:px-6 lg:px-8">
+          <ClinicOnboardingGate>{children}</ClinicOnboardingGate>
+        </main>
       </div>
     </div>
   )
 }
-
