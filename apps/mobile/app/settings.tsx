@@ -302,7 +302,7 @@ export default function SettingsScreen() {
           <Text style={[styles.logoutText, { color: colors.text }]}>{t.logout}</Text>
         </TouchableOpacity>
 
-        <Text style={[styles.versionText, { color: colors.textTertiary }]}>{t.version} 1.0.0</Text>
+        <Text style={[styles.versionText, { color: colors.textTertiary }]}>{t.version} 3.0.0</Text>
         <View style={{ height: Math.max(insets.bottom, 20) + 20 }} />
       </ScrollView>
     </SafeAreaView>
