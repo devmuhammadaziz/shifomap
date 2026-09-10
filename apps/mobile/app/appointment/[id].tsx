@@ -9,8 +9,6 @@ import {
   Modal,
   TextInput,
   Animated,
-  KeyboardAvoidingView,
-  Platform,
   Alert,
   Image,
   Keyboard,
@@ -25,6 +23,7 @@ import { getTranslations } from '../../lib/translations';
 import { getColors } from '../../lib/theme';
 import Skeleton from '../components/Skeleton';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=200&h=200&fit=crop';
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -50,6 +49,7 @@ export default function AppointmentDetailScreen() {
   const t = getTranslations(language);
   const colors = getColors(theme);
   const insets = useSafeAreaInsets();
+  const sheetBottom = useComposerBottomInset(insets.bottom, 8);
 
   const [booking, setBooking] = useState<Booking | null>(null);
   const [loading, setLoading] = useState(true);
@@ -373,7 +373,7 @@ export default function AppointmentDetailScreen() {
       {/* Cancel reason bottom sheet */}
       <Modal visible={sheetVisible} transparent animationType="none">
         <TouchableOpacity style={styles.sheetBackdrop} activeOpacity={1} onPress={() => { Keyboard.dismiss(); setSheetVisible(false); }} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.sheetAvoid}>
+        <View style={[styles.sheetAvoid, { paddingBottom: sheetBottom }]}>
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <Animated.View style={[styles.sheet, { backgroundColor: colors.backgroundCard, borderColor: colors.border, transform: [{ translateY: slideAnim }] }]}>
               <View style={[styles.sheetHandle, { backgroundColor: colors.textTertiary }]} />
@@ -409,7 +409,7 @@ export default function AppointmentDetailScreen() {
               </ScrollView>
             </Animated.View>
           </TouchableWithoutFeedback>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );

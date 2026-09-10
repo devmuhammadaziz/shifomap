@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
+import { useKeyboardHeight } from '../../lib/use-keyboard-height';
 import { Button, IconButton, Input } from '../../components/ui';
 import {
   addMedicalHistory,
@@ -18,6 +19,7 @@ export default function MedicalHistoryEdit() {
   const theme = useThemeStore((s) => s.theme);
   const language = (useAuthStore((s) => s.language) ?? 'uz') as 'uz' | 'ru' | 'en';
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
   const tokens = getTokens(theme);
 
   const [name, setName] = useState('');
@@ -64,10 +66,7 @@ export default function MedicalHistoryEdit() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: tokens.colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <View style={{ flex: 1, backgroundColor: tokens.colors.background, paddingBottom: keyboardHeight }}>
       <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
         <IconButton icon="chevron-back" onPress={() => router.back()} />
         <Text style={[tokens.type.title, { color: tokens.colors.text }]}>
@@ -75,7 +74,7 @@ export default function MedicalHistoryEdit() {
         </Text>
         <View style={{ width: 40 }} />
       </View>
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }}>
+      <ScrollView contentContainerStyle={{ padding: 20, gap: 12 }} keyboardShouldPersistTaps="handled">
         <Input
           label={tr('Kasallik nomi', 'Название болезни', 'Illness name')}
           value={name}
@@ -103,7 +102,7 @@ export default function MedicalHistoryEdit() {
           )}
         />
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 12, borderTopColor: tokens.colors.border, backgroundColor: tokens.colors.background }]}>
+      <View style={[styles.footer, { paddingBottom: keyboardHeight > 0 ? 12 : insets.bottom + 12, borderTopColor: tokens.colors.border, backgroundColor: tokens.colors.background }]}>
         <Button
           title={tr('Saqlash', 'Сохранить', 'Save')}
           variant="gradient"
@@ -111,7 +110,7 @@ export default function MedicalHistoryEdit() {
           onPress={save}
         />
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

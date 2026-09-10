@@ -8,8 +8,6 @@ import {
   FlatList,
   TouchableOpacity,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Modal,
   Share,
   ActivityIndicator,
@@ -24,6 +22,7 @@ import { useNavigation } from 'expo-router';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import {
   listPosts,
   togglePostLike,
@@ -362,6 +361,7 @@ function CommentsModal({
   const theme = useThemeStore((s) => s.theme);
   const tokens = getTokens(theme);
   const insets = useSafeAreaInsets();
+  const composerBottom = useComposerBottomInset(insets.bottom, 8);
   const [items, setItems] = useState<PostComment[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
@@ -393,13 +393,9 @@ function CommentsModal({
 
   return (
     <Modal visible={!!post} transparent animationType="slide" onRequestClose={onClose}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.modalOverlay}
-        keyboardVerticalOffset={0}
-      >
+      <View style={styles.modalOverlay}>
         <TouchableOpacity style={{ flex: 1 }} onPress={onClose} activeOpacity={1} />
-        <View style={[styles.modalSheet, { backgroundColor: tokens.colors.background }]}>
+        <View style={[styles.modalSheet, { backgroundColor: tokens.colors.background, paddingBottom: composerBottom }]}>
           <View style={styles.modalHandle} />
           <View style={styles.modalHeader}>
             <Text style={[tokens.type.titleLg, { color: tokens.colors.text }]}>
@@ -411,7 +407,7 @@ function CommentsModal({
             keyExtractor={(i) => i._id}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
             keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
+            keyboardDismissMode="interactive"
             ListEmptyComponent={
               <View style={{ alignItems: 'center', padding: 28 }}>
                 <View style={{
@@ -437,7 +433,7 @@ function CommentsModal({
               {
                 borderTopColor: tokens.colors.border,
                 backgroundColor: tokens.colors.background,
-                paddingBottom: 10 + (Platform.OS === 'ios' ? insets.bottom : 0),
+                paddingBottom: 10,
               },
             ]}
           >
@@ -475,7 +471,7 @@ function CommentsModal({
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

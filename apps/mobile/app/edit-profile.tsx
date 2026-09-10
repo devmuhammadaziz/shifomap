@@ -8,8 +8,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../components/icons/Icon';
@@ -19,6 +17,7 @@ import { useThemeStore } from '../store/theme-store';
 import { getTranslations } from '../lib/translations';
 import { updateMe, changePatientPassword, getApiErrorMessage } from '../lib/api';
 import { getColors } from '../lib/theme';
+import { useKeyboardHeight } from '../lib/use-keyboard-height';
 
 const PHONE_PREFIX = '+998';
 
@@ -44,6 +43,7 @@ export default function EditProfileScreen() {
   const t = getTranslations(language);
   const colors = getColors(theme);
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
 
   const [fullName, setFullName] = useState('');
   const [age, setAge] = useState('');
@@ -138,15 +138,13 @@ export default function EditProfileScreen() {
         <View style={styles.backButton} />
       </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboard}
-      >
+      <View style={[styles.keyboard, { paddingBottom: keyboardHeight }]}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         >
           <View style={styles.section}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>{t.completeFullName}</Text>
@@ -303,7 +301,7 @@ export default function EditProfileScreen() {
 
           <View style={{ height: Math.max(insets.bottom, 20) + 20 }} />
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

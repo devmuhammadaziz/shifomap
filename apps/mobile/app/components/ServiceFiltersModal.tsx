@@ -8,15 +8,15 @@ import {
   ScrollView,
   ActivityIndicator,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/icons/Icon';
 import { getServiceFilterOptions, type ServiceFilterOptions, type ServiceFilters } from '../../lib/api';
 import { useAuthStore } from '../../store/auth-store';
 import { getTranslations } from '../../lib/translations';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import Skeleton from './Skeleton';
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=200&h=200&fit=crop';
@@ -31,6 +31,8 @@ export default function ServiceFiltersModal({ visible, onClose, initialFilters =
   const router = useRouter();
   const language = useAuthStore((s) => s.language);
   const t = getTranslations(language);
+  const insets = useSafeAreaInsets();
+  const sheetBottom = useComposerBottomInset(insets.bottom, 8);
   const [options, setOptions] = useState<ServiceFilterOptions | null>(null);
   const [loading, setLoading] = useState(true);
   const [categoryId, setCategoryId] = useState<string | undefined>(initialFilters.categoryId);
@@ -77,7 +79,7 @@ export default function ServiceFiltersModal({ visible, onClose, initialFilters =
       <TouchableWithoutFeedback onPress={onClose}>
         <View style={styles.backdrop} />
       </TouchableWithoutFeedback>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.container}>
+      <View style={[styles.container, { paddingBottom: sheetBottom }]}>
         <View style={styles.sheet}>
           <View style={styles.header}>
             <Text style={styles.title}>{t.filters}</Text>
@@ -181,7 +183,7 @@ export default function ServiceFiltersModal({ visible, onClose, initialFilters =
             </TouchableOpacity>
           </View>
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }

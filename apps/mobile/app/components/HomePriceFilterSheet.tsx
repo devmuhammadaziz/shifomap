@@ -8,16 +8,16 @@ import {
   TouchableWithoutFeedback,
   TextInput,
   Animated,
-  KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { getServiceFilterOptions } from '../../lib/api';
 import { getTranslations } from '../../lib/translations';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import type { getTokens } from '../../lib/design';
 
 const PRICE_PRESETS = [
@@ -41,6 +41,8 @@ function formatUz(n: number) {
 
 export default function HomePriceFilterSheet({ visible, onClose, initialQuery = '', language, tokens }: Props) {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const sheetBottom = useComposerBottomInset(insets.bottom, 8);
   const t = getTranslations(language as 'uz' | 'ru' | 'en');
   const isRu = language === 'ru';
 
@@ -113,7 +115,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
 
   return (
     <Modal transparent visible={visible} animationType="none" onRequestClose={closeSheet}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.flex, { paddingBottom: sheetBottom }]}>
         <TouchableWithoutFeedback onPress={closeSheet}>
           <Animated.View style={[styles.backdrop, { opacity: fade }]} />
         </TouchableWithoutFeedback>
@@ -239,7 +241,7 @@ export default function HomePriceFilterSheet({ visible, onClose, initialQuery = 
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -251,7 +253,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderTopWidth: StyleSheet.hairlineWidth,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 20,
+    paddingBottom: 12,
     maxHeight: '78%',
   },
   handle: {

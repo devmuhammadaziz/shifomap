@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -16,6 +14,7 @@ import { Icon } from '../components/icons/Icon';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
 import { getTokens } from '../lib/design';
+import { useKeyboardHeight } from '../lib/use-keyboard-height';
 import { getClinicDetail, createHomeVisitRequest, getApiErrorMessage } from '../lib/api';
 import { Button } from '../components/ui';
 import { HOME_VISIT_SYMPTOMS, symptomLabel } from '../lib/home-visit-symptoms';
@@ -27,6 +26,7 @@ export default function HomeVisitRequestScreen() {
   const token = useAuthStore((s) => s.token);
   const theme = useThemeStore((s) => s.theme);
   const tokens = getTokens(theme);
+  const keyboardHeight = useKeyboardHeight();
   const isUz = language !== 'ru';
 
   const [clinicName, setClinicName] = useState('');
@@ -113,7 +113,7 @@ export default function HomeVisitRequestScreen() {
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top']}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={[styles.flex, { paddingBottom: keyboardHeight }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
             <Icon name="chevron-back" size={28} color={tokens.colors.primary} />
@@ -224,7 +224,7 @@ export default function HomeVisitRequestScreen() {
             disabled={!street.trim() || submitting}
           />
         </View>
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 }

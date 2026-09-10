@@ -5,8 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
   ScrollView,
   ActivityIndicator,
   Modal,
@@ -29,6 +27,7 @@ import {
   getDoctorSlotsBySpecialty,
   type DoctorSlotBySpecialty,
 } from '../lib/api';
+import { useComposerBottomInset } from '../lib/use-keyboard-height';
 
 import ShifoRobot from './components/ShifoRobot';
 const ACCENT = '#2563EB';
@@ -343,6 +342,7 @@ export default function AiChatScreen() {
   const language = useAuthStore((s: any) => s.language) ?? 'uz';
   const colors = getColors(theme);
   const insets = useSafeAreaInsets();
+  const composerBottom = useComposerBottomInset(insets.bottom, 8);
   const [inputText, setInputText] = useState('');
   const [messages, setMessages] = useState<ChatMessageItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -687,11 +687,7 @@ export default function AiChatScreen() {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        style={styles.flex1}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top + 56 : 0}
-      >
+      <View style={styles.flex1}>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
 
           {messages.length === 0 ? (
@@ -913,8 +909,8 @@ export default function AiChatScreen() {
 
         </ScrollView>
 
-        {/* Bottom Input Area */}
-        <View style={[styles.inputContainer, { backgroundColor: colors.background, paddingBottom: Math.max(insets.bottom, 12) }]}>
+        {/* Bottom Input Area — pinned flush above keyboard */}
+        <View style={[styles.inputContainer, { backgroundColor: colors.background, paddingBottom: composerBottom }]}>
           <View style={styles.inputRow}>
             <View style={[styles.inputWrapper, { backgroundColor: colors.backgroundInput, borderColor: colors.border }]}>
               <TextInput
@@ -945,7 +941,7 @@ export default function AiChatScreen() {
             </TouchableOpacity>
           </View>
         </View>
-        </KeyboardAvoidingView>
+      </View>
       </SafeAreaView>
 
       {/* History Modal */}
@@ -955,7 +951,7 @@ export default function AiChatScreen() {
         transparent={true}
         onRequestClose={() => setHistoryModalVisible(false)}
       >
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
+        <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.background }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -1006,7 +1002,7 @@ export default function AiChatScreen() {
                )}
             </ScrollView>
           </View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
 
       <Modal

@@ -18,6 +18,7 @@ import { Icon, type IconName } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
 import { addCustomReminder } from '../../lib/api';
 import { getTokens } from '../../lib/design';
+import { useKeyboardHeight } from '../../lib/use-keyboard-height';
 import { PILL_ICON_OPTIONS, type PillIconId, PillIcon, pillIconLabel } from '../../lib/pill-icons';
 import { type PillReminderMeta } from '../../lib/pill-reminder-meta';
 import type { AppTheme } from '../../store/theme-store';
@@ -148,6 +149,8 @@ function TimeWheel({
 
 export default function PillCreateWizard({ visible, onClose, onSaved, language, theme }: Props) {
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+  const footerPad = keyboardHeight > 0 ? 12 : Math.max(insets.bottom, 12) + 8;
   const tokens = getTokens(theme);
   const isDark = theme === 'dark';
 
@@ -344,7 +347,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen" onRequestClose={onClose}>
-      <View style={[styles.root, { backgroundColor: tokens.colors.background }]}>
+      <View style={[styles.root, { backgroundColor: tokens.colors.background, paddingBottom: keyboardHeight }]}>
         <LinearGradient colors={heroColors} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[styles.hero, { paddingTop: insets.top + 8 }]}>
           <View style={styles.heroTop}>
             <TouchableOpacity onPress={goBack} hitSlop={12} style={styles.heroBack}>
@@ -500,7 +503,7 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
           ) : null}
         </View>
 
-        <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 12) + 8, borderTopColor: sheetBorder, backgroundColor: sheetBg }]}>
+        <View style={[styles.footer, { paddingBottom: footerPad, borderTopColor: sheetBorder, backgroundColor: sheetBg }]}>
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={goNext}

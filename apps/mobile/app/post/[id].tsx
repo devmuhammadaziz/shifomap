@@ -9,8 +9,6 @@ import {
   TextInput,
   ActivityIndicator,
   Share,
-  KeyboardAvoidingView,
-  Platform,
   Dimensions,
   NativeSyntheticEvent,
   NativeScrollEvent,
@@ -21,6 +19,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import { IconButton } from '../../components/ui';
 import {
   getPostById,
@@ -74,6 +73,7 @@ export default function PostDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const composerBottom = useComposerBottomInset(insets.bottom, 8);
   const theme = useThemeStore((s) => s.theme);
   const language = (useAuthStore((s) => s.language) ?? 'uz') as 'uz' | 'ru' | 'en';
   const tokens = getTokens(theme);
@@ -151,17 +151,14 @@ export default function PostDetailScreen() {
   const multiImages = imageUrls.length > 1;
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={{ flex: 1, backgroundColor: tokens.colors.background }}
-    >
+    <View style={{ flex: 1, backgroundColor: tokens.colors.background }}>
       <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
         <IconButton icon="chevron-back" onPress={() => router.back()} />
         <Text style={[tokens.type.title, { color: tokens.colors.text }]}>{tr('Post', 'Пост', 'Post')}</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <View style={styles.sliderWrap}>
           {(post.imageUrls?.length ?? 1) > 1 ? (
             <ScrollView
@@ -261,7 +258,7 @@ export default function PostDetailScreen() {
         </View>
       </ScrollView>
 
-      <View style={[styles.composer, { backgroundColor: tokens.colors.background, borderTopColor: tokens.colors.border, paddingBottom: insets.bottom + 10 }]}>
+      <View style={[styles.composer, { backgroundColor: tokens.colors.background, borderTopColor: tokens.colors.border, paddingBottom: composerBottom }]}>
         <TextInput
           placeholder={tr('Fikr yozing...', 'Написать комментарий...', 'Write a comment...')}
           value={text}
@@ -278,7 +275,7 @@ export default function PostDetailScreen() {
           <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

@@ -6,8 +6,6 @@ import {
   Modal,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
   ActivityIndicator,
   ScrollView,
@@ -21,6 +19,7 @@ import { useAuthStore } from '../../store/auth-store';
 import { getColors } from '../../lib/theme';
 import { submitReview } from '../../lib/api';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 
 export type ReviewTarget = 'clinic' | 'service' | 'doctor';
 
@@ -142,6 +141,7 @@ export default function ReviewBottomSheet({
   const t = getTranslations(language);
   const colors = getColors(theme);
   const insets = useSafeAreaInsets();
+  const sheetBottom = useComposerBottomInset(insets.bottom, 8);
   const [stars, setStars] = useState(5);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -200,11 +200,7 @@ export default function ReviewBottomSheet({
       <TouchableWithoutFeedback onPress={handleBackdropPress}>
         <View style={[styles.backdrop, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
       </TouchableWithoutFeedback>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.container}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 12 : insets.bottom + 24}
-      >
+      <View style={[styles.container, { paddingBottom: sheetBottom }]}>
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={[styles.sheet, { backgroundColor: sheetBg, borderColor: sheetBorder }]}>
             <View style={styles.handleWrap}>
@@ -335,7 +331,7 @@ export default function ReviewBottomSheet({
             </ScrollView>
           </View>
         </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
+      </View>
     </Modal>
   );
 }
@@ -354,7 +350,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    paddingBottom: 34,
+    paddingBottom: 8,
   },
   handleWrap: {
     alignItems: 'center',

@@ -3,8 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
   TextInput,
   TouchableOpacity,
   FlatList,
@@ -16,6 +14,7 @@ import { Icon } from '../../components/icons/Icon';
 import { useThemeStore } from '../../store/theme-store';
 import { useAuthStore } from '../../store/auth-store';
 import { getTokens } from '../../lib/design';
+import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import { Avatar, IconButton } from '../../components/ui';
 import {
   listConversationMessages,
@@ -30,6 +29,7 @@ export default function ChatThread() {
   const theme = useThemeStore((s) => s.theme);
   const language = (useAuthStore((s) => s.language) ?? 'uz') as 'uz' | 'ru' | 'en';
   const insets = useSafeAreaInsets();
+  const composerBottom = useComposerBottomInset(insets.bottom, 8);
   const tokens = getTokens(theme);
 
   const [conv, setConv] = useState<ChatConversation | null>(null);
@@ -108,11 +108,7 @@ export default function ChatThread() {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: tokens.colors.background }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.bottom + 8 : insets.bottom + 16}
-    >
+    <View style={{ flex: 1, backgroundColor: tokens.colors.background }}>
       <View style={[styles.topBar, { paddingTop: insets.top + 10, backgroundColor: tokens.colors.background, borderBottomColor: tokens.colors.border }]}>
         <IconButton icon="chevron-back" onPress={() => router.back()} />
         <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -139,9 +135,11 @@ export default function ChatThread() {
           renderItem={renderItem}
           contentContainerStyle={{ padding: 14, gap: 6 }}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
         />
       )}
-      <View style={[styles.composer, { backgroundColor: tokens.colors.background, borderTopColor: tokens.colors.border, paddingBottom: insets.bottom + 8 }]}>
+      <View style={[styles.composer, { backgroundColor: tokens.colors.background, borderTopColor: tokens.colors.border, paddingBottom: composerBottom }]}>
         <TextInput
           value={text}
           onChangeText={setText}
@@ -158,7 +156,7 @@ export default function ChatThread() {
           <Icon name="send" size={18} color="#fff" />
         </TouchableOpacity>
       </View>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 

@@ -11,8 +11,6 @@ import {
   TextInput,
   Modal,
   Animated,
-  KeyboardAvoidingView,
-  Platform,
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
@@ -23,6 +21,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { searchServicesWithFilters, type PublicServiceItem, type ServiceFilters } from '../lib/api';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
+import { useComposerBottomInset } from '../lib/use-keyboard-height';
 import { getTranslations } from '../lib/translations';
 import { getColors } from '../lib/theme';
 import { getTokens } from '../lib/design';
@@ -65,6 +64,7 @@ export default function ServicesResultsScreen() {
   const colors = getColors(theme);
   const tokens = getTokens(theme);
   const insets = useSafeAreaInsets();
+  const filterSheetBottom = useComposerBottomInset(insets.bottom, 8);
   const savedOnly = params.saved === '1';
   const hydrateSaved = useSavedServicesStore((s) => s.hydrate);
   const removeSavedService = useSavedServicesStore((s) => s.removeService);
@@ -429,10 +429,7 @@ export default function ServicesResultsScreen() {
         <TouchableWithoutFeedback onPress={() => setFilterModalVisible(false)}>
           <View style={styles.filterBackdrop} />
         </TouchableWithoutFeedback>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.filterAvoid}
-        >
+        <View style={[styles.filterAvoid, { paddingBottom: filterSheetBottom }]}>
           <Animated.View
             style={[
               styles.filterSheet,
@@ -474,7 +471,7 @@ export default function ServicesResultsScreen() {
               <Text style={styles.filterApplyBtnText}>{t.apply}</Text>
             </TouchableOpacity>
           </Animated.View>
-        </KeyboardAvoidingView>
+        </View>
       </Modal>
     </View>
   );
