@@ -30,7 +30,7 @@ type TabDef = {
 
 const LEFT_TABS: TabDef[] = [
   { key: 'index', route: 'index', icon: 'home-outline', iconActive: 'home', uz: 'Bosh sahifa', ru: 'Главная' },
-  { key: 'clinics', route: 'clinics', icon: 'medkit-outline', iconActive: 'medkit', uz: 'Klinikalar', ru: 'Клиники' },
+  { key: 'feed', route: 'feed', icon: 'play-circle-outline', iconActive: 'play-circle', uz: 'Postlar', ru: 'Посты' },
 ];
 
 const RIGHT_TABS: TabDef[] = [

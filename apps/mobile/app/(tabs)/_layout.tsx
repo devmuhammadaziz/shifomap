@@ -44,8 +44,8 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" />
-      <Tabs.Screen name="clinics" />
-      <Tabs.Screen name="feed" options={{ href: null }} />
+      <Tabs.Screen name="feed" />
+      <Tabs.Screen name="clinics" options={{ href: null }} />
       <Tabs.Screen name="appointments" />
       <Tabs.Screen name="profile" />
     </Tabs>
