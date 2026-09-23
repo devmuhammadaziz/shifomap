@@ -167,6 +167,22 @@ export default function HomeScreen() {
       path: '/ai-chat',
     },
     {
+      key: 'pills',
+      title: isUz ? 'Dori eslatma' : 'Таблетки',
+      subtitle: isUz ? 'Vaqtida ichish' : 'Вовремя принимать',
+      icon: 'alarm',
+      gradient: [tokens.brand.amber, '#fbbf24'],
+      path: '/pill-reminder',
+    },
+    {
+      key: 'clinic',
+      title: isUz ? 'Klinikalar' : 'Клиники',
+      subtitle: isUz ? 'Topish va bron' : 'Найти и записаться',
+      icon: 'business',
+      gradient: [tokens.brand.indigo, tokens.brand.iris],
+      path: '/clinics',
+    },
+    {
       key: 'health',
       title: isUz ? '10 ta savol' : '10 вопросов',
       subtitle: isUz ? 'Holatingizni baholang' : 'Оценка здоровья',
@@ -183,12 +199,12 @@ export default function HomeScreen() {
       path: '/first-aid',
     },
     {
-      key: 'analyze',
-      title: isUz ? 'AI Tahlil' : 'AI Анализ',
-      subtitle: isUz ? 'AI izohi' : 'AI объяснит',
+      key: 'history',
+      title: isUz ? 'Kasallik tarixi' : 'Медкарта',
+      subtitle: isUz ? 'Yozuvlar' : 'Записи',
       icon: 'document-text',
       gradient: [tokens.brand.sky, tokens.brand.skySoft],
-      path: '/ai-analyze',
+      path: '/medical-history',
     },
   ];
 
@@ -466,9 +482,9 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Pill reminder */}
-        {nextPill ? (
-          <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+        {/* Pill reminder — always reachable; banner when a dose is due */}
+        <View style={{ paddingHorizontal: 20, marginTop: 18 }}>
+          {nextPill ? (
             <View
               style={[
                 styles.pillBanner,
@@ -485,7 +501,7 @@ export default function HomeScreen() {
                 activeOpacity={0.85}
               >
                 <LinearGradient colors={tokens.gradients.warm as [string, string, ...string[]]} style={styles.pillIcon}>
-                  <Icon name="medical" size={20} color={tokens.brand.amber} />
+                  <Icon name="alarm" size={20} color={tokens.brand.amber} />
                 </LinearGradient>
                 <View style={{ flex: 1, minWidth: 0 }}>
                   <Text style={{ color: tokens.colors.textSecondary, fontSize: 11, fontWeight: '700' }} numberOfLines={1}>
@@ -526,8 +542,34 @@ export default function HomeScreen() {
                 <Icon name="checkmark" size={22} color="#fff" />
               </TouchableOpacity>
             </View>
-          </View>
-        ) : null}
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.pillBanner,
+                {
+                  backgroundColor: tokens.colors.backgroundCard,
+                  borderColor: tokens.colors.border,
+                  ...(!isDark ? shadows.sm : null),
+                },
+              ]}
+              onPress={() => router.push('/pill-reminder')}
+              activeOpacity={0.88}
+            >
+              <LinearGradient colors={tokens.gradients.warm as [string, string, ...string[]]} style={styles.pillIcon}>
+                <Icon name="alarm" size={20} color={tokens.brand.amber} />
+              </LinearGradient>
+              <View style={{ flex: 1, minWidth: 0 }}>
+                <Text style={{ color: tokens.colors.text, fontSize: 15, fontWeight: '800' }} numberOfLines={1}>
+                  {isUz ? 'Dori eslatmasi' : 'Напоминание о лекарствах'}
+                </Text>
+                <Text style={{ color: tokens.colors.textTertiary, fontSize: 12, marginTop: 2 }} numberOfLines={1}>
+                  {isUz ? 'Eslatma qo‘shing yoki boshqaring' : 'Добавьте или управляйте напоминаниями'}
+                </Text>
+              </View>
+              <Icon name="chevron-forward" size={18} color={tokens.colors.textTertiary} />
+            </TouchableOpacity>
+          )}
+        </View>
 
         {/* Top clinics */}
         <View style={{ marginTop: 26 }}>

@@ -81,17 +81,25 @@ const PillReminderScreen = () => {
         if (isRefresh) setRefreshing(true);
         else setLoading(true);
         try {
-            const [pData, cData] = await Promise.all([
+            const [pResult, cResult] = await Promise.allSettled([
                 getMyPrescriptions(),
-                getCustomReminders()
+                getCustomReminders(),
             ]);
-            setList(pData);
-            setCustomList(cData);
-            await syncPillReminderNotifications(cData);
+
+            const prescriptions = pResult.status === 'fulfilled' ? pResult.value : [];
+            const customs = cResult.status === 'fulfilled' ? cResult.value : [];
+            setList(prescriptions);
+            setCustomList(customs);
+
+            // Never let notification scheduling wipe a successful API load.
+            try {
+                await syncPillReminderNotifications(customs);
+            } catch {
+                /* scheduling failed (Expo Go / OS) — reminders still stay on screen */
+            }
         } catch {
             setList([]);
             setCustomList([]);
-            await syncPillReminderNotifications([]);
         } finally {
             setLoading(false);
             setRefreshing(false);

@@ -16,9 +16,13 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon, type IconName } from '../../components/icons/Icon';
 import { LinearGradient } from 'expo-linear-gradient';
-import { addCustomReminder } from '../../lib/api';
+import { addCustomReminder, getCustomReminders } from '../../lib/api';
 import { getTokens } from '../../lib/design';
 import { useKeyboardHeight } from '../../lib/use-keyboard-height';
+import {
+  ensurePillNotificationPermissions,
+  syncPillReminderNotifications,
+} from '../../lib/pill-local-notifications';
 import { PILL_ICON_OPTIONS, type PillIconId, PillIcon, pillIconLabel } from '../../lib/pill-icons';
 import { type PillReminderMeta } from '../../lib/pill-reminder-meta';
 import type { AppTheme } from '../../store/theme-store';
@@ -247,6 +251,25 @@ export default function PillCreateWizard({ visible, onClose, onSaved, language, 
           notes,
           timesPerDay: times.length,
         });
+      }
+      // Ask OS permission right after a successful save (local alarms need it).
+      try {
+        const granted = await ensurePillNotificationPermissions();
+        if (!granted) {
+          Alert.alert(
+            tr(language, 'Bildirishnoma o‘chirilgan', 'Уведомления выключены'),
+            tr(
+              language,
+              'Eslatma saqlandi, lekin bildirishnoma uchun Sozlamalardan ruxsat bering.',
+              'Напоминание сохранено, но включите уведомления в настройках системы.',
+            ),
+          );
+        } else {
+          const list = await getCustomReminders().catch(() => []);
+          await syncPillReminderNotifications(list);
+        }
+      } catch {
+        /* keep save success even if scheduling fails */
       }
       onSaved();
       onClose();

@@ -60,13 +60,17 @@ export default function RootLayout() {
         <Stack.Screen name="health-test" options={screenOptions} />
         <Stack.Screen name="first-aid/index" options={screenOptions} />
         <Stack.Screen name="first-aid/[slug]" options={screenOptions} />
+        <Stack.Screen name="ai-chat" options={screenOptions} />
         <Stack.Screen name="ai-analyze" options={screenOptions} />
+        <Stack.Screen name="pill-reminder" options={screenOptions} />
         <Stack.Screen name="medical-history/index" options={screenOptions} />
         <Stack.Screen name="medical-history/edit" options={screenOptions} />
         <Stack.Screen name="chat/index" options={screenOptions} />
         <Stack.Screen name="chat/[id]" options={screenOptions} />
         <Stack.Screen name="post/[id]" options={screenOptions} />
         <Stack.Screen name="stories-viewer" options={screenOptions} />
+        <Stack.Screen name="clinics-map" options={screenOptions} />
+        <Stack.Screen name="notifications" options={screenOptions} />
       </Stack>
     </>
   );

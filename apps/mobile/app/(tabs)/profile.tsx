@@ -97,6 +97,11 @@ export default function ProfileScreen() {
 
   const menu: Array<{ icon: IconName; title: string; onPress: () => void }> = [
     {
+      icon: 'alarm-outline',
+      title: isUz ? 'Dori eslatmasi' : 'Напоминание о лекарствах',
+      onPress: () => router.push('/pill-reminder'),
+    },
+    {
       icon: 'time-outline',
       title: isUz ? 'Yozuvlar tarixi' : 'История записей',
       onPress: () => router.push('/(tabs)/appointments'),
@@ -107,13 +112,18 @@ export default function ProfileScreen() {
       onPress: () => router.push('/chat'),
     },
     {
+      icon: 'document-text-outline',
+      title: isUz ? 'Kasallik tarixi' : 'Медкарта',
+      onPress: () => router.push('/medical-history'),
+    },
+    {
       icon: 'bookmark-outline',
       title: isUz ? 'Saqlangan xizmatlar' : 'Сохранённые услуги',
       onPress: () => router.push('/services-results?saved=1' as never),
     },
     {
-      icon: 'document-text-outline',
-      title: isUz ? 'Mening tahlillarim' : 'Мои анализы',
+      icon: 'flask-outline',
+      title: isUz ? 'AI Tahlil' : 'AI Анализ',
       onPress: () => router.push('/ai-analyze'),
     },
   ];

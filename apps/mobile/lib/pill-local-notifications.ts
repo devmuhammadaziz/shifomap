@@ -140,56 +140,63 @@ export async function ensurePillNotificationPermissions(): Promise<boolean> {
 /**
  * Reconciles OS scheduled notifications with server reminder list.
  * Call after loading reminders, when toggling settings, or after login.
+ * Never throws — callers must not lose reminder UI if scheduling fails.
  */
 export async function syncPillReminderNotifications(reminders: CustomReminder[]): Promise<void> {
   if (Platform.OS === 'web') return;
 
-  const optedIn = await getPillsLocalNotificationsEnabled();
-  const Notifications = await loadNotifications();
-  if (!Notifications) return;
+  try {
+    const optedIn = await getPillsLocalNotificationsEnabled();
+    const Notifications = await loadNotifications();
+    if (!Notifications) return;
 
-  await ensureAndroidChannel(Notifications);
+    await ensureAndroidChannel(Notifications);
 
-  if (!optedIn) {
+    if (!optedIn) {
+      await cancelScheduledPillRemindersByPrefix();
+      return;
+    }
+
+    const granted = await ensurePillNotificationPermissions();
+    if (!granted) {
+      await cancelScheduledPillRemindersByPrefix();
+      return;
+    }
+
     await cancelScheduledPillRemindersByPrefix();
-    return;
-  }
 
-  const granted = await ensurePillNotificationPermissions();
-  if (!granted) {
-    await cancelScheduledPillRemindersByPrefix();
-    return;
-  }
-
-  await cancelScheduledPillRemindersByPrefix();
-
-  const active = reminders.filter((r) => r.isActive !== false);
-  await Promise.all(
-    active.map(async (r) => {
+    const active = reminders.filter((r) => r.isActive !== false);
+    for (const r of active) {
       const parsed = parseReminderTime(r.time);
-      if (!parsed) return;
+      if (!parsed) continue;
 
       const body = formatPillNotificationBody(r);
 
-      await Notifications.scheduleNotificationAsync({
-        identifier: `${PILL_IDENTIFIER_PREFIX}${r.id}`,
-        content: {
-          title: r.pillName,
-          body,
-          data: {
-            type: DATA_TYPE,
-            reminderId: r.id,
+      try {
+        await Notifications.scheduleNotificationAsync({
+          identifier: `${PILL_IDENTIFIER_PREFIX}${r.id}`,
+          content: {
+            title: r.pillName,
+            body,
+            data: {
+              type: DATA_TYPE,
+              reminderId: r.id,
+            },
+            sound: true,
+            ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
           },
-          sound: true,
-          ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: parsed.hour,
-          minute: parsed.minute,
-          ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
-        },
-      });
-    })
-  );
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour: parsed.hour,
+            minute: parsed.minute,
+            ...(Platform.OS === 'android' ? { channelId: ANDROID_CHANNEL_ID } : {}),
+          },
+        });
+      } catch {
+        /* one bad schedule must not abort the rest */
+      }
+    }
+  } catch {
+    /* Expo Go / OS scheduling errors — keep app usable */
+  }
 }
