@@ -21,6 +21,7 @@ import { getTokens } from '../../lib/design';
 import {
   formatUzNationalDigits,
   isValidUzPhone9,
+  toUzNationalDigits,
   UZ_PHONE_INLINE_ERROR_RU,
   UZ_PHONE_INLINE_ERROR_UZ,
 } from '../../lib/uz-phone';
@@ -123,7 +124,7 @@ export default function Login() {
               placeholder="90 123 45 67"
               placeholderTextColor={tokens.colors.textPlaceholder}
               value={formatUzNationalDigits(digits)}
-              onChangeText={(v) => setDigits(v.replace(/\D/g, '').slice(0, 9))}
+              onChangeText={(v) => setDigits(toUzNationalDigits(v))}
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
               keyboardType="phone-pad"

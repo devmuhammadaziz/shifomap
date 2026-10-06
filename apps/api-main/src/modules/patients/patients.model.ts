@@ -1,8 +1,17 @@
 import { z } from "zod"
 import type { ObjectId } from "mongodb"
 
-/** Uzbekistan mobile: +998 + valid operator prefix + 7 digits */
-export const UZ_PHONE_REGEX = /^\+998(33|71|77|89|88|90|91|92|93|94|95|97|98|99|20)\d{7}$/
+/**
+ * Uzbekistan number: +998 + 2-digit code + 7 digits. Any code is accepted (no national
+ * code starts with 0 or 1) so new operator ranges work without an app/server update.
+ * Known mobile codes: 20 33 50 70 77 80 87 88 90 91 92 93 94 95 97 98 99 (+55 VoIP, 61–79 fixed).
+ */
+export const UZ_PHONE_REGEX = /^\+998[2-9]\d{8}$/
+
+const uzPhoneSchema = z.preprocess(
+  (v) => (typeof v === "string" ? normalizeUzPhone(v.trim()) : v),
+  z.string().regex(UZ_PHONE_REGEX, "Invalid Uzbekistan phone number")
+)
 
 const passwordStrength = z
   .string()
@@ -57,7 +66,7 @@ export const authGoogleBodySchema = z.object({
 
 // Validation: Phone auth body
 export const authPhoneBodySchema = z.object({
-  phone: z.string().regex(UZ_PHONE_REGEX, "Invalid Uzbekistan mobile number"),
+  phone: uzPhoneSchema,
 })
 
 export function normalizeUzPhone(phone: string): string {
@@ -76,7 +85,7 @@ export function uzPhoneLookupValues(phone: string): string[] {
 
 // Validation: Phone + password auth (login or signup: one field checks or creates password)
 export const authPhonePasswordBodySchema = z.object({
-  phone: z.string().regex(UZ_PHONE_REGEX, "Invalid Uzbekistan mobile number"),
+  phone: uzPhoneSchema,
   password: passwordStrength,
   intent: z.enum(["login", "signup"]).optional(),
 })
@@ -97,7 +106,7 @@ export const updatePatientBodySchema = z.object({
   contacts: z
     .object({
       email: z.string().email().nullable().optional(),
-      phone: z.string().regex(UZ_PHONE_REGEX).optional(),
+      phone: uzPhoneSchema.optional(),
       telegram: z.string().max(64).nullable().optional(),
     })
     .optional(),
