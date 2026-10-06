@@ -22,7 +22,11 @@ import type {
   ChangePatientPasswordBody,
 } from "./patients.model"
 import { mapDocToPublicPatient, normalizeUzPhone } from "./patients.model"
-import { signPatientToken } from "@/common/middleware/auth"
+import {
+  AUTH_ERROR_CODES,
+  signPatientToken,
+  verifyPatientTokenForRefresh,
+} from "@/common/middleware/auth"
 import { unauthorized, badRequest, conflict } from "@/common/errors"
 import { env } from "@/env"
 import type { PatientLanguage } from "./patients.model"
@@ -110,7 +114,7 @@ export async function authGoogle(body: AuthGoogleBody) {
   return {
     token,
     patient: mapDocToPublicPatient(patient),
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.PATIENT_JWT_EXPIRES_IN,
   }
 }
 
@@ -166,7 +170,7 @@ export async function authPhone(body: AuthPhoneBody, preferredLanguage: PatientL
   return {
     token,
     patient: mapDocToPublicPatient(patient),
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.PATIENT_JWT_EXPIRES_IN,
     needsProfile,
   }
 }
@@ -184,7 +188,7 @@ async function issuePatientSession(patientId: ObjectId) {
   return {
     token,
     patient: mapDocToPublicPatient(patient),
-    expiresIn: env.JWT_EXPIRES_IN,
+    expiresIn: env.PATIENT_JWT_EXPIRES_IN,
     needsProfile,
   }
 }
@@ -247,6 +251,30 @@ export async function authPhonePassword(
     needsProfile: result.needsProfile,
   })
   return result
+}
+
+/**
+ * Exchange a valid or recently-expired patient token for a fresh one.
+ * Lets the app keep users signed in across releases without a forced logout.
+ */
+export async function refreshPatientSession(token: string) {
+  const payload = await verifyPatientTokenForRefresh(token)
+  if (!ObjectId.isValid(payload.sub)) {
+    throw unauthorized("Session expired, please sign in again", AUTH_ERROR_CODES.invalid)
+  }
+  const patient = await findPatientById(toObjectId(payload.sub))
+  if (!patient) {
+    throw unauthorized("Session expired, please sign in again", AUTH_ERROR_CODES.invalid)
+  }
+  if (patient.status !== "active") {
+    throw unauthorized("Account is not active", AUTH_ERROR_CODES.invalid)
+  }
+  const newToken = await signPatientToken(patient._id.toHexString())
+  return {
+    token: newToken,
+    patient: mapDocToPublicPatient(patient),
+    expiresIn: env.PATIENT_JWT_EXPIRES_IN,
+  }
 }
 
 export async function getMe(patientId: string) {

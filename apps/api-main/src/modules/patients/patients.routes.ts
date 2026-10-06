@@ -18,8 +18,10 @@ import {
   changePatientPassword,
   deleteMe,
   registerPatientExpoPushToken,
+  refreshPatientSession,
 } from "./patients.service"
-import { requirePatientAuth } from "@/common/middleware/auth"
+import { AUTH_ERROR_CODES, requirePatientAuth } from "@/common/middleware/auth"
+import { unauthorized } from "@/common/errors"
 import { logger } from "@/common/logger"
 
 export const patientsRoutes = new Elysia({ prefix: "/patients" })
@@ -98,6 +100,17 @@ export const patientsRoutes = new Elysia({ prefix: "/patients" })
       })
       throw err
     }
+  })
+  // POST /v1/patients/auth/refresh - Bearer token (may be expired within grace window) → new token
+  .post("/auth/refresh", async ({ request, set }) => {
+    const header = request.headers.get("authorization") ?? ""
+    const token = /^Bearer\s+(.+)$/i.exec(header.trim())?.[1]?.trim()
+    if (!token) {
+      throw unauthorized("Missing or invalid Authorization header", AUTH_ERROR_CODES.missing)
+    }
+    const result = await refreshPatientSession(token)
+    set.status = 200
+    return { success: true, data: result }
   })
   .use(requirePatientAuth)
   // POST /v1/patients/me/complete - Complete profile after phone signup (body: fullName, gender, age)

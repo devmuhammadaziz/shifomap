@@ -6,8 +6,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "types": [],
-    "baseUrl": ".",
+    "types": ["bun"],
     "paths": {
       "@/*": [
         "./src/*"

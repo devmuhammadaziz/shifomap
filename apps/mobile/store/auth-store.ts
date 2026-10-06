@@ -1,7 +1,9 @@
 import { create } from 'zustand';
+import { Alert } from 'react-native';
+import { router } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { cancelAllScheduledPillReminders } from '../lib/pill-local-notifications';
-import { setAuthToken } from '../lib/api';
+import { configureAuthHandlers, ensureFreshToken, setAuthToken } from '../lib/api';
 import type { Patient } from '../lib/api';
 
 const TOKEN_KEY = '@shifo_token';
@@ -105,6 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         hydrated: true,
       });
       setAuthToken(token);
+      if (token) void ensureFreshToken();
     } catch {
       set({ hydrated: true });
     }
@@ -117,6 +120,38 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     await AsyncStorage.multiRemove([TOKEN_KEY, PATIENT_KEY]);
   },
 }));
+
+let sessionExpiredHandling = false;
+
+configureAuthHandlers({
+  onTokenRefreshed: (token, patient) => {
+    const store = useAuthStore.getState();
+    store.setToken(token);
+    if (patient) store.setPatient(patient);
+  },
+  onSessionExpired: () => {
+    if (sessionExpiredHandling) return;
+    sessionExpiredHandling = true;
+    const { language, logout } = useAuthStore.getState();
+    void logout()
+      .catch(() => {})
+      .finally(() => {
+        try {
+          router.replace('/(auth)/login');
+        } catch {
+          // Navigator not mounted yet; SplashScreen routes to login once token is null.
+        }
+        const ru = language === 'ru';
+        Alert.alert(
+          ru ? 'Сессия истекла' : 'Sessiya tugadi',
+          ru ? 'Пожалуйста, войдите снова.' : 'Iltimos, qaytadan kiring.'
+        );
+        setTimeout(() => {
+          sessionExpiredHandling = false;
+        }, 3000);
+      });
+  },
+});
 
 export function needsProfile(patient: Patient | null): boolean {
   if (!patient) return false;

@@ -1,5 +1,8 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import { Stack } from 'expo-router';
+import { ensureFreshToken } from '../lib/api';
+import '../store/auth-store';
 import PushNotificationsBridge from '../lib/push-notifications-bridge';
 import { initPillNotificationsForeground } from '../lib/pill-local-notifications';
 import { StatusBar } from 'expo-status-bar';
@@ -22,6 +25,13 @@ export default function RootLayout() {
     preloadHomeImages();
     void initPillNotificationsForeground();
   }, [hydrateSaved, hydrateTheme]);
+
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') void ensureFreshToken();
+    });
+    return () => sub.remove();
+  }, []);
 
   const screenOptions = {
     headerShown: false,

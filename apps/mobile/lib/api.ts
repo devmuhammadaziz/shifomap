@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios';
 import { Platform } from 'react-native';
 
 // EXPO_PUBLIC_API_URL: set in .env (production: https://api.shifoyol.uz, dev: http://192.168.x.x:8080).
@@ -31,15 +31,188 @@ export function getApiErrorMessage(err: unknown): string | null {
 export const api = axios.create({
   baseURL: `${API_BASE}/v1`,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
 });
 
+let currentToken: string | null = null;
+
 export function setAuthToken(token: string | null) {
+  currentToken = token;
   if (token) {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
     delete api.defaults.headers.common['Authorization'];
   }
 }
+
+// ─── Session refresh ─────────────────────────────────────────────────────────
+
+type AuthHandlers = {
+  /** Persist the renewed token (and fresh profile) without logging the user out. */
+  onTokenRefreshed: (token: string, patient: Patient | null) => void;
+  /** Token can't be renewed (account deleted, secret rotated, ...): sign out cleanly. */
+  onSessionExpired: () => void;
+};
+
+let authHandlers: AuthHandlers | null = null;
+
+export function configureAuthHandlers(handlers: AuthHandlers) {
+  authHandlers = handlers;
+}
+
+// Older servers answered auth failures with HTTP 500 + plain text, so match by message too.
+const AUTH_FAILURE_MESSAGE = /invalid or expired token|token expired|missing or invalid authorization|invalid token for patient|patient not found/i;
+
+function isAuthFailure(err: AxiosError): boolean {
+  const status = err.response?.status;
+  if (!status) return false;
+  const data = err.response?.data as unknown;
+  if (data && typeof data === 'object') {
+    const code = (data as { code?: unknown }).code;
+    if (typeof code === 'string' && code.startsWith('TOKEN_')) return true;
+  }
+  if (status !== 401 && status !== 500) return false;
+  const msg =
+    typeof data === 'string'
+      ? data
+      : String((data as { error?: unknown; message?: unknown } | null)?.error ?? (data as { message?: unknown } | null)?.message ?? '');
+  return AUTH_FAILURE_MESSAGE.test(msg);
+}
+
+function isPublicAuthEndpoint(url: string | undefined): boolean {
+  return !!url && url.includes('/patients/auth/');
+}
+
+function decodeBase64Url(input: string): string {
+  const b64 = input.replace(/-/g, '+').replace(/_/g, '/');
+  const padded = b64 + '==='.slice((b64.length + 3) % 4);
+  if (typeof globalThis.atob === 'function') return globalThis.atob(padded);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  let out = '';
+  let buffer = 0;
+  let bits = 0;
+  for (const ch of padded) {
+    if (ch === '=') break;
+    const v = chars.indexOf(ch);
+    if (v < 0) continue;
+    buffer = (buffer << 6) | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out += String.fromCharCode((buffer >> bits) & 0xff);
+    }
+  }
+  return out;
+}
+
+/** Seconds since epoch when the token expires, or null if it can't be read. */
+export function getTokenExpiry(token: string | null): number | null {
+  if (!token) return null;
+  try {
+    const part = token.split('.')[1];
+    if (!part) return null;
+    const payload = JSON.parse(decodeBase64Url(part)) as { exp?: unknown };
+    return typeof payload.exp === 'number' ? payload.exp : null;
+  } catch {
+    return null;
+  }
+}
+
+type RefreshOutcome = { ok: true; token: string } | { ok: false; sessionInvalid: boolean };
+
+let refreshInFlight: Promise<RefreshOutcome> | null = null;
+
+async function requestNewToken(oldToken: string): Promise<RefreshOutcome> {
+  try {
+    const { data } = await axios.post<{ success: boolean; data?: { token?: string; patient?: Patient } }>(
+      `${API_BASE}/v1/patients/auth/refresh`,
+      null,
+      { headers: { Authorization: `Bearer ${oldToken}` }, timeout: 20000 }
+    );
+    const token = data?.data?.token;
+    if (!data?.success || !token) return { ok: false, sessionInvalid: false };
+    // The user may have logged out (or in as someone else) while we were waiting.
+    if (currentToken !== oldToken) {
+      return currentToken ? { ok: true, token: currentToken } : { ok: false, sessionInvalid: false };
+    }
+    setAuthToken(token);
+    authHandlers?.onTokenRefreshed(token, data.data?.patient ?? null);
+    return { ok: true, token };
+  } catch (e) {
+    const status = (e as AxiosError).response?.status;
+    // 404 = server without refresh support: the stored token is unusable either way.
+    const sessionInvalid = status === 401 || status === 403 || status === 404;
+    return { ok: false, sessionInvalid };
+  }
+}
+
+/** Single-flight refresh: concurrent callers share one network request. */
+function refreshSession(oldToken: string): Promise<RefreshOutcome> {
+  if (!refreshInFlight) {
+    refreshInFlight = requestNewToken(oldToken).finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
+const REFRESH_BEFORE_EXPIRY_SEC = 30 * 24 * 60 * 60;
+let lastProactiveCheck = 0;
+
+/**
+ * Renew the token if it's expired or close to expiry. Safe to call often
+ * (app start, app foreground); never throws, never logs out on network errors.
+ */
+export async function ensureFreshToken(options: { force?: boolean } = {}): Promise<void> {
+  const token = currentToken;
+  if (!token) return;
+  const now = Date.now();
+  if (!options.force && now - lastProactiveCheck < 60_000) return;
+  lastProactiveCheck = now;
+  const exp = getTokenExpiry(token);
+  const needsRefresh = options.force || exp === null || exp - now / 1000 < REFRESH_BEFORE_EXPIRY_SEC;
+  if (!needsRefresh) return;
+  const outcome = await refreshSession(token);
+  const alreadyExpired = exp !== null && exp <= Date.now() / 1000;
+  // A still-valid token keeps working even if renewal failed; requests will retry via the interceptor.
+  if (!outcome.ok && outcome.sessionInvalid && alreadyExpired && currentToken === token) {
+    authHandlers?.onSessionExpired();
+  }
+}
+
+type RetriableConfig = InternalAxiosRequestConfig & { _authRetried?: boolean };
+
+function bearerFromConfig(config: InternalAxiosRequestConfig): string | null {
+  const raw = config.headers?.Authorization ?? config.headers?.authorization;
+  if (typeof raw !== 'string') return null;
+  const m = /^Bearer\s+(.+)$/i.exec(raw.trim());
+  return m?.[1] ?? null;
+}
+
+api.interceptors.response.use(undefined, async (error: AxiosError) => {
+  const config = error.config as RetriableConfig | undefined;
+  if (!config || config._authRetried || isPublicAuthEndpoint(config.url) || !isAuthFailure(error)) {
+    throw error;
+  }
+  const sentToken = bearerFromConfig(config);
+  if (!sentToken) throw error;
+  config._authRetried = true;
+
+  let freshToken: string | null = null;
+  if (currentToken && currentToken !== sentToken) {
+    freshToken = currentToken;
+  } else {
+    const outcome = await refreshSession(sentToken);
+    if (outcome.ok) {
+      freshToken = outcome.token;
+    } else {
+      if (outcome.sessionInvalid && currentToken === sentToken) authHandlers?.onSessionExpired();
+      throw error;
+    }
+  }
+  config.headers.set('Authorization', `Bearer ${freshToken}`);
+  return api.request(config);
+});
 
 export interface Patient {
   _id: string;

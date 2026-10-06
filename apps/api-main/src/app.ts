@@ -24,6 +24,7 @@ import { storiesRoutes, storiesAdminRoutes } from "@/modules/stories/stories.rou
 import { homeVisitsPatientRoutes } from "@/modules/home-visits/home-visits.routes"
 import { homeVisitsManageRoutes } from "@/modules/home-visits/home-visits.manage.routes"
 import { AppError } from "@/common/errors"
+import { logger } from "@/common/logger"
 
 // V1 API routes
 const v1 = new Elysia({ prefix: "/v1" })
@@ -59,6 +60,35 @@ const v1 = new Elysia({ prefix: "/v1" })
 
 // Main Elysia app
 export const app = new Elysia()
+  // Must be registered before any route and as "global": Elysia only applies hooks
+  // to routes defined after them, otherwise every AppError (401/404/...) leaks out as 500.
+  .onError({ as: "global" }, ({ code, error, set, request }) => {
+    const err = error as AppError & { statusCode?: number; code?: string }
+    if (error instanceof AppError || (typeof err?.statusCode === "number" && err?.message)) {
+      set.status = err.statusCode
+      return { success: false, error: err.message, code: err.code }
+    }
+    if (code === "NOT_FOUND") {
+      set.status = 404
+      return { success: false, error: "Not found", code: "NOT_FOUND" }
+    }
+    if (code === "VALIDATION" || code === "PARSE") {
+      set.status = 400
+      return { success: false, error: "Invalid request", code: "VALIDATION_ERROR" }
+    }
+    if (code === "INVALID_COOKIE_SIGNATURE") {
+      set.status = 401
+      return { success: false, error: "Unauthorized", code: "UNAUTHORIZED" }
+    }
+    logger.error("[app] Unhandled error", {
+      method: request.method,
+      url: request.url,
+      code: String(code),
+      err: error instanceof Error ? `${error.name}: ${error.message}\n${error.stack ?? ""}` : String(error),
+    })
+    set.status = 500
+    return { success: false, error: "Internal server error", code: "INTERNAL_ERROR" }
+  })
   // CORS plugin - allows requests from any origin in dev
   .use(
     cors({
@@ -88,19 +118,5 @@ export const app = new Elysia()
   .use(healthRoutes)
   // V1 API
   .use(v1)
-  // Global error handler (Elysia may wrap errors from derive, so check statusCode too)
-  .onError(({ error, set }) => {
-    const err = error as AppError & { statusCode?: number; code?: string }
-    if (err?.statusCode && err?.message) {
-      set.status = err.statusCode
-      return { success: false, error: err.message, code: err.code }
-    }
-    if (error instanceof AppError) {
-      set.status = error.statusCode
-      return { success: false, error: error.message, code: error.code }
-    }
-    set.status = 500
-    return { success: false, error: "Internal server error" }
-  })
 
 export type App = typeof app
