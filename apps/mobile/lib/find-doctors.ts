@@ -1,4 +1,4 @@
-import { getClinicsList, getClinicDetail } from './api';
+import { getClinicsList, getClinicDetail, type ClinicDetailPublic } from './api';
 import {
   type DoctorSpecialty,
   getDoctorSpecialty,
@@ -16,6 +16,11 @@ export type PublicDoctorMatch = {
   ratingAvg: number;
   reviewsCount: number;
 };
+
+function clinicRating(clinic: ClinicDetailPublic): { ratingAvg: number; reviewsCount: number } {
+  if (clinic.settings?.reviewsEnabled === false) return { ratingAvg: 0, reviewsCount: 0 };
+  return { ratingAvg: clinic.rating?.avg ?? 0, reviewsCount: clinic.rating?.count ?? 0 };
+}
 
 function nameMatches(fullName: string, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -51,8 +56,7 @@ export async function findDoctorsForSpecialty(
         specialty: d.specialty,
         avatarUrl: d.avatarUrl ?? null,
         clinicName: clinic.clinicDisplayName,
-        ratingAvg: clinic.rating?.avg ?? 0,
-        reviewsCount: clinic.rating?.count ?? 0,
+        ...clinicRating(clinic),
       });
     }
   }
@@ -92,8 +96,7 @@ export async function findDoctorsByName(
         specialty: d.specialty,
         avatarUrl: d.avatarUrl ?? null,
         clinicName: clinic.clinicDisplayName,
-        ratingAvg: clinic.rating?.avg ?? 0,
-        reviewsCount: clinic.rating?.count ?? 0,
+        ...clinicRating(clinic),
       });
     }
   }

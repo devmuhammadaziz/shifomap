@@ -42,6 +42,11 @@ export interface ClinicDoc {
     avg: number
     count: number
   }
+  /** Feature switches controlled by the clinic admin. Missing = enabled. */
+  settings?: {
+    reviewsEnabled?: boolean
+    bookingEnabled?: boolean
+  }
   owners: ClinicOwner[]
   branches: ClinicBranch[]
   services: ClinicService[]
@@ -140,6 +145,8 @@ export interface ClinicDoctor {
   serviceIds: ObjectId[]
   branchIds: ObjectId[] // single branch: one element
   isActive: boolean
+  /** Set by the clinic admin (not the doctor). Missing = enabled. */
+  homeVisitEnabled?: boolean
   schedule: {
     timezone: string
     weekly: Array<{
@@ -353,6 +360,31 @@ export const updateDoctorScheduleBodySchema = z.object({
 })
 export type UpdateDoctorScheduleBody = z.infer<typeof updateDoctorScheduleBodySchema>
 
+export const updateClinicSettingsBodySchema = z
+  .object({
+    reviewsEnabled: z.boolean().optional(),
+    bookingEnabled: z.boolean().optional(),
+  })
+  .refine((v) => v.reviewsEnabled !== undefined || v.bookingEnabled !== undefined, {
+    message: "Nothing to update",
+  })
+export type UpdateClinicSettingsBody = z.infer<typeof updateClinicSettingsBodySchema>
+
+export const setHomeVisitBodySchema = z.object({ enabled: z.boolean() })
+
+export type ClinicFeatures = { reviewsEnabled: boolean; bookingEnabled: boolean }
+
+export function getClinicFeatures(doc: Pick<ClinicDoc, "settings"> | null | undefined): ClinicFeatures {
+  return {
+    reviewsEnabled: doc?.settings?.reviewsEnabled !== false,
+    bookingEnabled: doc?.settings?.bookingEnabled !== false,
+  }
+}
+
+export function isDoctorHomeVisitEnabled(doctor: Pick<ClinicDoctor, "homeVisitEnabled" | "isActive">): boolean {
+  return doctor.isActive !== false && doctor.homeVisitEnabled !== false
+}
+
 export type CreateClinicBody = z.infer<typeof createClinicBodySchema>
 export type LoginClinicOwnerBody = z.infer<typeof loginClinicOwnerBodySchema>
 export type ChangePlanBody = z.infer<typeof changePlanBodySchema>
@@ -379,6 +411,7 @@ export function mapDocToPublicClinic(doc: ClinicDoc) {
       updatedAt: doc.ranking.updatedAt.toISOString(),
     },
     rating: doc.rating,
+    settings: getClinicFeatures(doc),
     owners: doc.owners.map((o) => ({
       _id: o._id.toHexString(),
       role: o.role,
@@ -440,6 +473,7 @@ export function mapDocToDetailedClinic(doc: ClinicDoc) {
       serviceIds: (d.serviceIds ?? []).map((id) => id.toHexString()),
       branchIds: d.branchIds.map((id) => id.toHexString()),
       isActive: d.isActive,
+      homeVisitEnabled: d.homeVisitEnabled !== false,
       schedule: d.schedule,
       lastLoginAt: d.security.lastLoginAt?.toISOString() ?? null,
       createdAt: d.createdAt.toISOString(),

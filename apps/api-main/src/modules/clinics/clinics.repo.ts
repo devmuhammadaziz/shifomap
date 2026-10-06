@@ -384,6 +384,7 @@ export interface ClinicDocPublicListProjection {
   categories?: ClinicCategory[]
   description: { short: string | null; full: string | null }
   rating: { avg: number; count: number }
+  settings?: ClinicDoc["settings"]
   branches?: Array<{ _id: import('mongodb').ObjectId; name: string; address: { city: string; street: string; geo: { lat: number; lng: number } }; isActive: boolean }>
 }
 
@@ -410,6 +411,7 @@ export async function findActiveClinicsForPublic(limit: number = 100): Promise<C
           "description.full": 1,
           "rating.avg": 1,
           "rating.count": 1,
+          settings: 1,
           branches: 1,
         },
       }
@@ -451,6 +453,7 @@ export async function searchClinicsPublic(q: string, limit: number = 10): Promis
           "description.full": 1,
           "rating.avg": 1,
           "rating.count": 1,
+          settings: 1,
           branches: 1,
         },
       }
@@ -1192,6 +1195,9 @@ export interface PublicServiceItem {
   price: { amount?: number; minAmount?: number; maxAmount?: number; currency: string }
   isActive: boolean
   rating?: { avg: number; count: number }
+  /** Clinic-level switches: hide ratings/reviews and booking in the app when false. */
+  reviewsEnabled?: boolean
+  bookingEnabled?: boolean
 }
 
 /**
@@ -1324,6 +1330,8 @@ export async function searchServicesPublic(
         durationMin: "$services.durationMin",
         price: "$services.price",
         isActive: "$services.isActive",
+        reviewsEnabled: { $ne: ["$settings.reviewsEnabled", false] },
+        bookingEnabled: { $ne: ["$settings.bookingEnabled", false] },
         rating: {
           $let: {
             vars: { r: { $arrayElemAt: ["$ratingAgg", 0] } },
@@ -1361,9 +1369,14 @@ export async function searchServicesPublic(
     durationMin: d.durationMin,
     price: d.price,
     isActive: d.isActive,
-    rating: d.rating
-      ? { avg: Number(d.rating.avg), count: Number(d.rating.count) }
-      : undefined,
+    reviewsEnabled: d.reviewsEnabled !== false,
+    bookingEnabled: d.bookingEnabled !== false,
+    rating:
+      d.reviewsEnabled === false
+        ? { avg: 0, count: 0 }
+        : d.rating
+          ? { avg: Number(d.rating.avg), count: Number(d.rating.count) }
+          : undefined,
   }))
   return { services, total }
 }
@@ -1461,7 +1474,7 @@ export async function getServiceFilterOptionsPublic(): Promise<{
  */
 export async function getServiceByIdPublic(serviceId: string): Promise<{
   service: PublicServiceItem & { branchIds: string[]; doctorIds: string[]; branchNames: string[]; doctorNames: string[] }
-  clinic: { _id: string; clinicDisplayName: string; clinicUniqueName: string }
+  clinic: { _id: string; clinicDisplayName: string; clinicUniqueName: string; reviewsEnabled: boolean; bookingEnabled: boolean }
 } | null> {
   const db = getDb()
   let sId: ObjectId
@@ -1515,6 +1528,8 @@ export async function getServiceByIdPublic(serviceId: string): Promise<{
           categoryName: "$categoryObj.name",
           branchNames: 1,
           doctorNames: 1,
+          reviewsEnabled: { $ne: ["$settings.reviewsEnabled", false] },
+          bookingEnabled: { $ne: ["$settings.bookingEnabled", false] },
         },
       },
     ])
@@ -1541,11 +1556,15 @@ export async function getServiceByIdPublic(serviceId: string): Promise<{
       doctorIds: (svc.doctorIds ?? []).map((id: ObjectId) => id.toHexString()),
       branchNames: d.branchNames ?? [],
       doctorNames: d.doctorNames ?? [],
+      reviewsEnabled: d.reviewsEnabled !== false,
+      bookingEnabled: d.bookingEnabled !== false,
     },
     clinic: {
       _id: d.clinicId,
       clinicDisplayName: d.clinicDisplayName,
       clinicUniqueName: d.clinicUniqueName,
+      reviewsEnabled: d.reviewsEnabled !== false,
+      bookingEnabled: d.bookingEnabled !== false,
     },
   }
 }
@@ -1591,6 +1610,8 @@ export async function getClinicServicesPublic(clinicId: string): Promise<PublicS
           durationMin: "$services.durationMin",
           price: "$services.price",
           isActive: "$services.isActive",
+          reviewsEnabled: { $ne: ["$settings.reviewsEnabled", false] },
+          bookingEnabled: { $ne: ["$settings.bookingEnabled", false] },
         },
       },
     ])
@@ -1608,5 +1629,7 @@ export async function getClinicServicesPublic(clinicId: string): Promise<PublicS
     durationMin: d.durationMin,
     price: d.price,
     isActive: d.isActive,
+    reviewsEnabled: d.reviewsEnabled !== false,
+    bookingEnabled: d.bookingEnabled !== false,
   }))
 }

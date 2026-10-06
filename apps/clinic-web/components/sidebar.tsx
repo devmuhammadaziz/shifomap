@@ -21,6 +21,7 @@ import {
   Star,
   MessageSquare,
   Tags,
+  Settings,
 } from 'lucide-react'
 import { useState, useMemo, useEffect } from 'react'
 import { Button } from './ui/button'
@@ -72,8 +73,9 @@ export default function Sidebar() {
       { name: t.sidebar.analytics, href: '/dashboard/analytics', icon: BarChart3 },
       { name: t.sidebar.ratingsAndReviews, href: '/dashboard/ratings', icon: Star },
       { name: t.sidebar.discounts, href: '/dashboard/discounts', icon: Tags },
+      { name: t.dashboard.settingsTitle, href: '/dashboard/settings', icon: Settings },
     ],
-    [t.sidebar]
+    [t.sidebar, t.dashboard.settingsTitle]
   )
 
   const doctorNavigation = useMemo(

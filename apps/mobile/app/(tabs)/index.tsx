@@ -623,12 +623,14 @@ export default function HomeScreen() {
                       onPress={() => router.push({ pathname: '/clinic/[id]', params: { id: c.id } })}
                     >
                       <Image source={{ uri: cover }} style={styles.clinicCover} />
-                      <View style={styles.ratingPill}>
-                        <Icon name="star" size={11} color={tokens.brand.amber} />
-                        <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>
-                          {(c.rating?.avg ?? 0).toFixed(1)}
-                        </Text>
-                      </View>
+                      {c.reviewsEnabled !== false && (c.rating?.count ?? 0) > 0 ? (
+                        <View style={styles.ratingPill}>
+                          <Icon name="star" size={11} color={tokens.brand.amber} />
+                          <Text style={{ color: '#fff', fontSize: 11, fontWeight: '800' }}>
+                            {(c.rating?.avg ?? 0).toFixed(1)}
+                          </Text>
+                        </View>
+                      ) : null}
                       <View style={{ padding: 12 }}>
                         <Text style={{ color: tokens.colors.text, fontWeight: '700', fontSize: 14 }} numberOfLines={1}>
                           {c.clinicDisplayName}

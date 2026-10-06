@@ -93,11 +93,15 @@ export default function ClinicsScreen() {
                   <Text style={[styles.cardName, { color: colors.text }]} numberOfLines={1}>{c.clinicDisplayName}</Text>
                   {tagline ? <Text style={[styles.cardTagline, { color: colors.textTertiary }]} numberOfLines={1}>{tagline}</Text> : null}
                   <View style={styles.cardMetaRow}>
-                    <View style={styles.cardRatingWrap}>
-                      <Icon name="star" size={14} color={colors.warning} />
-                      <Text style={[styles.cardRating, { color: colors.warning }]}>{c.rating.avg > 0 ? c.rating.avg.toFixed(1) : '—'} {c.rating.count > 0 ? `(${c.rating.count})` : ''}</Text>
-                    </View>
-                    <Text style={[styles.cardMetaDot, { color: colors.textTertiary }]}>•</Text>
+                    {c.reviewsEnabled !== false ? (
+                      <>
+                        <View style={styles.cardRatingWrap}>
+                          <Icon name="star" size={14} color={colors.warning} />
+                          <Text style={[styles.cardRating, { color: colors.warning }]}>{c.rating.avg > 0 ? c.rating.avg.toFixed(1) : '—'} {c.rating.count > 0 ? `(${c.rating.count})` : ''}</Text>
+                        </View>
+                        <Text style={[styles.cardMetaDot, { color: colors.textTertiary }]}>•</Text>
+                      </>
+                    ) : null}
                     <Text style={[styles.cardBranches, { color: colors.textTertiary }]}>{c.branchesCount} {t.branches}</Text>
                   </View>
                   {c.descriptionShort ? (

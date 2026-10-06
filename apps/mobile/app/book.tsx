@@ -15,7 +15,9 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Icon } from '../components/icons/Icon';
-import { getClinicDetail, getServiceById, createBooking, getBookedSlots, type ClinicDetailPublic, type ClinicDoctorPublic, type ClinicBranchPublic, type ClinicServicePublic } from '../lib/api';
+import { FeatureNotice } from '../components/ui';
+import { disabledFeatureFromError, featureMessage, isFeatureOn } from '../lib/clinic-features';
+import { getClinicDetail, getServiceById, createBooking, getBookedSlots, getApiErrorMessage, type ClinicDetailPublic, type ClinicDoctorPublic, type ClinicBranchPublic, type ClinicServicePublic } from '../lib/api';
 import { useAuthStore } from '../store/auth-store';
 import { useThemeStore } from '../store/theme-store';
 import { useNotificationStore } from '../store/notification-store';
@@ -312,7 +314,19 @@ export default function BookScreen() {
         router.replace('/(tabs)');
       }, 2500);
     } catch (e) {
-      Alert.alert('Error', e instanceof Error ? e.message : 'Booking failed');
+      const disabled = disabledFeatureFromError(e);
+      if (disabled) {
+        const msg = featureMessage(disabled, language);
+        Alert.alert(msg.title, msg.body);
+        if (disabled === 'booking') {
+          setClinic((c) => (c ? { ...c, settings: { ...c.settings, bookingEnabled: false } } : c));
+        }
+      } else {
+        Alert.alert(
+          language === 'ru' ? 'Ошибка' : 'Xato',
+          getApiErrorMessage(e) ?? (e instanceof Error ? e.message : 'Booking failed'),
+        );
+      }
     } finally {
       setSubmitting(false);
     }
@@ -327,6 +341,23 @@ export default function BookScreen() {
     return (
       <View style={[styles.centered, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (!isFeatureOn(clinic.settings?.bookingEnabled)) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <View style={[styles.header, { borderBottomColor: colors.border }]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={12}>
+            <Icon name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t.bookAppointment}</Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={{ padding: 20 }}>
+          <FeatureNotice kind="booking" />
+        </View>
       </View>
     );
   }

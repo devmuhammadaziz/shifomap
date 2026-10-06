@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb"
 import { findClinicById } from "@/modules/clinics/clinics.repo"
 import type { ClinicDoc } from "@/modules/clinics/clinics.model"
+import { getClinicFeatures } from "@/modules/clinics/clinics.model"
 import {
   insertBooking,
   findBookingsByUserId,
@@ -16,7 +17,7 @@ import {
 import type { BookingDoc, BookingStatus } from "./bookings.model"
 import type { CreateBookingBody } from "./bookings.model"
 import { findPatientsByIds } from "@/modules/patients/patients.repo"
-import { badRequest, notFound, unauthorized } from "@/common/errors"
+import { badRequest, forbidden, notFound, unauthorized } from "@/common/errors"
 import { toObjectId } from "@/common/utils/id"
 
 function getClinicDisplayNames(clinic: ClinicDoc | null, booking: BookingDoc) {
@@ -40,7 +41,10 @@ export async function createBooking(userId: string, body: CreateBookingBody) {
   const userIdObj = toObjectId(userId)
 
   const clinic = await findClinicById(clinicId)
-  if (!clinic) throw notFound("Clinic not found")
+  if (!clinic || clinic.status !== "active" || clinic.deletedAt) throw notFound("Clinic not found")
+  if (!getClinicFeatures(clinic).bookingEnabled) {
+    throw forbidden("This clinic is not accepting online bookings", "BOOKING_DISABLED")
+  }
   const service = (clinic.services ?? []).find((s) => s._id.equals(serviceId))
   if (!service) throw badRequest("Service not found in this clinic")
 

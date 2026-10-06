@@ -17,6 +17,7 @@ import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
 import { getColors } from '../../lib/theme';
 import Skeleton from '../components/Skeleton';
+import { FeatureNotice } from '../../components/ui';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 220;
@@ -148,14 +149,18 @@ export default function ClinicServicesScreen() {
               ) : null}
             </View>
           )}
-          {(clinic.rating?.count ?? 0) > 0 && (
+          {clinic.settings?.reviewsEnabled !== false && (clinic.rating?.count ?? 0) > 0 && (
             <View style={[styles.ratingBox, { backgroundColor: colors.backgroundSecondary }]}>
               <View>
                 <View style={styles.ratingRow}>
                   <Icon name="star" size={18} color={colors.warning} />
                   <Text style={[styles.ratingValue, { color: colors.text }]}>{clinic.rating.avg.toFixed(1)} / 5.0</Text>
                 </View>
-                <Text style={[styles.ratingReviews, { color: colors.textTertiary }]}>Based on {clinic.rating.count} reviews</Text>
+                <Text style={[styles.ratingReviews, { color: colors.textTertiary }]}>
+                  {language === 'ru'
+                    ? `По ${clinic.rating.count} отзывам`
+                    : `${clinic.rating.count} ta sharh asosida`}
+                </Text>
               </View>
               <View style={[styles.topRatedPill, { backgroundColor: colors.success }]}>
                 <Text style={styles.topRatedText}>{t.topRated}</Text>
@@ -174,6 +179,9 @@ export default function ClinicServicesScreen() {
           {/* Services list */}
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>{t.viewClinicServices}</Text>
+            {clinic.settings?.bookingEnabled === false ? (
+              <FeatureNotice kind="booking" style={{ marginBottom: 12 }} />
+            ) : null}
             {services.length === 0 ? (
               <Text style={[styles.noResults, { color: colors.textTertiary }]}>{t.noResultsFound}</Text>
             ) : (

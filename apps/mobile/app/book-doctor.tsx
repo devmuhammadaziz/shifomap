@@ -15,11 +15,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../store/theme-store';
 import { useAuthStore } from '../store/auth-store';
 import { getTokens } from '../lib/design';
-import { Button, IconButton } from '../components/ui';
+import { Button, IconButton, FeatureNotice } from '../components/ui';
+import { disabledFeatureFromError, featureMessage } from '../lib/clinic-features';
 import {
   getClinicDetail,
   getDoctorSlots,
   createBooking,
+  getApiErrorMessage,
   type ClinicDetailPublic,
   type DoctorSlotsResponse,
 } from '../lib/api';
@@ -94,6 +96,7 @@ export default function BookDoctorScreen() {
   const [slotsData, setSlotsData] = useState<DoctorSlotsResponse | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [bookingBlocked, setBookingBlocked] = useState(false);
 
   const tr = (u: string, r: string, e: string) => (language === 'uz' ? u : language === 'ru' ? r : e);
   const dates = useMemo(() => getNextDates(14), []);
@@ -138,11 +141,38 @@ export default function BookDoctorScreen() {
       });
       router.replace({ pathname: '/appointment/[id]', params: { id: result._id } });
     } catch (e) {
-      Alert.alert('Error', (e as Error).message);
+      const disabled = disabledFeatureFromError(e);
+      if (disabled) {
+        const msg = featureMessage(disabled, language);
+        Alert.alert(msg.title, msg.body);
+        if (disabled === 'booking') setBookingBlocked(true);
+      } else {
+        Alert.alert(tr('Xato', 'Ошибка', 'Error'), getApiErrorMessage(e) ?? (e as Error).message);
+      }
     } finally {
       setBooking(false);
     }
   };
+
+  const bookingOff =
+    bookingBlocked || clinic?.settings?.bookingEnabled === false || slotsData?.bookingEnabled === false;
+
+  if (bookingOff) {
+    return (
+      <View style={{ flex: 1, backgroundColor: tokens.colors.background }}>
+        <View style={[styles.topBar, { paddingTop: insets.top + 10 }]}>
+          <IconButton icon="chevron-back" onPress={() => router.back()} />
+          <Text style={[tokens.type.title, { color: tokens.colors.text }]}>
+            {tr('Bron qilish', 'Запись', 'Book appointment')}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+        <View style={{ padding: 20 }}>
+          <FeatureNotice kind="booking" />
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: tokens.colors.background }}>

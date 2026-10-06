@@ -15,7 +15,9 @@ import {
   Play,
   Eye,
   Plus,
+  House,
 } from 'lucide-react'
+import { useToast } from '@/contexts/toast-context'
 import { CreateDoctorModal, type DoctorForEdit } from '../doctors/create-doctor-modal'
 import { DoctorDetailsModal } from '../doctors/doctor-details-modal'
 
@@ -31,6 +33,7 @@ interface Doctor {
   branchIds: string[]
   serviceIds?: string[]
   isActive: boolean
+  homeVisitEnabled?: boolean
   lastLoginAt?: string | null
   createdAt?: string
   updatedAt?: string
@@ -60,8 +63,42 @@ function getAuthHeaders(): HeadersInit {
   }
 }
 
+const HOME_VISIT_TEXT = {
+  uz: {
+    column: 'Uyga chaqirish',
+    allowed: 'Ruxsat',
+    blocked: "Yo'q",
+    toggleLabel: (name: string) => `${name}: uyga chaqirish`,
+    enableAll: 'Hammasini uyga chaqirishga ruxsat',
+    disableAll: "Hammasini uyga chaqirishni o'chirish",
+    summary: (n: number, total: number) => `Uyga chaqirish: ${total} tadan ${n} ta shifokor`,
+    enabledOne: (name: string) => `${name} endi uyga chaqirilishi mumkin`,
+    disabledOne: (name: string) => `${name}ni endi uyga chaqirib bo'lmaydi`,
+    allEnabled: 'Barcha shifokorlarni uyga chaqirish yoqildi',
+    allDisabled: "Barcha shifokorlarni uyga chaqirish o'chirildi",
+    error: "Saqlab bo'lmadi. Qaytadan urinib ko'ring.",
+  },
+  ru: {
+    column: 'Вызов на дом',
+    allowed: 'Да',
+    blocked: 'Нет',
+    toggleLabel: (name: string) => `${name}: вызов на дом`,
+    enableAll: 'Разрешить вызов на дом всем',
+    disableAll: 'Запретить вызов на дом всем',
+    summary: (n: number, total: number) => `Вызов на дом: ${n} из ${total} врачей`,
+    enabledOne: (name: string) => `${name}: вызов на дом разрешён`,
+    disabledOne: (name: string) => `${name}: вызов на дом запрещён`,
+    allEnabled: 'Вызов на дом включён для всех врачей',
+    allDisabled: 'Вызов на дом выключен для всех врачей',
+    error: 'Не удалось сохранить. Попробуйте ещё раз.',
+  },
+} as const
+
 export function DoctorsTab() {
-  const { t } = useLanguage()
+  const { t, language } = useLanguage()
+  const hv = HOME_VISIT_TEXT[language === 'ru' ? 'ru' : 'uz']
+  const { toast } = useToast()
+  const [homeVisitBusy, setHomeVisitBusy] = useState<string | null>(null)
   const [clinic, setClinic] = useState<ClinicData | null>(null)
   const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
@@ -193,6 +230,47 @@ export function DoctorsTab() {
     }
   }
 
+  const setDoctorHomeVisit = async (doctor: Doctor, enabled: boolean) => {
+    setHomeVisitBusy(doctor._id)
+    setClinic((c) =>
+      c ? { ...c, doctors: (c.doctors ?? []).map((d) => (d._id === doctor._id ? { ...d, homeVisitEnabled: enabled } : d)) } : c
+    )
+    try {
+      const res = await fetch(`${getApiUrl()}/v1/clinics/my-clinic/doctors/${doctor._id}/home-visit`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ enabled }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json?.success) throw new Error(json?.error || hv.error)
+      toast(enabled ? hv.enabledOne(doctor.fullName) : hv.disabledOne(doctor.fullName))
+    } catch (e) {
+      toast((e as Error).message || hv.error, 'error')
+      fetchMyClinic()
+    } finally {
+      setHomeVisitBusy(null)
+    }
+  }
+
+  const setAllHomeVisit = async (enabled: boolean) => {
+    setHomeVisitBusy('all')
+    try {
+      const res = await fetch(`${getApiUrl()}/v1/clinics/my-clinic/doctors/home-visit`, {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ enabled }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json?.success) throw new Error(json?.error || hv.error)
+      toast(enabled ? hv.allEnabled : hv.allDisabled)
+      await fetchMyClinic()
+    } catch (e) {
+      toast((e as Error).message || hv.error, 'error')
+    } finally {
+      setHomeVisitBusy(null)
+    }
+  }
+
   const handleDelete = async (doctorId: string) => {
     setActionLoading(doctorId)
     setDeleteConfirmId(null)
@@ -258,6 +336,34 @@ export function DoctorsTab() {
         </div>
       </div>
 
+      {doctors.length > 0 && (() => {
+        const enabledCount = doctors.filter((d) => d.homeVisitEnabled !== false).length
+        return (
+          <div className="flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 sm:flex-row sm:items-center">
+            <div className="flex items-center gap-2 text-sm font-medium text-gray-700 sm:mr-auto">
+              <House className="h-4 w-4 text-blue-600" />
+              {hv.summary(enabledCount, doctors.length)}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={homeVisitBusy !== null || enabledCount === doctors.length}
+              onClick={() => void setAllHomeVisit(true)}
+            >
+              {hv.enableAll}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={homeVisitBusy !== null || enabledCount === 0}
+              onClick={() => void setAllHomeVisit(false)}
+            >
+              {hv.disableAll}
+            </Button>
+          </div>
+        )
+      })()}
+
       {/* Table */}
       <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
         <div className="overflow-x-auto">
@@ -284,6 +390,9 @@ export function DoctorsTab() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   {t.accounts.status}
                 </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  {hv.column}
+                </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider w-16">
                   {t.accounts.actions}
                 </th>
@@ -292,7 +401,7 @@ export function DoctorsTab() {
             <tbody className="divide-y divide-gray-100">
               {filteredDoctors.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={7} className="px-4 py-12 text-center text-gray-500">
                     {t.doctors.emptyDesc}
                   </td>
                 </tr>
@@ -335,6 +444,35 @@ export function DoctorsTab() {
                           <span className={`h-1.5 w-1.5 rounded-full ${doctor.isActive ? 'bg-green-500' : 'bg-gray-500'}`} />
                           {doctor.isActive ? t.accounts.active : t.accounts.inactive}
                         </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const on = doctor.homeVisitEnabled !== false
+                          return (
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={on}
+                                aria-label={hv.toggleLabel(doctor.fullName)}
+                                disabled={homeVisitBusy !== null}
+                                onClick={() => void setDoctorHomeVisit(doctor, !on)}
+                                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:opacity-50 ${
+                                  on ? 'bg-blue-600' : 'bg-gray-300'
+                                }`}
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                                    on ? 'translate-x-6' : 'translate-x-1'
+                                  }`}
+                                />
+                              </button>
+                              <span className={`text-xs font-medium ${on ? 'text-blue-700' : 'text-gray-500'}`}>
+                                {on ? hv.allowed : hv.blocked}
+                              </span>
+                            </div>
+                          )
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="inline-block" ref={openMenuId === doctor._id ? menuRef : undefined}>

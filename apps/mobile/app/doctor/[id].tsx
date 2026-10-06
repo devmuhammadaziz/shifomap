@@ -25,7 +25,8 @@ import { useAuthStore } from '../../store/auth-store';
 import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
 import { getTokens } from '../../lib/design';
-import { Button, Card, SkeletonBlock, IconButton } from '../../components/ui';
+import { Button, Card, SkeletonBlock, IconButton, FeatureNotice } from '../../components/ui';
+import { isFeatureOn } from '../../lib/clinic-features';
 import ReviewBottomSheet from '../components/ReviewBottomSheet';
 import ReviewerHeader from '../components/ReviewerHeader';
 import WorkingHoursList from '../components/WorkingHoursList';
@@ -51,6 +52,8 @@ export default function DoctorDetailScreen() {
   const [reviewsLoadMore, setReviewsLoadMore] = useState(false);
   const [doctorRating, setDoctorRating] = useState<{ avg: number; count: number } | null>(null);
   const [chatOpening, setChatOpening] = useState(false);
+  const [reviewsOn, setReviewsOn] = useState(true);
+  const [bookingOn, setBookingOn] = useState(true);
   const token = useAuthStore((s) => s.token);
 
   useEffect(() => {
@@ -62,6 +65,8 @@ export default function DoctorDetailScreen() {
     setLoading(true);
     getClinicDetail(clinicId)
       .then((clinic) => {
+        setReviewsOn(isFeatureOn(clinic.settings?.reviewsEnabled));
+        setBookingOn(isFeatureOn(clinic.settings?.bookingEnabled));
         const found = clinic.doctors?.find((d) => d._id === doctorId);
         setDoctor(found ?? null);
         if (!found) setError('Doctor not found');
@@ -76,6 +81,7 @@ export default function DoctorDetailScreen() {
     else setReviewsLoading(true);
     getReviews({ clinicId, doctorId, skip, limit })
       .then((res) => {
+        if (res.reviewsEnabled === false) setReviewsOn(false);
         setDoctorRating(res.rating);
         setReviewsTotal(res.total);
         if (append) setReviews((prev) => [...prev, ...res.reviews]);
@@ -184,6 +190,7 @@ export default function DoctorDetailScreen() {
   }
 
   const hasSchedule = !!doctor.schedule?.weekly?.length;
+  const homeVisitOn = isFeatureOn(doctor.homeVisitEnabled);
 
   return (
     <View style={[styles.root, { backgroundColor: tokens.colors.background }]}>
@@ -218,6 +225,8 @@ export default function DoctorDetailScreen() {
             </View>
 
             <View style={[styles.statsRow, { backgroundColor: tokens.colors.backgroundCard }]}>
+              {reviewsOn ? (
+              <>
               <View style={styles.statCell}>
                 <Text style={[tokens.type.titleLg, { color: tokens.colors.text }]}>
                   {doctorRating?.avg?.toFixed(1) ?? '—'}
@@ -242,6 +251,8 @@ export default function DoctorDetailScreen() {
                 </Text>
               </View>
               <View style={[styles.statDivider, { backgroundColor: tokens.colors.border }]} />
+              </>
+              ) : null}
               <View style={styles.statCell}>
                 <Text style={[tokens.type.titleLg, { color: tokens.colors.text }]}>
                   {doctor.serviceIds?.length ?? 0}
@@ -288,6 +299,10 @@ export default function DoctorDetailScreen() {
             <Text style={[tokens.type.caption, { color: tokens.colors.textTertiary, marginBottom: 10 }]}>
               {t.reviews}
             </Text>
+            {!reviewsOn ? (
+              <FeatureNotice kind="reviews" compact />
+            ) : (
+            <>
             {reviewsLoading && reviews.length === 0 ? (
               <ActivityIndicator size="small" color={tokens.brand.iris} />
             ) : reviews.length === 0 ? (
@@ -340,25 +355,32 @@ export default function DoctorDetailScreen() {
                 {t.writeReview ?? 'Write review'}
               </Text>
             </TouchableOpacity>
+            </>
+            )}
           </Card>
         </View>
       </ScrollView>
 
       <View style={[styles.ctaBar, { backgroundColor: tokens.colors.background, borderTopColor: tokens.colors.border, paddingBottom: insets.bottom + 10 }]}>
-        <Button
-          title={language === 'uz' ? 'Uyga chaqirish' : language === 'en' ? 'Home visit' : 'Вызов на дом'}
-          variant="outline"
-          leftIcon="home-outline"
-          onPress={() =>
-            router.push({
-              pathname: '/home-visit-request',
-              params: { doctorId: doctorId as string, clinicId: clinicId as string },
-            })
-          }
-          fullWidth
-          size="md"
-          style={{ marginBottom: 10 }}
-        />
+        {homeVisitOn ? (
+          <Button
+            title={language === 'uz' ? 'Uyga chaqirish' : language === 'en' ? 'Home visit' : 'Вызов на дом'}
+            variant="outline"
+            leftIcon="home-outline"
+            onPress={() =>
+              router.push({
+                pathname: '/home-visit-request',
+                params: { doctorId: doctorId as string, clinicId: clinicId as string },
+              })
+            }
+            fullWidth
+            size="md"
+            style={{ marginBottom: 10 }}
+          />
+        ) : (
+          <FeatureNotice kind="homeVisit" compact style={{ marginBottom: 10 }} />
+        )}
+        {!bookingOn ? <FeatureNotice kind="booking" compact style={{ marginBottom: 10 }} /> : null}
         <View style={styles.ctaRow}>
         <Button
           title={language === 'uz' ? 'Yozish' : language === 'en' ? 'Write' : 'Написать'}
@@ -371,25 +393,27 @@ export default function DoctorDetailScreen() {
           style={{ flex: 1 }}
           size="md"
         />
-        <Button
-          title={language === 'uz' ? 'Bron qilish' : 'Записаться'}
-          variant="gradient"
-          rightIcon="arrow-forward"
-          onPress={() =>
-            router.push({
-              pathname: '/book-doctor',
-              params: { doctorId: doctorId as string, clinicId: clinicId as string },
-            })
-          }
-          fullWidth={false}
-          style={{ flex: 1.2 }}
-          size="md"
-        />
+        {bookingOn ? (
+          <Button
+            title={language === 'uz' ? 'Bron qilish' : 'Записаться'}
+            variant="gradient"
+            rightIcon="arrow-forward"
+            onPress={() =>
+              router.push({
+                pathname: '/book-doctor',
+                params: { doctorId: doctorId as string, clinicId: clinicId as string },
+              })
+            }
+            fullWidth={false}
+            style={{ flex: 1.2 }}
+            size="md"
+          />
+        ) : null}
         </View>
       </View>
 
       <ReviewBottomSheet
-        visible={reviewSheetVisible}
+        visible={reviewSheetVisible && reviewsOn}
         onClose={() => setReviewSheetVisible(false)}
         onSuccess={onReviewSuccess}
         clinicId={clinicId ?? ''}

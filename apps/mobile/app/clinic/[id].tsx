@@ -27,6 +27,8 @@ import Skeleton from '../components/Skeleton';
 import ReviewBottomSheet from '../components/ReviewBottomSheet';
 import ReviewerHeader from '../components/ReviewerHeader';
 import WorkingHoursList from '../components/WorkingHoursList';
+import { FeatureNotice } from '../../components/ui';
+import { isFeatureOn } from '../../lib/clinic-features';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 300;
@@ -129,10 +131,13 @@ export default function ClinicDetailScreen() {
       });
   };
 
+  const reviewsOn = isFeatureOn(clinic?.settings?.reviewsEnabled);
+  const bookingOn = isFeatureOn(clinic?.settings?.bookingEnabled);
+
   useEffect(() => {
-    if (!id || !clinic) return;
+    if (!id || !clinic || !reviewsOn) return;
     loadReviews(0, 3, false);
-  }, [id, clinic?._id]);
+  }, [id, clinic?._id, reviewsOn]);
 
   const onLoadMoreReviews = () => {
     loadReviews(reviewsSkip, 10, true);
@@ -284,7 +289,7 @@ export default function ClinicDetailScreen() {
           </View>
 
           <View style={styles.inlineMeta}>
-            {(clinic.rating?.count ?? 0) > 0 ? (
+            {reviewsOn && (clinic.rating?.count ?? 0) > 0 ? (
               <View style={styles.metaItem}>
                 <Icon name="star" size={13} color={colors.warning} />
                 <Text style={[styles.metaStrong, { color: colors.text }]}>{clinic.rating.avg.toFixed(1)}</Text>
@@ -293,7 +298,7 @@ export default function ClinicDetailScreen() {
                 </Text>
               </View>
             ) : null}
-            {(clinic.rating?.avg ?? 0) >= 4.5 ? (
+            {reviewsOn && (clinic.rating?.avg ?? 0) >= 4.5 ? (
               <View style={styles.trustedBadge}>
                 <Icon name="shield-checkmark" size={12} color="#16A34A" />
                 <Text style={{ color: '#15803D', fontSize: 11, fontWeight: '700' }}>
@@ -633,7 +638,7 @@ export default function ClinicDetailScreen() {
           <View style={styles.block}>
             <View style={styles.blockHeader}>
               <Text style={[styles.blockHeading, { color: colors.text }]}>{t.reviews}</Text>
-              {id && clinic ? (
+              {id && clinic && reviewsOn ? (
                 <TouchableOpacity onPress={() => setReviewSheetVisible(true)} hitSlop={8} activeOpacity={0.6}>
                   <Text style={[styles.seeAllLink, { color: colors.primaryLight }]}>
                     {t.writeReview} →
@@ -642,7 +647,9 @@ export default function ClinicDetailScreen() {
               ) : null}
             </View>
             <View style={[styles.dividerHairline, { backgroundColor: colors.border }]} />
-            {reviewsLoading && reviews.length === 0 ? (
+            {!reviewsOn ? (
+              <FeatureNotice kind="reviews" style={{ marginTop: 4 }} />
+            ) : reviewsLoading && reviews.length === 0 ? (
               <View style={{ paddingVertical: 24, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primaryLight} />
               </View>
@@ -712,15 +719,19 @@ export default function ClinicDetailScreen() {
           },
         ]}
       >
-        <TouchableOpacity
-          style={[styles.bookButton, { backgroundColor: ACCENT, flex: 1 }]}
-          activeOpacity={0.88}
-          onPress={() => router.push({ pathname: '/clinic-services/[id]', params: { id: id as string } })}
-        >
-          <Text style={styles.bookButtonText}>
-            {language === 'ru' ? 'Записаться в клинику' : 'Klinikaga yozilish'}
-          </Text>
-        </TouchableOpacity>
+        {bookingOn ? (
+          <TouchableOpacity
+            style={[styles.bookButton, { backgroundColor: ACCENT, flex: 1 }]}
+            activeOpacity={0.88}
+            onPress={() => router.push({ pathname: '/clinic-services/[id]', params: { id: id as string } })}
+          >
+            <Text style={styles.bookButtonText}>
+              {language === 'ru' ? 'Записаться в клинику' : 'Klinikaga yozilish'}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <FeatureNotice kind="booking" compact style={{ flex: 1 }} />
+        )}
         {clinicPhone ? (
           <TouchableOpacity
             style={styles.callBtn}
@@ -733,7 +744,7 @@ export default function ClinicDetailScreen() {
       </View>
 
       <ReviewBottomSheet
-        visible={reviewSheetVisible}
+        visible={reviewSheetVisible && reviewsOn}
         onClose={() => setReviewSheetVisible(false)}
         onSuccess={onReviewSuccess}
         clinicId={id ?? ''}

@@ -15,6 +15,8 @@ import {
   updateServiceBodySchema,
   updateClinicInfoBodySchema,
   addOwnerBodySchema,
+  updateClinicSettingsBodySchema,
+  setHomeVisitBodySchema,
 } from "./clinics.model"
 import {
   createClinic,
@@ -59,9 +61,13 @@ import {
   publicListClinics,
   getMyClinicReviews,
   publicDoctorSlotsBySpecialty,
+  getMyClinicSettings,
+  updateMyClinicSettings,
+  setDoctorHomeVisit,
+  setAllDoctorsHomeVisit,
 } from "./clinics.service"
 import { requireAuth } from "@/common/middleware/auth"
-import { unauthorized } from "@/common/errors"
+import { badRequest, forbidden, unauthorized } from "@/common/errors"
 
 function isPlatformAdmin(role?: string) {
   return role === "SUPER_ADMIN_SHIFO" || role === "admin"
@@ -661,6 +667,39 @@ export const clinicsRoutes = new Elysia({ prefix: "/clinics" })
       set.status = 500
       return { success: false, error: "Internal server error" }
     }
+  })
+  // Clinic owner: allow/deny home visits for every doctor at once
+  .patch("/my-clinic/doctors/home-visit", async ({ auth, body, set }) => {
+    const clinicId = await resolveClinicIdForOwner(auth)
+    if (!clinicId) throw forbidden("Forbidden: clinic owner only")
+    const parsed = setHomeVisitBodySchema.safeParse(body ?? {})
+    if (!parsed.success) throw badRequest("enabled (boolean) is required", "VALIDATION_ERROR")
+    const result = await setAllDoctorsHomeVisit(clinicId, parsed.data.enabled)
+    set.status = 200
+    return { success: true, data: result }
+  })
+  // Clinic owner: allow/deny home visits for one doctor
+  .patch("/my-clinic/doctors/:doctorId/home-visit", async ({ auth, params, body, set }) => {
+    const clinicId = await resolveClinicIdForOwner(auth)
+    if (!clinicId) throw forbidden("Forbidden: clinic owner only")
+    const parsed = setHomeVisitBodySchema.safeParse(body ?? {})
+    if (!parsed.success) throw badRequest("enabled (boolean) is required", "VALIDATION_ERROR")
+    const result = await setDoctorHomeVisit(clinicId, params.doctorId, parsed.data.enabled)
+    set.status = 200
+    return { success: true, data: result }
+  })
+  // Clinic owner: feature switches (reviews / booking)
+  .get("/my-clinic/settings", async ({ auth, set }) => {
+    const result = await getMyClinicSettings(auth)
+    set.status = 200
+    return { success: true, data: result }
+  })
+  .patch("/my-clinic/settings", async ({ auth, body, set }) => {
+    const parsed = updateClinicSettingsBodySchema.safeParse(body ?? {})
+    if (!parsed.success) throw badRequest("reviewsEnabled or bookingEnabled (boolean) is required", "VALIDATION_ERROR")
+    const result = await updateMyClinicSettings(auth, parsed.data)
+    set.status = 200
+    return { success: true, data: result }
   })
   // Clinic owner: delete doctor
   .delete("/my-clinic/doctors/:doctorId", async ({ auth, params, set }) => {

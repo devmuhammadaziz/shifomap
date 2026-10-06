@@ -3,6 +3,7 @@ import { createBookingBodySchema, cancelBookingBodySchema } from "./bookings.mod
 import { createBooking, getMyBookings, getBookingById, getNextUpcoming, cancelBookingByPatient, getBookedSlots } from "./bookings.service"
 import { requirePatientAuth } from "@/common/middleware/auth"
 import { findClinicById } from "@/modules/clinics/clinics.repo"
+import { getClinicFeatures } from "@/modules/clinics/clinics.model"
 import { findBookedTimesForDoctorOnDate } from "./bookings.repo"
 import { toObjectId } from "@/common/utils/id"
 
@@ -48,6 +49,7 @@ export const bookingsRoutes = new Elysia({ prefix: "/bookings" })
         schedule: doctor.schedule,
         bookedTimes,
         services,
+        bookingEnabled: getClinicFeatures(clinic).bookingEnabled,
       },
     }
   })

@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb"
 import { getDb, HOME_VISITS_COLLECTION, PATIENTS_COLLECTION } from "@/db/mongo"
 import { findClinicById } from "@/modules/clinics/clinics.repo"
+import { isDoctorHomeVisitEnabled } from "@/modules/clinics/clinics.model"
 import type { PatientDoc } from "@/modules/patients/patients.model"
 import type { JwtPayload } from "@/common/middleware/auth"
 import { badRequest, forbidden, notFound, unauthorized } from "@/common/errors"
@@ -32,6 +33,9 @@ export async function createHomeVisit(patientId: string, body: CreateHomeVisitBo
 
   const doctor = clinic.doctors?.find((d) => d._id.equals(doctorId) && d.isActive !== false)
   if (!doctor) throw badRequest("Doctor not found in this clinic")
+  if (!isDoctorHomeVisitEnabled(doctor)) {
+    throw forbidden("This doctor is not available for home visits", "HOME_VISIT_DISABLED")
+  }
 
   const now = new Date()
   const doc: HomeVisitDoc = {

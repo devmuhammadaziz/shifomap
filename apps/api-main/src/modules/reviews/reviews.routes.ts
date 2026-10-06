@@ -9,6 +9,7 @@ import { requirePatientAuth } from "@/common/middleware/auth"
 import { toObjectId } from "@/common/utils/id"
 import { getDb, CLINICS_COLLECTION } from "@/db/mongo"
 import type { ClinicDoc } from "@/modules/clinics/clinics.model"
+import { getClinicFeatures } from "@/modules/clinics/clinics.model"
 
 export const reviewsRoutes = new Elysia({ prefix: "/reviews" })
   .get("/", async ({ query, set }) => {
@@ -22,6 +23,14 @@ export const reviewsRoutes = new Elysia({ prefix: "/reviews" })
         set.status = 400
         return { success: false, error: "clinicId is required" }
       }
+      // Reviews stay in the database; they're only hidden while the clinic has them turned off.
+      const owner = await getDb()
+        .collection<ClinicDoc>(CLINICS_COLLECTION)
+        .findOne({ _id: toObjectId(clinicId, "clinicId") }, { projection: { settings: 1 } })
+      if (!getClinicFeatures(owner).reviewsEnabled) {
+        set.status = 200
+        return { success: true, data: { reviews: [], total: 0, rating: { avg: 0, count: 0 }, reviewsEnabled: false } }
+      }
       const data = await listReviewsWithPatientDetails(
         { clinicId, serviceId, doctorId },
         skip,
@@ -32,7 +41,7 @@ export const reviewsRoutes = new Elysia({ prefix: "/reviews" })
       // Strip the private `patient` object (phone/email/city) and only expose
       // `patientName` + `patientAvatar` to the public.
       const reviews = data.reviews.map(({ patient: _p, ...r }) => r)
-      return { success: true, data: { reviews, total: data.total, rating } }
+      return { success: true, data: { reviews, total: data.total, rating, reviewsEnabled: true } }
     } catch (e: unknown) {
       const err = e as { statusCode?: number; message?: string }
       if (err.statusCode) {
@@ -70,6 +79,10 @@ export const reviewsRoutes = new Elysia({ prefix: "/reviews" })
       if (!clinic) {
         set.status = 404
         return { success: false, error: "Clinic not found" }
+      }
+      if (!getClinicFeatures(clinic).reviewsEnabled) {
+        set.status = 403
+        return { success: false, error: "This clinic does not accept reviews", code: "REVIEWS_DISABLED" }
       }
 
       const sid = parsed.data.serviceId?.trim()

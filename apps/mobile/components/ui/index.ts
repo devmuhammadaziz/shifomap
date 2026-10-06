@@ -9,5 +9,6 @@ export { Input } from './Input';
 export { ListItem } from './ListItem';
 export { PrimaryGradient } from './PrimaryGradient';
 export { SkeletonBlock } from './SkeletonBlock';
+export { FeatureNotice } from './FeatureNotice';
 export { Icon } from '../icons/Icon';
 export type { IconName, IconProps, IconVariant } from '../icons/Icon';

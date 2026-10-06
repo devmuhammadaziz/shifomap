@@ -272,8 +272,8 @@ async function findDoctorSuggestionsBySpecialty(specialtyKey: string): Promise<D
         avatarUrl: d.avatarUrl ?? null,
         clinicName: clinic.clinicDisplayName,
         address,
-        ratingAvg: clinic.rating?.avg ?? 0,
-        reviewsCount: clinic.rating?.count ?? 0,
+        ratingAvg: clinic.settings?.reviewsEnabled === false ? 0 : clinic.rating?.avg ?? 0,
+        reviewsCount: clinic.settings?.reviewsEnabled === false ? 0 : clinic.rating?.count ?? 0,
       });
     }
   }
@@ -825,12 +825,14 @@ export default function AiChatScreen() {
                             <View style={{ flex: 1, minWidth: 0 }}>
                               <Text style={[styles.doctorName, { color: colors.text }]} numberOfLines={1}>{doc.doctorName}</Text>
                               <Text style={[styles.doctorSpec, { color: colors.textSecondary }]} numberOfLines={1}>{doc.specialty}</Text>
-                              <View style={styles.docMetaRow}>
-                                <Icon name="star" size={13} color="#f59e0b" />
-                                <Text style={[styles.docMetaText, { color: colors.textSecondary }]}>
-                                  {doc.ratingAvg.toFixed(1)} · {doc.reviewsCount}
-                                </Text>
-                              </View>
+                              {doc.reviewsCount > 0 ? (
+                                <View style={styles.docMetaRow}>
+                                  <Icon name="star" size={13} color="#f59e0b" />
+                                  <Text style={[styles.docMetaText, { color: colors.textSecondary }]}>
+                                    {doc.ratingAvg.toFixed(1)} · {doc.reviewsCount}
+                                  </Text>
+                                </View>
+                              ) : null}
                               <Text style={[styles.docClinic, { color: colors.text }]} numberOfLines={1}>{doc.clinicName}</Text>
                               <Text style={[styles.docAddr, { color: colors.textTertiary }]} numberOfLines={1}>{doc.address}</Text>
                             </View>

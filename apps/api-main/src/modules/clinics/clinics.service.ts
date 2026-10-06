@@ -40,7 +40,7 @@ import {
   getClinicServicesPublic,
   searchClinicsPublic,
 } from "./clinics.repo"
-import type { PublicServiceFilters } from "./clinics.repo"
+import type { PublicServiceFilters, ClinicDocPublicListProjection } from "./clinics.repo"
 import { listReviewsWithPatientDetails, getRatingForTarget } from "@/modules/reviews/reviews.repo"
 import type {
   ClinicService,
@@ -61,7 +61,8 @@ import type {
   UpdateClinicInfoBody,
   ClinicCategory,
 } from "./clinics.model"
-import { mapDocToPublicClinic, mapDocToDetailedClinic } from "./clinics.model"
+import { mapDocToPublicClinic, mapDocToDetailedClinic, getClinicFeatures } from "./clinics.model"
+import type { UpdateClinicSettingsBody } from "./clinics.model"
 import { badRequest, conflict, notFound, unauthorized } from "@/common/errors"
 import { toObjectId } from "@/common/utils/id"
 import { signToken } from "@/common/middleware/auth"
@@ -502,6 +503,62 @@ export async function setDoctorStatus(clinicId: string, doctorId: string, isActi
   return { message: isActive ? "Doctor activated" : "Doctor set inactive" }
 }
 
+/** Clinic feature switches (reviews / booking) for the owner dashboard. */
+export async function getMyClinicSettings(auth: { role?: string; clinicId?: string; sub: string }) {
+  const clinicId = await resolveClinicIdForOwner(auth)
+  if (!clinicId) throw unauthorized("Clinic owner only")
+  const clinic = await findClinicById(toObjectId(clinicId))
+  if (!clinic) throw notFound("Clinic not found")
+  const doctors = clinic.doctors ?? []
+  return {
+    ...getClinicFeatures(clinic),
+    homeVisit: {
+      enabledCount: doctors.filter((d) => d.homeVisitEnabled !== false).length,
+      totalDoctors: doctors.length,
+    },
+  }
+}
+
+export async function updateMyClinicSettings(
+  auth: { role?: string; clinicId?: string; sub: string },
+  body: UpdateClinicSettingsBody
+) {
+  const clinicId = await resolveClinicIdForOwner(auth)
+  if (!clinicId) throw unauthorized("Clinic owner only")
+  const $set: Record<string, unknown> = { updatedAt: new Date() }
+  if (body.reviewsEnabled !== undefined) $set["settings.reviewsEnabled"] = body.reviewsEnabled
+  if (body.bookingEnabled !== undefined) $set["settings.bookingEnabled"] = body.bookingEnabled
+  const res = await getDb()
+    .collection<ClinicDoc>(CLINICS_COLLECTION)
+    .updateOne({ _id: toObjectId(clinicId), deletedAt: null }, { $set })
+  if (res.matchedCount === 0) throw notFound("Clinic not found")
+  return getMyClinicSettings(auth)
+}
+
+/** Allow/deny calling one doctor to a patient's home (clinic admin decision, not the doctor's). */
+export async function setDoctorHomeVisit(clinicId: string, doctorId: string, enabled: boolean) {
+  const res = await getDb()
+    .collection<ClinicDoc>(CLINICS_COLLECTION)
+    .updateOne(
+      { _id: toObjectId(clinicId), "doctors._id": toObjectId(doctorId, "doctorId") },
+      { $set: { "doctors.$.homeVisitEnabled": enabled, "doctors.$.updatedAt": new Date(), updatedAt: new Date() } }
+    )
+  if (res.matchedCount === 0) throw notFound("Doctor not found")
+  return { doctorId, homeVisitEnabled: enabled }
+}
+
+export async function setAllDoctorsHomeVisit(clinicId: string, enabled: boolean) {
+  const now = new Date()
+  const res = await getDb()
+    .collection<ClinicDoc>(CLINICS_COLLECTION)
+    .updateOne(
+      { _id: toObjectId(clinicId) },
+      { $set: { "doctors.$[].homeVisitEnabled": enabled, "doctors.$[].updatedAt": now, updatedAt: now } }
+    )
+  if (res.matchedCount === 0) throw notFound("Clinic not found")
+  return { homeVisitEnabled: enabled }
+}
+
 /**
  * Delete doctor (clinic owner)
  */
@@ -837,24 +894,7 @@ export async function publicUnifiedSearch(q: string, limit: number = 15) {
     searchClinicsPublic(q, 10),
   ])
 
-  const clinics: PublicClinicListItem[] = clinicDocs.map((d) => ({
-    id: d._id.toHexString(),
-    clinicDisplayName: d.clinicDisplayName,
-    logoUrl: d.branding?.logoUrl ?? null,
-    coverUrl: d.branding?.coverUrl ?? null,
-    servicesCount: d.stats?.servicesCount ?? 0,
-    branchesCount: d.stats?.branchesCount ?? 0,
-    categories: (Array.isArray(d.categories) && d.categories.length > 0) ? d.categories : (Array.isArray(d.category) ? d.category : []),
-    descriptionShort: d.description?.short ?? null,
-    rating: d.rating ? { avg: d.rating.avg, count: d.rating.count } : { avg: 0, count: 0 },
-    branches: (d.branches ?? [])
-      .filter((b) => b.isActive)
-      .map((b) => ({
-        id: b._id.toHexString(),
-        name: b.name,
-        address: b.address,
-      })),
-  }))
+  const clinics: PublicClinicListItem[] = clinicDocs.map(toPublicClinicListItem)
 
   return {
     services: serviceRes.services,
@@ -923,15 +963,20 @@ export interface PublicClinicListItem {
   categories: string[] | ClinicCategory[]
   descriptionShort: string | null
   rating: { avg: number; count: number }
+  reviewsEnabled: boolean
+  bookingEnabled: boolean
   branches: Array<{ id: string; name: string; address: { city: string; street: string; geo: { lat: number; lng: number } } }>
 }
 
-/**
- * List active clinics for patient app (public, no auth)
- */
-export async function publicListClinics(limit: number = 100): Promise<PublicClinicListItem[]> {
-  const docs = await findActiveClinicsForPublic(limit)
-  return docs.map((d) => ({
+/** Public rating: hidden (zeroed) when the clinic turned reviews off, so it never leaks to any client. */
+export function publicClinicRating(d: Pick<ClinicDoc, "rating" | "settings">): { avg: number; count: number } {
+  if (!getClinicFeatures(d).reviewsEnabled || !d.rating) return { avg: 0, count: 0 }
+  return { avg: d.rating.avg, count: d.rating.count }
+}
+
+function toPublicClinicListItem(d: ClinicDocPublicListProjection): PublicClinicListItem {
+  const features = getClinicFeatures(d)
+  return {
     id: d._id.toHexString(),
     clinicDisplayName: d.clinicDisplayName,
     logoUrl: d.branding?.logoUrl ?? null,
@@ -940,7 +985,9 @@ export async function publicListClinics(limit: number = 100): Promise<PublicClin
     branchesCount: d.stats?.branchesCount ?? 0,
     categories: (Array.isArray(d.categories) && d.categories.length > 0) ? d.categories : (Array.isArray(d.category) ? d.category : []),
     descriptionShort: d.description?.short ?? null,
-    rating: d.rating ? { avg: d.rating.avg, count: d.rating.count } : { avg: 0, count: 0 },
+    rating: publicClinicRating(d),
+    reviewsEnabled: features.reviewsEnabled,
+    bookingEnabled: features.bookingEnabled,
     branches: (d.branches ?? [])
       .filter((b) => b.isActive)
       .map((b) => ({
@@ -948,7 +995,15 @@ export async function publicListClinics(limit: number = 100): Promise<PublicClin
         name: b.name,
         address: b.address,
       })),
-  }))
+  }
+}
+
+/**
+ * List active clinics for patient app (public, no auth)
+ */
+export async function publicListClinics(limit: number = 100): Promise<PublicClinicListItem[]> {
+  const docs = await findActiveClinicsForPublic(limit)
+  return docs.map(toPublicClinicListItem)
 }
 
 /**
@@ -965,7 +1020,16 @@ export async function publicGetClinicDetails(clinicId: string) {
   if (clinic.status !== "active" || clinic.deletedAt) {
     throw notFound("Clinic not found")
   }
-  return mapDocToDetailedClinic(clinic)
+  const detailed = mapDocToDetailedClinic(clinic)
+  return {
+    ...detailed,
+    rating: publicClinicRating(clinic),
+    // Inactive doctors can't be booked or called home either.
+    doctors: detailed.doctors.map((d) => ({
+      ...d,
+      homeVisitEnabled: d.isActive !== false && d.homeVisitEnabled,
+    })),
+  }
 }
 
 /**
@@ -1004,7 +1068,7 @@ export async function publicDoctorSlotsBySpecialty(specialty: string, date: stri
   const db = getDb()
   const clinics = await db
     .collection<ClinicDoc>(CLINICS_COLLECTION)
-    .find({ status: "active", deletedAt: null })
+    .find({ status: "active", deletedAt: null, "settings.bookingEnabled": { $ne: false } })
     .limit(60)
     .toArray()
 

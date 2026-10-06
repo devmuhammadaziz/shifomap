@@ -21,6 +21,12 @@ export function getConnectionErrorMessage(err: unknown): string {
   return msg;
 }
 
+/** Machine-readable error code from the backend (response.data.code), e.g. "BOOKING_DISABLED". */
+export function getApiErrorCode(err: unknown): string | null {
+  const code = (err as { response?: { data?: { code?: unknown } } })?.response?.data?.code;
+  return typeof code === 'string' ? code : null;
+}
+
 /** Get error message from API response (response.data.error from backend). */
 export function getApiErrorMessage(err: unknown): string | null {
   const ax = err as { response?: { data?: { error?: string; message?: string } } };
@@ -381,6 +387,8 @@ export interface PublicServiceItem {
   price: { amount?: number; minAmount?: number; maxAmount?: number; currency: string };
   isActive: boolean;
   rating?: { avg: number; count: number };
+  reviewsEnabled?: boolean;
+  bookingEnabled?: boolean;
 }
 
 export interface ServiceFilters {
@@ -511,7 +519,13 @@ export interface ServiceDetailResponse {
     branchNames?: string[];
     doctorNames?: string[];
   };
-  clinic: { _id: string; clinicDisplayName: string; clinicUniqueName: string };
+  clinic: {
+    _id: string;
+    clinicDisplayName: string;
+    clinicUniqueName: string;
+    reviewsEnabled?: boolean;
+    bookingEnabled?: boolean;
+  };
   activeDiscount?: ActiveDiscountInfo | null;
 }
 
@@ -585,6 +599,8 @@ export interface ClinicListItem {
   categories: Array<{ _id: string; name: string } | string>;
   descriptionShort: string | null;
   rating: { avg: number; count: number };
+  reviewsEnabled?: boolean;
+  bookingEnabled?: boolean;
   branches: Array<{ id: string; name: string; address: { city: string; street: string; geo: { lat: number; lng: number } } }>;
 }
 
@@ -617,6 +633,7 @@ export interface ClinicDoctorPublic {
   serviceIds: string[];
   branchIds: string[];
   isActive: boolean;
+  homeVisitEnabled?: boolean;
   schedule: { timezone: string; weekly: Array<{ day: number; from: string; to: string; lunchFrom?: string; lunchTo?: string }> };
 }
 
@@ -646,6 +663,7 @@ export interface ClinicDetailPublic {
   doctors: ClinicDoctorPublic[];
   categories: Array<{ _id: string; name: string }>;
   rating: { avg: number; count: number };
+  settings?: { reviewsEnabled?: boolean; bookingEnabled?: boolean };
 }
 
 export async function getClinicDetail(clinicId: string): Promise<ClinicDetailPublic> {
@@ -855,6 +873,7 @@ export interface ReviewsResponse {
   reviews: ReviewItem[];
   total: number;
   rating: { avg: number; count: number };
+  reviewsEnabled?: boolean;
 }
 
 export async function getReviews(params: {
@@ -1198,6 +1217,7 @@ export interface DoctorSlotsResponse {
     price: { amount?: number; minAmount?: number; maxAmount?: number; currency: string };
     serviceImage: string | null;
   }>;
+  bookingEnabled?: boolean;
 }
 
 export async function getDoctorSlots(clinicId: string, doctorId: string, date: string): Promise<DoctorSlotsResponse> {

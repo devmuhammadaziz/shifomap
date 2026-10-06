@@ -22,6 +22,8 @@ import SaveServiceStar from '../components/SaveServiceStar';
 import Skeleton from '../components/Skeleton';
 import ReviewBottomSheet from '../components/ReviewBottomSheet';
 import ReviewerHeader from '../components/ReviewerHeader';
+import { FeatureNotice } from '../../components/ui';
+import { isFeatureOn } from '../../lib/clinic-features';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 300;
@@ -84,10 +86,13 @@ export default function ServiceDetailScreen() {
       });
   };
 
+  const reviewsOn = isFeatureOn(data?.clinic?.reviewsEnabled ?? data?.service?.reviewsEnabled);
+  const bookingOn = isFeatureOn(data?.clinic?.bookingEnabled ?? data?.service?.bookingEnabled);
+
   useEffect(() => {
-    if (!data?.clinic?._id || !id) return;
+    if (!data?.clinic?._id || !id || !reviewsOn) return;
     loadReviews(0, 3, false);
-  }, [data?.clinic?._id, id]);
+  }, [data?.clinic?._id, id, reviewsOn]);
 
   const onLoadMoreReviews = () => {
     loadReviews(reviewsSkip, 10, true);
@@ -141,6 +146,7 @@ export default function ServiceDetailScreen() {
 
   const { service, clinic } = data;
   const rawService = service as typeof service & { branchNames?: string[]; doctorNames?: string[] };
+  const ratingCount = reviewsOn ? serviceRating?.count ?? 0 : 0;
   const branchNames = rawService.branchNames ?? [];
   const doctorNames = rawService.doctorNames ?? [];
   const branchIds = service.branchIds ?? [];
@@ -213,10 +219,10 @@ export default function ServiceDetailScreen() {
                 </Text>
               </View>
             ) : null}
-            {service.durationMin > 0 && (serviceRating?.count ?? 0) > 0 ? (
+            {service.durationMin > 0 && ratingCount > 0 ? (
               <Text style={[styles.metaSep, { color: colors.textTertiary }]}>·</Text>
             ) : null}
-            {(serviceRating?.count ?? 0) > 0 ? (
+            {ratingCount > 0 ? (
               <View style={styles.metaItem}>
                 <Icon name="star" size={13} color={colors.warning} />
                 <Text style={[styles.metaStrong, { color: colors.text }]}>
@@ -227,7 +233,7 @@ export default function ServiceDetailScreen() {
                 </Text>
               </View>
             ) : null}
-            {service.categoryName && (service.durationMin > 0 || (serviceRating?.count ?? 0) > 0) ? (
+            {service.categoryName && (service.durationMin > 0 || ratingCount > 0) ? (
               <Text style={[styles.metaSep, { color: colors.textTertiary }]}>·</Text>
             ) : null}
             {service.categoryName ? (
@@ -315,14 +321,18 @@ export default function ServiceDetailScreen() {
           <View style={styles.block}>
             <View style={styles.blockHeader}>
               <Text style={[styles.blockHeading, { color: colors.text }]}>{t.reviews}</Text>
-              <TouchableOpacity onPress={() => setReviewSheetVisible(true)} hitSlop={8} activeOpacity={0.6}>
-                <Text style={[styles.seeAllLink, { color: colors.primaryLight }]}>
-                  {t.writeReview} →
-                </Text>
-              </TouchableOpacity>
+              {reviewsOn ? (
+                <TouchableOpacity onPress={() => setReviewSheetVisible(true)} hitSlop={8} activeOpacity={0.6}>
+                  <Text style={[styles.seeAllLink, { color: colors.primaryLight }]}>
+                    {t.writeReview} →
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </View>
             <View style={[styles.dividerHairline, { backgroundColor: colors.border }]} />
-            {reviewsLoading && reviews.length === 0 ? (
+            {!reviewsOn ? (
+              <FeatureNotice kind="reviews" style={{ marginTop: 4 }} />
+            ) : reviewsLoading && reviews.length === 0 ? (
               <View style={{ paddingVertical: 24, alignItems: 'center' }}>
                 <ActivityIndicator size="small" color={colors.primaryLight} />
               </View>
@@ -381,7 +391,7 @@ export default function ServiceDetailScreen() {
       </ScrollView>
 
       <ReviewBottomSheet
-        visible={reviewSheetVisible}
+        visible={reviewSheetVisible && reviewsOn}
         onClose={() => setReviewSheetVisible(false)}
         onSuccess={onReviewSuccess}
         clinicId={clinic._id}
@@ -391,15 +401,19 @@ export default function ServiceDetailScreen() {
       />
 
       <View style={[styles.stickyFooter, { backgroundColor: colors.backgroundCard, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
-        <TouchableOpacity
-          style={[styles.bookButton, { backgroundColor: colors.primary }]}
-          activeOpacity={0.9}
-          onPress={() => router.push({ pathname: '/book', params: { clinicId: clinic._id, serviceId: id as string } })}
-        >
-          <Icon name="calendar" size={22} color="#fff" style={styles.bookIcon} />
-          <Text style={styles.bookButtonText}>{t.bookAppointment}</Text>
-          <Icon name="arrow-forward" size={20} color="#fff" />
-        </TouchableOpacity>
+        {bookingOn ? (
+          <TouchableOpacity
+            style={[styles.bookButton, { backgroundColor: colors.primary }]}
+            activeOpacity={0.9}
+            onPress={() => router.push({ pathname: '/book', params: { clinicId: clinic._id, serviceId: id as string } })}
+          >
+            <Icon name="calendar" size={22} color="#fff" style={styles.bookIcon} />
+            <Text style={styles.bookButtonText}>{t.bookAppointment}</Text>
+            <Icon name="arrow-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        ) : (
+          <FeatureNotice kind="booking" />
+        )}
       </View>
     </View>
   );

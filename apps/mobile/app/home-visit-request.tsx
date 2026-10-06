@@ -16,7 +16,8 @@ import { useThemeStore } from '../store/theme-store';
 import { getTokens } from '../lib/design';
 import { useKeyboardHeight } from '../lib/use-keyboard-height';
 import { getClinicDetail, createHomeVisitRequest, getApiErrorMessage } from '../lib/api';
-import { Button } from '../components/ui';
+import { Button, FeatureNotice } from '../components/ui';
+import { disabledFeatureFromError, featureMessage, isFeatureOn } from '../lib/clinic-features';
 import { HOME_VISIT_SYMPTOMS, symptomLabel } from '../lib/home-visit-symptoms';
 
 export default function HomeVisitRequestScreen() {
@@ -38,6 +39,7 @@ export default function HomeVisitRequestScreen() {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [homeVisitOff, setHomeVisitOff] = useState(false);
 
   useEffect(() => {
     if (!clinicId || !doctorId) return;
@@ -48,6 +50,7 @@ export default function HomeVisitRequestScreen() {
         if (doc) {
           setDoctorName(doc.fullName);
           setDoctorSpecialty(doc.specialty);
+          if (!isFeatureOn(doc.homeVisitEnabled)) setHomeVisitOff(true);
         }
       })
       .catch(() => {});
@@ -98,6 +101,13 @@ export default function HomeVisitRequestScreen() {
         [{ text: 'OK', onPress: () => router.back() }],
       );
     } catch (e) {
+      const disabled = disabledFeatureFromError(e);
+      if (disabled) {
+        const msg = featureMessage(disabled, language);
+        Alert.alert(msg.title, msg.body);
+        if (disabled === 'homeVisit') setHomeVisitOff(true);
+        return;
+      }
       const code = (e as { response?: { data?: { code?: string } } })?.response?.data?.code;
       const message =
         code === 'VALIDATION_ERROR'
@@ -110,6 +120,24 @@ export default function HomeVisitRequestScreen() {
       setSubmitting(false);
     }
   };
+
+  if (homeVisitOff) {
+    return (
+      <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top']}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} hitSlop={12}>
+            <Icon name="chevron-back" size={28} color={tokens.colors.primary} />
+          </TouchableOpacity>
+          <Text style={[styles.title, { color: tokens.colors.text }]}>
+            {isUz ? 'Shifokorni uyga chaqirish' : 'Вызов врача на дом'}
+          </Text>
+        </View>
+        <View style={styles.scroll}>
+          <FeatureNotice kind="homeVisit" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: tokens.colors.background }]} edges={['top']}>

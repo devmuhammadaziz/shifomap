@@ -17,7 +17,8 @@ import { useThemeStore } from '../../store/theme-store';
 import { getTranslations } from '../../lib/translations';
 import { useAuthStore } from '../../store/auth-store';
 import { getColors } from '../../lib/theme';
-import { submitReview } from '../../lib/api';
+import { submitReview, getApiErrorMessage } from '../../lib/api';
+import { disabledFeatureFromError, featureMessage } from '../../lib/clinic-features';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 
@@ -176,7 +177,11 @@ export default function ReviewBottomSheet({
       onSuccess?.();
       onClose();
     } catch (e) {
-      setSubmitError(e instanceof Error ? e.message : String(e));
+      if (disabledFeatureFromError(e) === 'reviews') {
+        setSubmitError(featureMessage('reviews', language).body);
+      } else {
+        setSubmitError(getApiErrorMessage(e) ?? (e instanceof Error ? e.message : String(e)));
+      }
     } finally {
       setSubmitting(false);
     }

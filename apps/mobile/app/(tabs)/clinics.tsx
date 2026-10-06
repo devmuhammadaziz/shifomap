@@ -230,13 +230,15 @@ export default function ClinicsTabScreen() {
                         {(t.nServices || '{{n}}').replace('{{n}}', String(c.servicesCount))}
                       </Text>
                     </View>
-                    <View style={styles.ratingBadge}>
-                      <Icon name="star" size={12} color="#F59E0B" />
-                      <Text style={styles.ratingBadgeText}>
-                        {c.rating.avg > 0 ? c.rating.avg.toFixed(1) : '—'}
-                        {c.rating.count > 0 ? ` (${c.rating.count})` : ''}
-                      </Text>
-                    </View>
+                    {c.reviewsEnabled !== false ? (
+                      <View style={styles.ratingBadge}>
+                        <Icon name="star" size={12} color="#F59E0B" />
+                        <Text style={styles.ratingBadgeText}>
+                          {c.rating.avg > 0 ? c.rating.avg.toFixed(1) : '—'}
+                          {c.rating.count > 0 ? ` (${c.rating.count})` : ''}
+                        </Text>
+                      </View>
+                    ) : null}
                   </View>
                   <Text style={styles.coverName} numberOfLines={1}>
                     {c.clinicDisplayName}
