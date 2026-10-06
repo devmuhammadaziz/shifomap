@@ -1,22 +1,12 @@
 import { Elysia } from "elysia"
 import { ObjectId } from "mongodb"
-import { mkdir, stat } from "fs/promises"
-import { join, extname } from "path"
+import { extname } from "path"
 import { getDb, FILES_COLLECTION } from "@/db/mongo"
 import { requireAuth } from "@/common/middleware/auth"
 import { toObjectId } from "@/common/utils/id"
-import { badRequest, notFound } from "@/common/errors"
+import { badRequest } from "@/common/errors"
 import { mapFileToPublic, type FileDoc } from "./files.model"
-
-const UPLOAD_DIR = join(process.cwd(), "uploads")
-
-async function ensureUploadDir() {
-  try {
-    await stat(UPLOAD_DIR)
-  } catch {
-    await mkdir(UPLOAD_DIR, { recursive: true })
-  }
-}
+import { loadFileBytes, saveFileBytes } from "./files.storage"
 
 const ALLOWED_MIME = [
   "image/jpeg",
@@ -24,84 +14,97 @@ const ALLOWED_MIME = [
   "image/webp",
   "image/gif",
   "image/heic",
+  "image/heif",
 ]
 
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/webp": ".webp",
+  "image/gif": ".gif",
+  "image/heic": ".heic",
+  "image/heif": ".heif",
+}
+
+/** Mobile clients often send an empty or generic type; trust the file signature instead. */
+function sniffImageMime(bytes: Uint8Array): string | null {
+  const b = bytes
+  if (b.length < 12) return null
+  if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return "image/jpeg"
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) return "image/png"
+  if (b[0] === 0x47 && b[1] === 0x49 && b[2] === 0x46) return "image/gif"
+  const ascii = (from: number, to: number) => String.fromCharCode(...b.slice(from, to))
+  if (ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "image/webp"
+  if (ascii(4, 8) === "ftyp") {
+    const brand = ascii(8, 12)
+    if (["heic", "heix", "hevc", "hevx"].includes(brand)) return "image/heic"
+    if (["mif1", "msf1", "heim", "heis"].includes(brand)) return "image/heif"
+  }
+  return null
+}
+
+function jsonError(status: number, error: string) {
+  return new Response(JSON.stringify({ success: false, error }), {
+    status,
+    headers: { "content-type": "application/json" },
+  })
+}
+
 export const filesRoutes = new Elysia({ prefix: "/files" })
-  .get("/:id", async ({ params, set }) => {
-    if (!ObjectId.isValid(params.id)) {
-      set.status = 400
-      return new Response(JSON.stringify({ success: false, error: "Invalid id" }), {
-        status: 400,
-        headers: { "content-type": "application/json" },
-      })
-    }
-    const db = getDb()
-    const doc = await db
+  .get("/:id", async ({ params }) => {
+    if (!ObjectId.isValid(params.id)) return jsonError(400, "Invalid id")
+    const doc = await getDb()
       .collection<FileDoc>(FILES_COLLECTION)
       .findOne({ _id: toObjectId(params.id), deletedAt: null })
-    if (!doc) {
-      set.status = 404
-      return new Response(JSON.stringify({ success: false, error: "Not found" }), {
-        status: 404,
-        headers: { "content-type": "application/json" },
-      })
-    }
-    const file = Bun.file(doc.storagePath)
-    if (!(await file.exists())) {
-      set.status = 404
-      return new Response(JSON.stringify({ success: false, error: "File missing on disk" }), {
-        status: 404,
-        headers: { "content-type": "application/json" },
-      })
-    }
-    set.headers["content-type"] = doc.mimeType
-    set.headers["cache-control"] = "public, max-age=86400"
-    return file
+    if (!doc) return jsonError(404, "Not found")
+    const bytes = await loadFileBytes(doc)
+    if (!bytes) return jsonError(404, "File content is missing")
+    return new Response(bytes, {
+      status: 200,
+      headers: {
+        "content-type": doc.mimeType,
+        "content-length": String(bytes.byteLength),
+        // File ids are never reused, so the content behind a URL never changes.
+        "cache-control": "public, max-age=31536000, immutable",
+        etag: `"${doc._id.toHexString()}"`,
+      },
+    })
   })
   .use(requireAuth)
   .post("/", async ({ request, auth, set }) => {
-    try {
-      await ensureUploadDir()
-      const form = await request.formData()
-      const file = form.get("file")
-      if (!(file instanceof File)) {
-        set.status = 400
-        throw badRequest("file is required")
-      }
-      if (file.size <= 0) throw badRequest("Empty file")
-      if (file.size > 15 * 1024 * 1024) throw badRequest("File too large (max 15MB)")
-      const mimeType = file.type || "application/octet-stream"
-      if (!ALLOWED_MIME.includes(mimeType)) {
-        throw badRequest(`Unsupported mime type: ${mimeType}`)
-      }
-      const id = new ObjectId()
-      const ext = extname(file.name) || (mimeType === "image/jpeg" ? ".jpg" : mimeType === "image/png" ? ".png" : ".bin")
-      const storagePath = join(UPLOAD_DIR, `${id.toHexString()}${ext}`)
-      const buffer = await file.arrayBuffer()
-      await Bun.write(storagePath, buffer)
+    const form = await request.formData().catch(() => {
+      throw badRequest("Expected multipart/form-data with a 'file' field")
+    })
+    const file = form.get("file")
+    if (!(file instanceof File)) throw badRequest("file is required")
+    if (file.size <= 0) throw badRequest("Empty file")
+    if (file.size > 15 * 1024 * 1024) throw badRequest("File too large (max 15MB)")
 
-      const db = getDb()
-      const doc: FileDoc = {
-        _id: id,
-        ownerId: auth.sub ? toObjectId(auth.sub) : null,
-        ownerRole: (auth.role as FileDoc["ownerRole"]) ?? "public",
-        originalName: file.name || `upload${ext}`,
-        mimeType,
-        size: file.size,
-        storagePath,
-        createdAt: new Date(),
-        deletedAt: null,
-      }
-      await db.collection<FileDoc>(FILES_COLLECTION).insertOne(doc)
-      set.status = 201
-      return { success: true, data: mapFileToPublic(doc) }
-    } catch (e: unknown) {
-      const err = e as { statusCode?: number; message?: string }
-      if (err.statusCode) {
-        set.status = err.statusCode
-        return { success: false, error: err.message }
-      }
-      set.status = 500
-      return { success: false, error: err.message || "Upload failed" }
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    const declared = (file.type || "").toLowerCase().split(";")[0].trim()
+    const mimeType = sniffImageMime(bytes) ?? (declared === "image/jpg" ? "image/jpeg" : declared)
+    if (!ALLOWED_MIME.includes(mimeType)) {
+      throw badRequest(`Unsupported file type: ${mimeType || "unknown"}`)
     }
+
+    const id = new ObjectId()
+    const ext = EXT_BY_MIME[mimeType] ?? (extname(file.name) || ".bin")
+    const originalName = file.name || `upload${ext}`
+    await saveFileBytes(id, bytes, { filename: originalName, mimeType })
+
+    const doc: FileDoc = {
+      _id: id,
+      ownerId: auth.sub && ObjectId.isValid(auth.sub) ? toObjectId(auth.sub) : null,
+      ownerRole: (auth.role as FileDoc["ownerRole"]) ?? "public",
+      originalName,
+      mimeType,
+      size: bytes.byteLength,
+      storagePath: "",
+      storage: "gridfs",
+      createdAt: new Date(),
+      deletedAt: null,
+    }
+    await getDb().collection<FileDoc>(FILES_COLLECTION).insertOne(doc)
+    set.status = 201
+    return { success: true, data: mapFileToPublic(doc) }
   })

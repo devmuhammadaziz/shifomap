@@ -25,7 +25,7 @@ import {
 import { findDoctorsForSpecialty, findDoctorsByName, type PublicDoctorMatch } from '../lib/find-doctors';
 
 const DEFAULT_SERVICE_IMG =
-  'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=200&h=200&fit=crop';
+  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop';
 
 function formatPrice(price: PublicServiceItem['price']): string {
   if (price.amount != null) return `${price.amount.toLocaleString()} ${price.currency}`;

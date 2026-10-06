@@ -29,7 +29,7 @@ import SaveServiceStar from './components/SaveServiceStar';
 import Skeleton from './components/Skeleton';
 import { useSavedServicesStore, type SavedServiceItem } from '../store/saved-services-store';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=200&h=200&fit=crop';
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop';
 
 function savedItemToPublic(s: SavedServiceItem): PublicServiceItem {
   return {

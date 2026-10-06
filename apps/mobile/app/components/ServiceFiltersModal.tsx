@@ -19,7 +19,7 @@ import { getTranslations } from '../../lib/translations';
 import { useComposerBottomInset } from '../../lib/use-keyboard-height';
 import Skeleton from './Skeleton';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=200&h=200&fit=crop';
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop';
 
 interface ServiceFiltersModalProps {
   visible: boolean;

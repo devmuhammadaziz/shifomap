@@ -10,7 +10,7 @@ import { getTranslations } from '../../lib/translations';
 import { getColors } from '../../lib/theme';
 import { getTokens } from '../../lib/design';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=240&h=240&fit=crop';
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=240&h=240&fit=crop';
 
 function formatPrice(price: SavedServiceItem['price']): string {
   if (price.amount != null) return `${price.amount.toLocaleString()} ${price.currency}`;

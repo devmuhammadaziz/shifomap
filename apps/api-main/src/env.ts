@@ -15,6 +15,8 @@ const envSchema = z.object({
   PATIENT_JWT_EXPIRES_IN: z.string().default("90d"),
   /** How long after expiry a patient token can still be exchanged for a new one */
   PATIENT_REFRESH_GRACE: z.string().default("365d"),
+  /** Public base URL of this API (e.g. https://api.shifoyol.uz); defaults to the request's host */
+  PUBLIC_API_URL: z.string().url().optional(),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   TELEGRAM_BOT_TOKEN: z.string().min(1, "TELEGRAM_BOT_TOKEN is required for landing notifications"),
   TELEGRAM_GROUP_CHAT_ID: z.string().min(1, "TELEGRAM_GROUP_CHAT_ID is required (e.g. -1001234567890)"),
@@ -37,6 +39,7 @@ function loadEnv(): Env {
     JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN,
     PATIENT_JWT_EXPIRES_IN: process.env.PATIENT_JWT_EXPIRES_IN,
     PATIENT_REFRESH_GRACE: process.env.PATIENT_REFRESH_GRACE,
+    PUBLIC_API_URL: process.env.PUBLIC_API_URL || undefined,
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
     TELEGRAM_GROUP_CHAT_ID: process.env.TELEGRAM_GROUP_CHAT_ID,

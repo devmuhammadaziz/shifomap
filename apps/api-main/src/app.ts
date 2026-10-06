@@ -25,6 +25,7 @@ import { homeVisitsPatientRoutes } from "@/modules/home-visits/home-visits.route
 import { homeVisitsManageRoutes } from "@/modules/home-visits/home-visits.manage.routes"
 import { AppError } from "@/common/errors"
 import { logger } from "@/common/logger"
+import { getPublicBaseUrl, rewriteFileUrls } from "@/common/utils/public-url"
 
 // V1 API routes
 const v1 = new Elysia({ prefix: "/v1" })
@@ -88,6 +89,15 @@ export const app = new Elysia()
     })
     set.status = 500
     return { success: false, error: "Internal server error", code: "INTERNAL_ERROR" }
+  })
+  // Stored upload URLs may be relative or carry the uploader's host (e.g. localhost);
+  // always hand clients a URL on the host they actually reached.
+  .onAfterHandle({ as: "global" }, (ctx) => {
+    const body = (ctx as unknown as { responseValue?: unknown; response?: unknown }).responseValue
+      ?? (ctx as unknown as { response?: unknown }).response
+    if (body && typeof body === "object" && !(body instanceof Response) && !(body instanceof Blob)) {
+      rewriteFileUrls(body, getPublicBaseUrl(ctx.request))
+    }
   })
   // CORS plugin - allows requests from any origin in dev
   .use(

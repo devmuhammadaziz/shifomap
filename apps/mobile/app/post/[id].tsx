@@ -33,7 +33,6 @@ import {
 
 function resolveImage(url: string): string {
   if (!url) return '';
-  if (url.startsWith('http')) return url;
   return getFileUrl(url) ?? url;
 }
 

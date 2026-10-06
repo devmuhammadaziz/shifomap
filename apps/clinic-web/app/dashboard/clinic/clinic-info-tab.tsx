@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Phone, Mail, MessageCircle } from 'lucide-react'
 
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1200&h=320&fit=crop'
-const DEFAULT_LOGO = 'https://images.unsplash.com/photo-1631217868264-5b4b0275f65f?w=200&h=200&fit=crop'
+const DEFAULT_LOGO = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=200&h=200&fit=crop'
 
 interface ClinicData {
   clinicDisplayName: string

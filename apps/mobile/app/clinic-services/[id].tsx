@@ -21,7 +21,7 @@ import Skeleton from '../components/Skeleton';
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const HERO_HEIGHT = 220;
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800';
-const DEFAULT_SERVICE_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=200&h=200&fit=crop';
+const DEFAULT_SERVICE_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=200&h=200&fit=crop';
 
 function formatPrice(price: PublicServiceItem['price']): string {
   if (price.amount != null) return `${price.amount.toLocaleString()} ${price.currency}`;

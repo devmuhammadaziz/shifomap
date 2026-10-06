@@ -4,11 +4,10 @@ import { useRouter } from 'expo-router';
 import { getFileUrl } from '../../lib/api';
 import type { StoryItem } from '../../lib/api';
 
-const FALLBACK = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=300&q=80';
+const FALLBACK = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=300&q=80';
 
 function resolveStoryImage(url: string): string {
   if (!url) return FALLBACK;
-  if (url.startsWith('http')) return url;
   return getFileUrl(url) ?? FALLBACK;
 }
 

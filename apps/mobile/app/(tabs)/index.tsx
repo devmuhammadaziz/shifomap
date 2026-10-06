@@ -36,7 +36,7 @@ import {
 import { Avatar, IconButton, SkeletonBlock } from '../../components/ui';
 import HomePriceFilterSheet from '../components/HomePriceFilterSheet';
 
-const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8e25d1d?w=400&q=80';
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&q=80';
 const DEFAULT_COVER = 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=800&q=80';
 
 function shuffle<T>(arr: T[]): T[] {

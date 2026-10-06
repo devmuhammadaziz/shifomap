@@ -7,7 +7,9 @@ export interface FileDoc {
   originalName: string
   mimeType: string
   size: number
+  /** Legacy local-disk location; new uploads are stored in GridFS and leave this empty. */
   storagePath: string
+  storage?: "gridfs" | "disk"
   createdAt: Date
   deletedAt: Date | null
 }

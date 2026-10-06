@@ -34,6 +34,33 @@ export const api = axios.create({
   timeout: 30000,
 });
 
+// Uploaded files may be stored relative ("/v1/files/<id>") or with the uploader's host
+// (localhost, LAN IP); point them all at the API this app talks to.
+const FILE_URL_RE = /^(?:https?:\/\/[^/\s]+)?\/v1\/files\/([a-f0-9]{24})(?:[?#].*)?$/i;
+
+function normalizeFileUrls(value: unknown, depth = 0): unknown {
+  if (depth > 12 || value == null) return value;
+  if (typeof value === 'string') {
+    if (!value.includes('/v1/files/')) return value;
+    const m = FILE_URL_RE.exec(value);
+    return m ? `${API_BASE}/v1/files/${m[1]}` : value;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) value[i] = normalizeFileUrls(value[i], depth + 1);
+    return value;
+  }
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    for (const key of Object.keys(obj)) obj[key] = normalizeFileUrls(obj[key], depth + 1);
+  }
+  return value;
+}
+
+api.interceptors.response.use((response) => {
+  if (response.data && typeof response.data === 'object') normalizeFileUrls(response.data);
+  return response;
+});
+
 let currentToken: string | null = null;
 
 export function setAuthToken(token: string | null) {
@@ -921,8 +948,10 @@ export async function deleteCustomReminder(id: string): Promise<boolean> {
 
 export function getFileUrl(id: string | null | undefined): string | null {
   if (!id) return null;
-  if (id.startsWith('http')) return id;
-  if (id.startsWith('/v1/')) return `${API_BASE}${id}`;
+  const m = FILE_URL_RE.exec(id);
+  if (m) return `${API_BASE}/v1/files/${m[1]}`;
+  if (/^(https?|data|file|content|ph|blob):/i.test(id)) return id;
+  if (id.startsWith('/')) return `${API_BASE}${id}`;
   return `${API_BASE}/v1/files/${id}`;
 }
 

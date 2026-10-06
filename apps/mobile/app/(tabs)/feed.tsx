@@ -38,9 +38,7 @@ const { height: SCREEN_H, width: SCREEN_W } = Dimensions.get('window');
 const SLIDE_DOTS_BOTTOM = 108;
 
 function resolveImage(url: string): string {
-  if (url.startsWith('http')) return url;
-  const resolved = getFileUrl(url);
-  return resolved ?? url;
+  return getFileUrl(url) ?? url;
 }
 
 function PostImageSlider({ imageUrls }: { imageUrls: string[] }) {

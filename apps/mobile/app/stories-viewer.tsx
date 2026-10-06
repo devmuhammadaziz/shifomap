@@ -19,7 +19,6 @@ const { width: W, height: H } = Dimensions.get('window');
 
 function resolveStoryImage(url: string): string {
   if (!url) return '';
-  if (url.startsWith('http')) return url;
   return getFileUrl(url) ?? url;
 }
 
