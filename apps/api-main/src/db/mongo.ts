@@ -65,3 +65,5 @@ export const TELEGRAM_USERS_COLLECTION = "telegram_users"
 export const STORIES_COLLECTION = "stories"
 export const STORY_VIEWS_COLLECTION = "story_views"
 export const HOME_VISITS_COLLECTION = "home_visits"
+/** Single-doc settings for the public marketing site (selected clinics, etc.). */
+export const LANDING_SETTINGS_COLLECTION = "landing_settings"
