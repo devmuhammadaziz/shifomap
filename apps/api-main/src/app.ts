@@ -93,10 +93,17 @@ export const app = new Elysia()
   // Stored upload URLs may be relative or carry the uploader's host (e.g. localhost);
   // always hand clients a URL on the host they actually reached.
   .onAfterHandle({ as: "global" }, (ctx) => {
-    const body = (ctx as unknown as { responseValue?: unknown; response?: unknown }).responseValue
-      ?? (ctx as unknown as { response?: unknown }).response
-    if (body && typeof body === "object" && !(body instanceof Response) && !(body instanceof Blob)) {
-      rewriteFileUrls(body, getPublicBaseUrl(ctx.request))
+    try {
+      const body = (ctx as unknown as { responseValue?: unknown; response?: unknown }).responseValue
+        ?? (ctx as unknown as { response?: unknown }).response
+      if (body && typeof body === "object" && !(body instanceof Response) && !(body instanceof Blob)) {
+        rewriteFileUrls(body, getPublicBaseUrl(ctx.request))
+      }
+    } catch (err) {
+      // Never turn a successful response into 500 because URL rewriting failed.
+      logger.error("[app] rewriteFileUrls failed", {
+        err: err instanceof Error ? err.message : String(err),
+      })
     }
   })
   // CORS plugin - allows requests from any origin in dev

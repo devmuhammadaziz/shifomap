@@ -7,9 +7,25 @@ const FILE_URL_RE = /^(?:https?:\/\/[^/\s]+)?\/v1\/files\/([a-f0-9]{24})(?:[?#].
 /** Base URL clients should use to reach this API, e.g. "https://api.shifoyol.uz". */
 export function getPublicBaseUrl(request: Request): string {
   if (env.PUBLIC_API_URL) return env.PUBLIC_API_URL.replace(/\/+$/, "")
-  const url = new URL(request.url)
-  const proto = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() || url.protocol.replace(":", "")
-  const host = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() || request.headers.get("host") || url.host
+
+  // request.url is sometimes a path-only string (e.g. "/") under Bun/proxies —
+  // never throw from the after-handle hook over that.
+  let parsed: URL | null = null
+  try {
+    parsed = new URL(request.url, "http://localhost")
+  } catch {
+    parsed = null
+  }
+
+  const proto =
+    request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() ||
+    parsed?.protocol.replace(":", "") ||
+    "http"
+  const host =
+    request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+    request.headers.get("host") ||
+    parsed?.host ||
+    "localhost"
   return `${proto}://${host}`
 }
 
