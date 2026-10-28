@@ -20,6 +20,9 @@ export async function uploadClinicImage(file: File): Promise<string> {
   })
   const json = await res.json().catch(() => ({}))
   if (!res.ok || !json?.success || !json?.data?.url) {
+    if (res.status === 413) {
+      throw new Error('Fayl hajmi server chegarasidan katta (maksimal 15MB)')
+    }
     throw new Error(json?.error || 'Upload failed')
   }
   const path = String(json.data.url)

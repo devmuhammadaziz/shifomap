@@ -462,6 +462,10 @@ function PostEditor({
 
   const onPickFile = async (file: File) => {
     if (!token) return
+    if (file.size > 15 * 1024 * 1024) {
+      setError("File is too large (maximum 15MB)")
+      return
+    }
     setUploading(true)
     setError(null)
     try {
@@ -472,8 +476,20 @@ function PostEditor({
         headers: { Authorization: `Bearer ${token}` },
         body: fd,
       })
+      if (!res.ok) {
+        if (res.status === 413) {
+          throw new Error("File is too large for server (max 15MB)")
+        }
+        const text = await res.text().catch(() => "")
+        try {
+          const json = JSON.parse(text)
+          throw new Error(json?.error ?? "Upload failed")
+        } catch {
+          throw new Error(`Upload failed (${res.status})`)
+        }
+      }
       const json = await res.json()
-      if (!res.ok || !json?.success) {
+      if (!json?.success) {
         throw new Error(json?.error ?? "Upload failed")
       }
       setImageUrls((arr) => {
